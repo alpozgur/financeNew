@@ -259,17 +259,19 @@ class ScenarioAnalyzer:
         try:
             # TÜM FONLARIN DETAYLARINI ÇEK
             all_details_query = """
-            SELECT DISTINCT ON (d.fcode) 
+            SELECT 
                 d.*,
-                f.price as current_price,
-                f.investorcount,
-                f.ftitle as fname
+                lf.price as current_price,
+                lf.investorcount,
+                lf.ftitle as fname,
+                pm.annual_return / 252 * 30 as return_30d,
+                pm.annual_volatility * 100 as volatility,
+                pm.sharpe_ratio as sharpe
             FROM tefasfunddetails d
-            JOIN tefasfunds f ON d.fcode = f.fcode
-            WHERE f.pdate >= CURRENT_DATE - INTERVAL '7 days'
-            ORDER BY d.fcode, f.pdate DESC
-            """
-            
+            JOIN mv_latest_fund_data lf ON d.fcode = lf.fcode
+            LEFT JOIN mv_fund_performance_metrics pm ON d.fcode = pm.fcode
+            WHERE pm.fcode IS NOT NULL
+            """            
             all_funds_data = self.db.execute_query(all_details_query)
             
             for _, fund in all_funds_data.iterrows():

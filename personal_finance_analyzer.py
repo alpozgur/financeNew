@@ -447,35 +447,21 @@ class PersonalFinanceAnalyzer:
         """SQL ile belirli tipteki fonları getir - DÜZELTILMIŞ"""
         try:
             query = f"""
-            WITH fund_performance AS (
-                SELECT f.fcode, 
-                    MAX(f.ftitle) as fund_name,
-                    CASE 
-                        WHEN MIN(f.price) > 0 THEN (MAX(f.price) - MIN(f.price)) / MIN(f.price) * 100
-                        ELSE 0
-                    END as performance,
-                    CASE
-                        WHEN AVG(f.price) > 0 THEN STDDEV(f.price) / AVG(f.price) * 100
-                        ELSE 0
-                    END as volatility,
-                    MAX(f.investorcount) as investors,
-                    MAX(f.price) as current_price
-                FROM tefasfunds f
-                WHERE f.pdate >= CURRENT_DATE - INTERVAL '365 days'
-                AND f.investorcount > 100
-                AND f.price > 0  -- Sıfır fiyat kontrolü
-                GROUP BY f.fcode
-                HAVING COUNT(*) >= 200
-                AND MIN(f.price) > 0  -- Minimum fiyat kontrolü
-            )
-            SELECT fp.*, COALESCE(fd.{fund_type}, 0) as allocation
-            FROM fund_performance fp
-            LEFT JOIN tefasfunddetails fd ON fp.fcode = fd.fcode
-            WHERE COALESCE(fd.{fund_type}, 0) > 50  -- %50'den fazla bu tipte
-            ORDER BY fp.performance DESC
+            SELECT 
+                pm.fcode,
+                lf.ftitle as fund_name,
+                pm.annual_return as performance,
+                pm.annual_volatility * 100 as volatility,
+                lf.investorcount as investors,
+                pm.current_price,
+                COALESCE(fd.{fund_type}, 0) as allocation
+            FROM mv_fund_performance_metrics pm
+            JOIN mv_latest_fund_data lf ON pm.fcode = lf.fcode
+            LEFT JOIN tefasfunddetails fd ON pm.fcode = fd.fcode
+            WHERE COALESCE(fd.{fund_type}, 0) > 50
+            ORDER BY pm.annual_return DESC
             LIMIT 10
-            """
-            
+            """            
             result = self.db.execute_query(query)
             return result.to_dict('records') if not result.empty else []
             

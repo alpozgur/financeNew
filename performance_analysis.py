@@ -468,36 +468,17 @@ class PerformanceAnalyzerMain:
             sql_limit = count * 2
             
             query = f"""
-            WITH recent_prices AS (
-                SELECT fcode, price, pdate,
-                    LAG(price) OVER (PARTITION BY fcode ORDER BY pdate) as prev_price
-                FROM tefasfunds 
-                WHERE pdate >= CURRENT_DATE - INTERVAL '30 days'
-                AND price > 0
-            ),
-            returns AS (
-                SELECT fcode, 
-                    (price - prev_price) / prev_price as daily_return
-                FROM recent_prices 
-                WHERE prev_price IS NOT NULL
-            ),
-            volatility_calc AS (
-                SELECT fcode,
-                    COUNT(*) as data_points,
-                    AVG(daily_return) as avg_return,
-                    STDDEV(daily_return) * 100 as volatility,
-                    MIN(daily_return) as min_return,
-                    MAX(daily_return) as max_return
-                FROM returns
-                GROUP BY fcode
-                HAVING COUNT(*) >= 15  -- En az 15 gün veri
-            )
-            SELECT fcode, volatility, avg_return, data_points
-            FROM volatility_calc
-            WHERE volatility > 0
-            ORDER BY volatility ASC
-            LIMIT {sql_limit}
-            """
+                    SELECT 
+                        fcode,
+                        annual_volatility as volatility,
+                        annual_return as avg_return,
+                        trading_days as data_points,
+                        current_price
+                    FROM mv_fund_performance_metrics
+                    WHERE annual_volatility > 0
+                    ORDER BY annual_volatility ASC
+                    LIMIT {sql_limit}
+                    """
             
             result = self.coordinator.db.execute_query(query)
             

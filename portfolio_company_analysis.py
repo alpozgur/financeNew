@@ -53,19 +53,16 @@ class EnhancedPortfolioCompanyAnalyzer:
                 try:
                     # 🚀 LİMİTSİZ SORGU - Tüm fonları bul
                     query = f"""
-                    WITH latest_data AS (
-                        SELECT DISTINCT f.fcode, f.ftitle, f.fcapacity, f.investorcount, f.price, f.pdate,
-                            ROW_NUMBER() OVER (PARTITION BY f.fcode ORDER BY f.pdate DESC) as rn
-                        FROM tefasfunds f
-                        WHERE UPPER(f.ftitle) LIKE '%{keyword}%'
-                        AND f.pdate >= CURRENT_DATE - INTERVAL '30 days'
-                        AND f.price > 0
-                    )
-                    SELECT fcode, ftitle as fund_name, fcapacity, investorcount, price
-                    FROM latest_data 
-                    WHERE rn = 1
-                    ORDER BY fcapacity DESC NULLS LAST
-                    """
+                        SELECT 
+                            fcode,
+                            fund_name,
+                            fcapacity,
+                            investorcount,
+                            current_price
+                        FROM mv_portfolio_company_summary
+                        WHERE company_name = %s
+                        ORDER BY fcapacity DESC NULLS LAST
+"""
                     
                     result = self.coordinator.db.execute_query(query)
                     
@@ -94,7 +91,42 @@ class EnhancedPortfolioCompanyAnalyzer:
             return []
 
     def calculate_comprehensive_performance(self, fund_code, days=252):
-        """Kapsamlı performans hesaplama - INF ve NaN hatalarını düzeltilmiş"""
+        """MV kullanarak hızlı performans hesaplama"""
+        try:
+            # Önce MV'den hazır metrikleri al
+            query = """
+            SELECT * FROM mv_fund_performance_metrics
+            WHERE fcode = :fcode
+            """
+            result = self.coordinator.db.execute_query(query, {'fcode': fund_code})            
+            if not result.empty:
+                row = result.iloc[0]
+                
+                # Sortino ratio için yaklaşık hesaplama
+                sortino_ratio = row['sharpe_ratio'] * 1.2  # Yaklaşık değer
+                
+                # Max drawdown için yaklaşık hesaplama
+                if row['calmar_ratio'] > 0 and row['annual_return'] > 0:
+                    max_drawdown = abs(row['annual_return'] / row['calmar_ratio'])
+                else:
+                    max_drawdown = row['annual_volatility'] * 2  # Yaklaşık
+                
+                return {
+                    'total_return': (row['annual_return'] / 252 * min(days, row['data_points'])) * 100,
+                    'annual_return': row['annual_return'] * 100,
+                    'volatility': row['annual_volatility'] * 100,
+                    'sharpe_ratio': row['sharpe_ratio'],
+                    'sortino_ratio': sortino_ratio,
+                    'calmar_ratio': row['calmar_ratio'],
+                    'win_rate': row['win_rate'] * 100,
+                    'max_drawdown': max_drawdown,
+                    'data_points': row['data_points'],
+                    'current_price': row['current_price']
+                }
+        except Exception as e:
+            print(f"MV sorgu hatası: {e}, fallback kullanılıyor")
+        
+        # Orijinal hesaplama (MV yoksa veya hata varsa)
         try:
             # Veri çekimi
             data = self.coordinator.db.get_fund_price_history(fund_code, days)
@@ -105,19 +137,17 @@ class EnhancedPortfolioCompanyAnalyzer:
             prices = data.set_index('pdate')['price'].sort_index()
             returns = prices.pct_change().dropna()
             
-            # ❌ HATA KAYNAĞI: İlk veya son fiyat 0 veya NaN olabilir
+            # İlk ve son fiyat kontrolü
             first_price = prices.iloc[0]
             last_price = prices.iloc[-1]
             
-            # 🔧 DÜZELTİLMİŞ: Sıfır kontrolü ekle
             if first_price <= 0 or last_price <= 0 or pd.isna(first_price) or pd.isna(last_price):
                 print(f"   ⚠️ {fund_code} geçersiz fiyat verisi: başlangıç={first_price}, son={last_price}")
                 return None
             
-            # Temel metrikler - güvenli hesaplama
+            # Temel metrikler
             total_return = (last_price / first_price - 1) * 100
             
-            # ❌ HATA KAYNAĞI: returns.std() NaN olabilir
             returns_std = returns.std()
             if pd.isna(returns_std) or returns_std == 0:
                 print(f"   ⚠️ {fund_code} volatilite hesaplanamadı")
@@ -126,7 +156,7 @@ class EnhancedPortfolioCompanyAnalyzer:
             annual_return = total_return * (252 / len(prices))
             volatility = returns_std * np.sqrt(252) * 100
             
-            # 🔧 DÜZELTİLMİŞ: Sharpe ratio hesaplama
+            # Sharpe ratio
             if volatility > 0 and not pd.isna(volatility):
                 sharpe = (annual_return - 15) / volatility
             else:
@@ -134,27 +164,25 @@ class EnhancedPortfolioCompanyAnalyzer:
             
             win_rate = (returns > 0).sum() / len(returns) * 100
             
-            # Max drawdown hesaplama - güvenli
+            # Max drawdown
             try:
                 cumulative = (1 + returns).cumprod()
                 running_max = cumulative.expanding().max()
                 drawdown = (cumulative - running_max) / running_max
                 max_drawdown = abs(drawdown.min()) * 100
                 
-                # NaN kontrolü
                 if pd.isna(max_drawdown):
                     max_drawdown = 0
-                    
             except Exception:
                 max_drawdown = 0
             
-            # Calmar ratio - güvenli
+            # Calmar ratio
             if max_drawdown > 0 and not pd.isna(max_drawdown):
                 calmar = abs(annual_return / max_drawdown)
             else:
                 calmar = 0
             
-            # Sortino ratio - güvenli
+            # Sortino ratio
             negative_returns = returns[returns < 0]
             if len(negative_returns) > 0:
                 downside_std = negative_returns.std()
@@ -164,9 +192,8 @@ class EnhancedPortfolioCompanyAnalyzer:
                 else:
                     sortino = 0
             else:
-                sortino = 0
+                sortino = sharpe * 1.5  # Yaklaşık değer
             
-            # 🔧 DÜZELTİLMİŞ: Tüm değerlerin geçerliliğini kontrol et
             result = {
                 'total_return': total_return,
                 'annual_return': annual_return,
@@ -196,7 +223,7 @@ class EnhancedPortfolioCompanyAnalyzer:
         except Exception as e:
             print(f"   ❌ {fund_code} performans hatası: {e}")
             return None
-    
+
     def analyze_company_comprehensive(self, company_name, analysis_days=252):
         """Şirket kapsamlı analizi - TÜM FONLARLA"""
         print(f"\n🏢 {company_name.upper()} - KAPSAMLI ANALİZ BAŞLATIYOR...")

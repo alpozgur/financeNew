@@ -19,54 +19,19 @@ class TechnicalAnalysis:
         try:
             # SQL ile MACD hesaplama ve filtreleme
             query = f"""
-            WITH recent_prices AS (
-                SELECT fcode, price, pdate,
-                    ROW_NUMBER() OVER (PARTITION BY fcode ORDER BY pdate DESC) as rn
-                FROM tefasfunds 
-                WHERE pdate >= CURRENT_DATE - INTERVAL '40 days'
-                AND price > 0
-                AND investorcount > 50
-            ),
-            price_series AS (
-                SELECT fcode, price, pdate
-                FROM recent_prices 
-                WHERE rn <= 30
-            ),
-            ema_calculations AS (
-                SELECT fcode,
-                    AVG(CASE WHEN rn <= 12 THEN price END) as ema_12_approx,
-                    AVG(CASE WHEN rn <= 26 THEN price END) as ema_26_approx,
-                    COUNT(*) as data_points
-                FROM (
-                    SELECT fcode, price,
-                        ROW_NUMBER() OVER (PARTITION BY fcode ORDER BY pdate DESC) as rn
-                    FROM price_series
-                ) ranked_prices
-                GROUP BY fcode
-                HAVING COUNT(*) >= 26
-            ),
-            macd_signals AS (
-                SELECT fcode,
-                    ema_12_approx,
-                    ema_26_approx,
-                    (ema_12_approx - ema_26_approx) as macd_line,
-                    data_points
-                FROM ema_calculations
-                WHERE ema_12_approx IS NOT NULL AND ema_26_approx IS NOT NULL
-            )
-            SELECT ms.fcode, ms.macd_line, ms.ema_12_approx, ms.ema_26_approx, 
-                ms.data_points, f.price as current_price, f.investorcount
-            FROM macd_signals ms
-            JOIN (
-                SELECT DISTINCT ON (fcode) fcode, price, investorcount
-                FROM tefasfunds 
-                WHERE pdate >= CURRENT_DATE - INTERVAL '7 days'
-                ORDER BY fcode, pdate DESC
-            ) f ON ms.fcode = f.fcode
-            WHERE ms.macd_line {operator} 0
-            ORDER BY ABS(ms.macd_line) DESC
-            LIMIT 20
-            """
+                    SELECT 
+                        ti.fcode,
+                        ti.macd_line,
+                        ti.current_price,
+                        ti.investorcount,
+                        ti.sma_10 as ema_12_approx,
+                        ti.sma_20 as ema_26_approx,
+                        ti.data_points
+                    FROM mv_fund_technical_indicators ti
+                    WHERE ti.macd_line {operator} 0
+                    ORDER BY ABS(ti.macd_line) DESC
+                    LIMIT 20
+                    """
 
             result = self.coordinator.db.execute_query(query)
             if result.empty:
@@ -141,58 +106,20 @@ class TechnicalAnalysis:
         
         try:
             query = f"""
-            WITH recent_prices AS (
-                SELECT fcode, price, pdate,
-                    ROW_NUMBER() OVER (PARTITION BY fcode ORDER BY pdate DESC) as rn
-                FROM tefasfunds 
-                WHERE pdate >= CURRENT_DATE - INTERVAL '30 days'
-                AND price > 0
-                AND investorcount > 50
-            ),
-            price_series AS (
-                SELECT fcode, price, pdate
-                FROM recent_prices 
-                WHERE rn <= 20  -- Son 20 gün (Bollinger için yeterli)
-            ),
-            bollinger_calc AS (
-                SELECT fcode,
-                    AVG(price) as sma_20,
-                    STDDEV(price) as std_20,
-                    COUNT(*) as data_points,
-                    (SELECT price FROM recent_prices WHERE fcode = ps.fcode AND rn = 1) as current_price
-                FROM price_series ps
-                GROUP BY fcode
-                HAVING COUNT(*) >= 15  -- En az 15 gün
-            ),
-            bollinger_bands AS (
-                SELECT fcode,
+                SELECT 
+                    fcode,
                     current_price,
                     sma_20,
-                    std_20,
-                    (sma_20 + 2 * std_20) as upper_band,
-                    (sma_20 - 2 * std_20) as lower_band,
-                    CASE 
-                        WHEN (sma_20 + 2 * std_20) - (sma_20 - 2 * std_20) = 0 THEN 0
-                        ELSE (current_price - (sma_20 - 2 * std_20)) / 
-                            ((sma_20 + 2 * std_20) - (sma_20 - 2 * std_20))
-                    END as bb_percent
-                FROM bollinger_calc
-                WHERE std_20 > 0
-            )
-            SELECT bb.fcode, bb.current_price, bb.sma_20, bb.upper_band, bb.lower_band, 
-                bb.bb_percent, f.investorcount
-            FROM bollinger_bands bb
-            JOIN (
-                SELECT DISTINCT ON (fcode) fcode, investorcount
-                FROM tefasfunds 
-                WHERE pdate >= CURRENT_DATE - INTERVAL '7 days'
-                ORDER BY fcode, pdate DESC
-            ) f ON bb.fcode = f.fcode
-            WHERE bb.bb_percent {bb_condition}
-            ORDER BY {'bb.bb_percent ASC' if is_lower_band else 'bb.bb_percent DESC'}
-            LIMIT 20
-            """
-            
+                    bb_upper as upper_band,
+                    bb_lower as lower_band,
+                    bb_position as bb_percent,
+                    investorcount
+                FROM mv_fund_technical_indicators
+                WHERE bb_position {bb_condition}
+                ORDER BY {'bb_position ASC' if is_lower_band else 'bb_position DESC'}
+                LIMIT 20
+                """
+            # SQL sorgusunu çalıştır            
             result = self.coordinator.db.execute_query(query)
             
             if result.empty:
@@ -291,56 +218,17 @@ class TechnicalAnalysis:
         try:
             # Basitleştirilmiş RSI hesaplaması SQL'de
             query = f"""
-            WITH recent_prices AS (
-                SELECT fcode, price, pdate,
-                    LAG(price) OVER (PARTITION BY fcode ORDER BY pdate) as prev_price,
-                    ROW_NUMBER() OVER (PARTITION BY fcode ORDER BY pdate DESC) as rn
-                FROM tefasfunds 
-                WHERE pdate >= CURRENT_DATE - INTERVAL '25 days'
-                AND price > 0
-                AND investorcount > 50
-            ),
-            price_changes AS (
-                SELECT fcode, price, pdate,
-                    CASE WHEN price > prev_price THEN price - prev_price ELSE 0 END as gain,
-                    CASE WHEN price < prev_price THEN prev_price - price ELSE 0 END as loss
-                FROM recent_prices 
-                WHERE prev_price IS NOT NULL
-                AND rn <= 15  -- Son 15 gün değişim
-            ),
-            rsi_calc AS (
-                SELECT fcode,
-                    AVG(gain) as avg_gain,
-                    AVG(loss) as avg_loss,
-                    COUNT(*) as data_points,
-                    (SELECT price FROM recent_prices WHERE fcode = pc.fcode AND rn = 1) as current_price
-                FROM price_changes pc
-                GROUP BY fcode
-                HAVING COUNT(*) >= 10  -- En az 10 gün
-            ),
-            rsi_values AS (
-                SELECT fcode, current_price,
-                    CASE 
-                        WHEN avg_loss = 0 THEN 100
-                        WHEN avg_gain = 0 THEN 0
-                        ELSE 100 - (100 / (1 + (avg_gain / avg_loss)))
-                    END as rsi_approx
-                FROM rsi_calc
-                WHERE avg_gain IS NOT NULL AND avg_loss IS NOT NULL
-            )
-            SELECT rv.fcode, rv.current_price, rv.rsi_approx, f.investorcount
-            FROM rsi_values rv
-            JOIN (
-                SELECT DISTINCT ON (fcode) fcode, investorcount
-                FROM tefasfunds 
-                WHERE pdate >= CURRENT_DATE - INTERVAL '7 days'
-                ORDER BY fcode, pdate DESC
-            ) f ON rv.fcode = f.fcode
-            WHERE rv.rsi_approx {rsi_condition}
-            ORDER BY {order_by}
-            LIMIT 20
-            """
-            
+                    SELECT 
+                        fcode,
+                        current_price,
+                        rsi_approx,
+                        investorcount
+                    FROM mv_fund_technical_indicators
+                    WHERE rsi_approx {rsi_condition}
+                    ORDER BY {order_by}
+                    LIMIT 20
+                    """
+            # SQL sorgusunu çalıştır            
             result = self.coordinator.db.execute_query(query)
             
             if result.empty:
