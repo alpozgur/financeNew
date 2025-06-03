@@ -1,11 +1,10 @@
 # analysis/coordinator.py
 import pandas as pd
 import numpy as np
-from typing import Dict, List, Optional, Any
+from typing import Dict, List
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 import json
-from pathlib import Path
 
 from database.connection import DatabaseManager
 from config.config import Config

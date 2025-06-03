@@ -1,11 +1,10 @@
 # analysis/performance.py
 import pandas as pd
 import numpy as np
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from scipy import stats
-import empyrical as ep
 from database.connection import DatabaseManager
 from config.config import Config
 

@@ -1,12 +1,9 @@
 # analysis/monte_carlo.py
 import pandas as pd
 import numpy as np
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 import logging
 from scipy import stats
-from scipy.optimize import minimize
-import matplotlib.pyplot as plt
-import seaborn as sns
 from database.connection import DatabaseManager
 from config.config import Config
 

@@ -1,9 +1,9 @@
 # analysis/portfolio_optimization.py
 import pandas as pd
 import numpy as np
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Tuple
 import logging
-from scipy.optimize import minimize, LinearConstraint
+from scipy.optimize import minimize
 from scipy import stats
 import cvxpy as cp
 from database.connection import DatabaseManager

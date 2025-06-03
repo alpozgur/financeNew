@@ -4,12 +4,10 @@ import re
 
 def normalize_turkish_text(text):
     replacements = {
-        'İ': 'i', 'ı': 'i', 'I': 'i',
-        'Ğ': 'g', 'ğ': 'g',
-        'Ü': 'u', 'ü': 'u', 
-        'Ş': 's', 'ş': 's',
-        'Ö': 'o', 'ö': 'o',
-        'Ç': 'c', 'ç': 'c'
+        'İ': 'i', 'I': 'ı',
+        'Ğ': 'ğ', 'Ü': 'ü', 
+        'Ş': 'ş', 'Ö': 'ö', 
+        'Ç': 'ç',
     }
     normalized = text.lower()
     for turkish_char, replacement in replacements.items():

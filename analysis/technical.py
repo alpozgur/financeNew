@@ -1,10 +1,8 @@
 # analysis/technical.py
 import pandas as pd
 import numpy as np
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 import logging
-from ta import add_all_ta_features, trend, momentum, volatility, volume
-from ta.utils import dropna
 from database.connection import DatabaseManager
 from config.config import Config
 

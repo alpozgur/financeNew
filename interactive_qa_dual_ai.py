@@ -10,7 +10,7 @@ import numpy as np
 from config.config import Config
 from analysis.coordinator import AnalysisCoordinator
 from analysis.hybrid_fund_selector import HybridFundSelector, HighPerformanceFundAnalyzer
-from analysis.performance import batch_analyze_funds_by_details
+# from analysis.performance import batch_analyze_funds_by_details
 # Mevcut import'ların altına ekleyin:
 from thematic_fund_analyzer import ThematicFundAnalyzer
 from utils import normalize_turkish_text
@@ -18,6 +18,11 @@ from technical_analysis import TechnicalAnalysis
 from performance_analysis import PerformanceAnalyzerMain
 from fundamental_analysis import FundamentalAnalysisEnhancement
 from portfolio_company_analysis import EnhancedPortfolioCompanyAnalyzer
+from currency_inflation_analyzer import CurrencyInflationAnalyzer
+from time_based_analyzer import TimeBasedAnalyzer
+from scenario_analysis import ScenarioAnalyzer
+from personal_finance_analyzer import PersonalFinanceAnalyzer
+
 class DualAITefasQA:
     """TEFAS Soru-Cevap Sistemi - OpenAI ve Ollama karşılaştırmalı"""
     
@@ -36,6 +41,10 @@ class DualAITefasQA:
         self.portfolio_analyzer = EnhancedPortfolioCompanyAnalyzer(self.coordinator)
         self.thematic_analyzer = ThematicFundAnalyzer(self.coordinator.db, self.config)
         self.performanceMain = PerformanceAnalyzerMain(self.coordinator, self.active_funds, self.ai_status)
+        self.currency_analyzer = CurrencyInflationAnalyzer(self.coordinator.db, self.config)
+        self.personal_analyzer = PersonalFinanceAnalyzer(self.coordinator, self.active_funds)
+        self.time_analyzer = TimeBasedAnalyzer(self.coordinator, self.active_funds)
+        self.scenario_analyzer = ScenarioAnalyzer(self.coordinator, self.active_funds)
         # AI durumunu kontrol et
         
     def _load_active_funds(self, max_funds=None, mode="comprehensive"):
@@ -99,7 +108,20 @@ class DualAITefasQA:
         # Sayısal değer parsing (10 fon, 5 fon vs.)
         numbers_in_question = re.findall(r'(\d+)', question)
         requested_count = int(numbers_in_question[0]) if numbers_in_question else 1
-        
+
+    # 🎲 SENARYO ANALİZİ SORULARI - YENİ
+        if self.scenario_analyzer.is_scenario_question(question):
+            return self.scenario_analyzer.analyze_scenario_question(question)
+        if CurrencyInflationAnalyzer.is_currency_inflation_question(question):
+            return self.currency_analyzer.analyze_currency_inflation_question(question)
+        # KİŞİSEL FİNANS SORULARI
+        if self.personal_analyzer.is_personal_finance_question(question):
+            return self.personal_analyzer.analyze_personal_finance_question(question)
+        # ZAMAN BAZLI ANALİZLER - YENİ
+        if TimeBasedAnalyzer.is_time_based_question(question):
+            time_result = self.time_analyzer.analyze_time_based_question(question)
+            if time_result:
+                return time_result        
         # GÜVENLİ FONLAR - ÇOKLU LİSTE DESTEĞİ
         if any(word in question_lower for word in ['en güvenli', 'en az riskli', 'güvenli fonlar']):
             # Eğer sayı belirtilmişse (örn: "en güvenli 10 fon") -> liste ver
@@ -189,6 +211,8 @@ class DualAITefasQA:
             return self._handle_fund_category_question(question)
         if any(word in question_lower for word in ['kazanç', 'getiri', 'son 1 yıl', 'son 12 ay', 'geçtiğimiz yıl', 'son yıl']):
             return self.performanceMain.handle_fund_past_performance_question(question)
+        if any(word in question_lower for word in ['en çok kazandıran', 'en çok getiri']):
+            return self.performanceMain.handle_top_gainer_fund_question(question)
         if 'en çok kazandıran' in question_lower or 'en çok getiri' in question_lower:
             return self.performanceMain.handle_top_gainer_fund_question(question)
         if 'düşüşte olan fonlar' in question_lower or 'en çok kaybettiren' in question_lower:
