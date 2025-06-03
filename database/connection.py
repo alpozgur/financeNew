@@ -2,7 +2,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.pool import QueuePool
 import pandas as pd
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, List
 import logging
 from config.config import Config
 

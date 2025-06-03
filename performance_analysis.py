@@ -1,10 +1,13 @@
+from datetime import datetime
+import time
 import pandas as pd
 import numpy as np
 
-class PerformanceAnalyzer:
-    def __init__(self, coordinator, active_funds):
+class PerformanceAnalyzerMain:
+    def __init__(self, coordinator, active_funds, ai_status):
         self.coordinator = coordinator
         self.active_funds = active_funds
+        self.ai_status = ai_status
     def handle_fund_past_performance_question(self, question):
         words = question.upper().split()
         fund_code = None
@@ -255,7 +258,7 @@ class PerformanceAnalyzer:
                         win_rate = (returns > 0).sum() / len(returns) * 100
                         
                         # 2025 skorunu hesapla
-                        score = self._calculate_2025_score(annual_return, volatility, sharpe, win_rate, risk_tolerance)
+                        score = self.calculate_2025_score(annual_return, volatility, sharpe, win_rate, risk_tolerance)
                         
                         analysis_results.append({
                             'fund_code': fcode,
@@ -566,7 +569,7 @@ class PerformanceAnalyzer:
         except Exception as e:
             print(f"   ❌ SQL analizi hatası: {e}")
             # Fallback: Hızlı Python versiyonu
-            return self._handle_safest_funds_list_fallback(count)
+            return self.handle_safest_funds_list_fallback(count)
     
     def handle_safest_fund(self, days=60):
         """En güvenli (en düşük volatilite) fonu bulur"""
@@ -715,3 +718,106 @@ class PerformanceAnalyzer:
             return f"🔻 Son {days} günde en çok kaybettiren fon: **{min_return_fund}**\nGetiri: %{min_return:.2f}"
         else:
             return "En çok kaybettiren fon tespit edilemedi."    
+
+    def calculate_2025_score(self, annual_return, volatility, sharpe, win_rate, risk_tolerance):
+        """2025 için özel skorlama"""
+        score = 0
+        
+        # Getiri skoru (0-30)
+        return_score = min(max(annual_return, 0) / 30 * 30, 30)
+        score += return_score
+        
+        # Sharpe skoru (0-25)
+        sharpe_score = min(max(sharpe, 0) * 10, 25)
+        score += sharpe_score
+        
+        # Risk skoru (0-25)
+        if risk_tolerance == "conservative":
+            risk_score = max(25 - volatility, 0)
+        elif risk_tolerance == "aggressive":
+            risk_score = min(volatility / 2, 25)
+        else:  # moderate
+            risk_score = max(20 - abs(volatility - 20) / 2, 0)
+        score += risk_score
+        
+        # Konsistans skoru (0-20)
+        consistency_score = win_rate / 5
+        score += consistency_score
+        
+        return max(min(score, 100), 0)
+
+    def handle_safest_funds_list_fallback(self, count=10):
+        """Fallback: Hızlı Python versiyonu"""
+        print(f"🛡️ Python fallback: En güvenli {count} fon...")
+        
+        safe_funds = []
+        start_time = time.time()
+        
+        for fcode in self.active_funds:  # 50 fon
+            try:
+                # Kısa veri çek (20 gün)
+                data = self.coordinator.db.get_fund_price_history(fcode, 20)
+                
+                if len(data) >= 10:
+                    prices = data.set_index('pdate')['price'].sort_index()
+                    returns = prices.pct_change().dropna()
+                    
+                    volatility = returns.std() * 100
+                    total_return = (prices.iloc[-1] / prices.iloc[0] - 1) * 100
+                    
+                    safe_funds.append({
+                        'fcode': fcode,
+                        'volatility': volatility,
+                        'total_return': total_return,
+                        'current_price': prices.iloc[-1]
+                    })
+                    
+            except Exception:
+                continue
+        
+        elapsed = time.time() - start_time
+        print(f"   ✅ {len(safe_funds)} fon analiz edildi ({elapsed:.1f} saniye)")
+        
+        if not safe_funds:
+            return "❌ Analiz edilebilir güvenli fon bulunamadı."
+        
+        # Volatiliteye göre sırala
+        safe_funds.sort(key=lambda x: x['volatility'])
+        top_funds = safe_funds[:count]
+        
+        # Fund details al
+        for fund in top_funds:
+            try:
+                details = self.coordinator.db.get_fund_details(fund['fcode'])
+                fund['fund_name'] = details.get('fund_name', 'N/A') if details else 'N/A'
+                fund['fund_type'] = details.get('fund_type', 'N/A') if details else 'N/A'
+            except:
+                fund['fund_name'] = 'N/A'
+                fund['fund_type'] = 'N/A'
+        
+        # Response oluştur
+        response = f"\n🛡️ EN GÜVENLİ {count} FON (Python Fallback)\n"
+        response += f"{'='*45}\n\n"
+        response += f"📊 ANALİZ SONUCU:\n"
+        response += f"   • Analiz Süresi: {elapsed:.1f} saniye\n"
+        response += f"   • En Düşük Volatilite: %{top_funds[0]['volatility']:.2f}\n\n"
+        
+        for i, fund in enumerate(top_funds, 1):
+            # Risk seviyesi
+            if fund['volatility'] < 1:
+                risk_level = "🟢 ÇOK GÜVENLİ"
+            elif fund['volatility'] < 2:
+                risk_level = "🟡 GÜVENLİ"
+            elif fund['volatility'] < 4:
+                risk_level = "🟠 ORTA"
+            else:
+                risk_level = "🔴 RİSKLİ"
+            
+            response += f"{i:2d}. {fund['fcode']} - {risk_level}\n"
+            response += f"    📉 Volatilite: %{fund['volatility']:.2f}\n"
+            response += f"    📈 Getiri: %{fund['total_return']:+.2f}\n"
+            response += f"    💲 Fiyat: {fund['current_price']:.4f} TL\n"
+            response += f"    🏷️ Tür: {fund['fund_type']}\n"
+            response += f"\n"
+        
+        return response
