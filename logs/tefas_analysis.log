@@ -1,0 +1,7 @@
+2025-06-01 13:57:16,397 - __main__ - INFO - TEFAS Analysis System starting...
+2025-06-01 13:57:16,873 - __main__ - INFO - Database contains 2586262 fund records
+2025-06-01 13:57:17,013 - __main__ - INFO - Found 1793 unique fund codes
+2025-06-01 13:58:28,620 - __main__ - INFO - TEFAS Analysis System starting...
+2025-06-01 13:58:28,987 - database.connection - INFO - Database connection successful
+2025-06-01 13:58:29,094 - __main__ - INFO - Database contains 2586262 fund records
+2025-06-01 13:58:29,235 - __main__ - INFO - Found 1793 unique fund codes

@@ -1,0 +1,12 @@
+# Sanal ortam ve cache klasörleri
+tefas_env/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE dosyaları
+.vscode/
+.idea/
+*.s
