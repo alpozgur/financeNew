@@ -12,6 +12,7 @@ from analysis.coordinator import AnalysisCoordinator
 from analysis.hybrid_fund_selector import HybridFundSelector, HighPerformanceFundAnalyzer
 # from analysis.performance import batch_analyze_funds_by_details
 # Mevcut import'ların altına ekleyin:
+from advanced_metrics_analyzer import AdvancedMetricsAnalyzer
 from thematic_fund_analyzer import ThematicFundAnalyzer
 from utils import normalize_turkish_text
 from technical_analysis import TechnicalAnalysis
@@ -23,6 +24,7 @@ from time_based_analyzer import TimeBasedAnalyzer
 from scenario_analysis import ScenarioAnalyzer
 from personal_finance_analyzer import PersonalFinanceAnalyzer
 from mathematical_calculations import MathematicalCalculator
+from macroeconomic_analyzer import MacroeconomicAnalyzer
 
 
 class DualAITefasQA:
@@ -38,6 +40,7 @@ class DualAITefasQA:
         self.active_funds = self._load_active_funds()
         print(f"✅ Loaded {len(self.active_funds)} active funds")
         self.ai_status = self._check_ai_availability()
+        self.advanced_metrics_analyzer = AdvancedMetricsAnalyzer(self.coordinator, self.active_funds, self.ai_status)
         self.technical_analyzer = TechnicalAnalysis(self.coordinator, self.active_funds)
         self.fundamental_analyzer = FundamentalAnalysisEnhancement(self.coordinator, self.active_funds)
         self.portfolio_analyzer = EnhancedPortfolioCompanyAnalyzer(self.coordinator)
@@ -48,6 +51,15 @@ class DualAITefasQA:
         self.time_analyzer = TimeBasedAnalyzer(self.coordinator, self.active_funds)
         self.scenario_analyzer = ScenarioAnalyzer(self.coordinator, self.active_funds)
         self.math_calculator = MathematicalCalculator(self.coordinator, self.active_funds)
+        # Makroekonomik analyzer'ı oluştur - HATA KONTROLÜ İLE
+        try:
+            print("📊 Makroekonomik analyzer yükleniyor...")
+            self.macro_analyzer = MacroeconomicAnalyzer(self.coordinator.db, self.config, self.coordinator)
+            print("✅ Makroekonomik analyzer yüklendi")
+        except Exception as e:
+            print(f"❌ Makroekonomik analyzer yüklenemedi: {e}")
+            self.macro_analyzer = None
+
         # AI durumunu kontrol et
         
     def _load_active_funds(self, max_funds=None, mode="comprehensive"):
@@ -107,16 +119,28 @@ class DualAITefasQA:
     def answer_question(self, question):
         """Soruya her iki AI ile de cevap ver"""
         question_lower =normalize_turkish_text(question)
-
+        print(f"DEBUG - Question lower: {question_lower}")
+        print(f"DEBUG - Alpha check: {any(word in question_lower for word in ['alpha degeri', 'alpha pozitif'])}")
+        print(f"DEBUG - Tracking check: {any(word in question_lower for word in ['tracking error', 'takip hatasi'])}")
         # Sayısal değer parsing (10 fon, 5 fon vs.)
         numbers_in_question = re.findall(r'(\d+)', question)
         requested_count = int(numbers_in_question[0]) if numbers_in_question else 1
-
     # 🎲 SENARYO ANALİZİ SORULARI - YENİ
         if self.scenario_analyzer.is_scenario_question(question):
             return self.scenario_analyzer.analyze_scenario_question(question)
         if CurrencyInflationAnalyzer.is_currency_inflation_question(question):
             return self.currency_analyzer.analyze_currency_inflation_question(question)
+        # Makroekonomik sorular - HATA AYIKLAMA İÇİN TRY-EXCEPT EKLE
+        try:
+            if hasattr(self, 'macro_analyzer') and self.macro_analyzer.is_macroeconomic_question(question):
+                return self.macro_analyzer.analyze_macroeconomic_impact(question)
+        except Exception as e:
+            import traceback
+            print(f"Makro analiz hatası detayı:")
+            traceback.print_exc()
+            return f"❌ Makroekonomik analiz hatası: {str(e)}\n\nLütfen soruyu farklı şekilde sorun."
+
+
         if MathematicalCalculator.is_mathematical_question(question):
             return self.math_calculator.analyze_mathematical_question(question)
         # KİŞİSEL FİNANS SORULARI
@@ -187,7 +211,26 @@ class DualAITefasQA:
                 return self.portfolio_analyzer.find_best_portfolio_company_unlimited()
             
             else:
-                return self._handle_portfolio_companies_overview(question)            
+                return self._handle_portfolio_companies_overview(question)     
+            
+        elif any(word in question_lower for word in ['beta katsayısı', 'beta değeri', 'beta 1', 
+                                                        'beta düşük', 'beta yüksek', 'beta altında','beta katsayisi', 'beta degeri', 'beta coefficient', 
+                                            'beta 1', 'beta dusuk', 'beta yuksek', 'beta altinda',
+                                            'beta less than', 'beta greater than']):
+            return self.advanced_metrics_analyzer.handle_beta_analysis(question)
+            
+        elif any(word in question_lower for word in ['alpha değeri', 'alpha pozitif', 'jensen alpha', 
+                                                        'alpha negatif', 'alfa değeri', 'alfa pozitif']):
+            return self.advanced_metrics_analyzer.handle_alpha_analysis(question)
+            
+        elif any(word in question_lower for word in ['tracking error', 'takip hatası', 'index fon tracking',
+                                                        'endeks fon tracking', 'tracking error düşük']):
+            return self.advanced_metrics_analyzer.handle_tracking_error_analysis(question)
+            
+        elif any(word in question_lower for word in ['information ratio', 'bilgi oranı', 'ir yüksek',
+                                                        'information ratio yüksek', 'aktif fon ir']):
+            return self.advanced_metrics_analyzer.handle_information_ratio_analysis(question)
+       
         # 📈 TEMATİK FON SORULARI - TÜM VERİTABANI 
         if self.thematic_analyzer.is_thematic_question(question):
             return self.thematic_analyzer.analyze_thematic_question(question)
@@ -630,7 +673,11 @@ class DualAITefasQA:
         response += f"   • Farklı AI perspektifleri\n"
         response += f"   • Daha kapsamlı analiz\n"
         response += f"   • AI performans değerlendirmesi\n"
-        
+        response += f"\n🔬 İLERİ ANALİZ SORULARI:\n"
+        response += f"   • 'Beta katsayısı 1'den düşük fonlar'\n"
+        response += f"   • 'Alpha değeri pozitif olan fonlar'\n"
+        response += f"   • 'Tracking error en düşük index fonlar'\n"
+        response += f"   • 'Information ratio en yüksek aktif fonlar'\n"        
         return response
 
     def run_interactive_session(self):

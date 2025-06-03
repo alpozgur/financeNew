@@ -4,7 +4,7 @@ import re
 
 def normalize_turkish_text(text):
     replacements = {
-        'İ': 'i', 'I': 'ı',
+        'İ': 'i', 
         'Ğ': 'ğ', 'Ü': 'ü', 
         'Ş': 'ş', 'Ö': 'ö', 
         'Ç': 'ç',

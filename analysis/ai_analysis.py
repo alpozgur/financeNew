@@ -6,11 +6,10 @@ TEFAS fonları için AI destekli analiz ve yorumlama
 
 import pandas as pd
 import numpy as np
-from typing import Dict, List, Optional, Any
+from typing import Dict, List
 import logging
-import json
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime
 from database.connection import DatabaseManager
 from config.config import Config
 
