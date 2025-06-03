@@ -15,6 +15,7 @@ import pandas as pd
 from analysis.performance import batch_analyze_funds_by_details
 # Mevcut import'ların altına ekleyin:
 from analysis.hybrid_fund_selector import HybridFundSelector, HighPerformanceFundAnalyzer
+from thematic_fund_analyzer import ThematicFundAnalyzer
 class DualAITefasQA:
     """TEFAS Soru-Cevap Sistemi - OpenAI ve Ollama karşılaştırmalı"""
     
@@ -30,6 +31,7 @@ class DualAITefasQA:
         
         self.fundamental_analyzer = FundamentalAnalysisEnhancement(self.coordinator, self.active_funds)
         self.portfolio_analyzer = EnhancedPortfolioCompanyAnalyzer(self.coordinator)
+        self.thematic_analyzer = ThematicFundAnalyzer(self.coordinator.db, self.config)
         # AI durumunu kontrol et
         self.ai_status = self._check_ai_availability()
         
@@ -89,7 +91,8 @@ class DualAITefasQA:
     
     def answer_question(self, question):
         """Soruya her iki AI ile de cevap ver"""
-        question_lower = question.lower()
+        question_lower =self.normalize_turkish_text(question)
+
         # Sayısal değer parsing (10 fon, 5 fon vs.)
         import re
         numbers_in_question = re.findall(r'(\d+)', question)
@@ -156,6 +159,36 @@ class DualAITefasQA:
             
             else:
                 return self._handle_portfolio_companies_overview(question)            
+        # 📈 TEMATİK FON SORULARI - TÜM VERİTABANI 
+        if any(word in question_lower for word in [
+            'teknoloji fonları', 'bilişim fonları', 'digital fonlar',
+            'esg fonları', 'sürdürülebilir fonlar', 'yeşil fonlar', 'çevre fonları',
+            'enerji fonları', 'petrol fonları', 'elektrik fonları',
+            'sağlık fonları', 'tıbbi fonlar', 'ilaç fonları', 'healthcare',
+            'fintek fonları', 'blockchain fonları', 'kripto fonları',
+            'ihracat fonları', 'ihracatçı fonlar', 'dış ticaret fonları',
+            'emlak fonları', 'gayrimenkul fonları', 'reit fonları',
+            'gıda fonları', 'tarım fonları', 'agriculture fonları',
+            'turizm fonları', 'otel fonları', 'seyahat fonları',
+            'banka fonları', 'bankacılık fonları', 'finans fonları'
+        ]):
+            return self.thematic_analyzer.analyze_thematic_question(question)
+        
+        # Tek kelime tema tespiti
+        elif any(word in question_lower for word in [
+            'teknoloji', 'bilişim', 'digital', 'yazılım', 'software',
+            'esg', 'sürdürülebilir', 'yeşil', 'çevre', 'sustainability',
+            'enerji', 'energy', 'petrol', 'elektrik', 'güneş', 'rüzgar',
+            'sağlık', 'health', 'tıbbi', 'ilaç', 'medical', 'healthcare',
+            'fintek', 'fintech', 'blockchain', 'kripto', 'bitcoin',
+            'ihracat', 'export', 'ihracatçı', 'dış ticaret',
+            'emlak', 'gayrimenkul', 'reit', 'real estate',
+            'gıda', 'food', 'tarım', 'agriculture',
+            'turizm', 'tourism', 'otel', 'hotel', 'seyahat',
+            'banka', 'bank', 'bankacılık', 'finans'
+        ]) and any(word in question_lower for word in ['fon', 'fund', 'yatırım']):
+            return self.thematic_analyzer.analyze_thematic_question(question)
+
                # FUNDAMENTAL ANALİZ SORULARI 🆕
         if any(word in question_lower for word in ['kapasite', 'büyüklük', 'büyük fon']):
             return self.fundamental_analyzer._handle_capacity_questions(question)
@@ -450,6 +483,25 @@ class DualAITefasQA:
         
         else:
             return None
+    @staticmethod
+    def normalize_turkish_text(text):
+        """Türkçe karakterleri normalize et"""
+        # Türkçe karakter dönüşümleri
+        replacements = {
+            'İ': 'i', 'ı': 'i', 'I': 'i',
+            'Ğ': 'g', 'ğ': 'g',
+            'Ü': 'u', 'ü': 'u', 
+            'Ş': 's', 'ş': 's',
+            'Ö': 'o', 'ö': 'o',
+            'Ç': 'c', 'ç': 'c'
+        }
+        
+        normalized = text.lower()
+        for turkish_char, replacement in replacements.items():
+            normalized = normalized.replace(turkish_char.lower(), replacement)
+            normalized = normalized.replace(turkish_char.upper(), replacement)
+        
+        return normalized
 
     def _handle_macd_signals_sql(self, question):
         """SQL ile MACD analizi - TÜM FONLAR"""
