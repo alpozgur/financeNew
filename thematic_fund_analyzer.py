@@ -13,6 +13,34 @@ import re
 from datetime import datetime, timedelta
 from database.connection import DatabaseManager
 from config.config import Config
+        # if any(word in question_lower for word in [
+        #     'teknoloji fonları', 'bilişim fonları', 'digital fonlar',
+        #     'esg fonları', 'sürdürülebilir fonlar', 'yeşil fonlar', 'çevre fonları',
+        #     'enerji fonları', 'petrol fonları', 'elektrik fonları',
+        #     'sağlık fonları', 'tıbbi fonlar', 'ilaç fonları', 'healthcare',
+        #     'fintek fonları', 'blockchain fonları', 'kripto fonları',
+        #     'ihracat fonları', 'ihracatçı fonlar', 'dış ticaret fonları',
+        #     'emlak fonları', 'gayrimenkul fonları', 'reit fonları',
+        #     'gıda fonları', 'tarım fonları', 'agriculture fonları',
+        #     'turizm fonları', 'otel fonları', 'seyahat fonları',
+        #     'banka fonları', 'bankacılık fonları', 'finans fonları'
+        # ]):
+        #     return self.thematic_analyzer.analyze_thematic_question(question)
+        
+        # # Tek kelime tema tespiti
+        # elif any(word in question_lower for word in [
+        #     'teknoloji', 'bilişim', 'digital', 'yazılım', 'software',
+        #     'esg', 'sürdürülebilir', 'yeşil', 'çevre', 'sustainability',
+        #     'enerji', 'energy', 'petrol', 'elektrik', 'güneş', 'rüzgar',
+        #     'sağlık', 'health', 'tıbbi', 'ilaç', 'medical', 'healthcare',
+        #     'fintek', 'fintech', 'blockchain', 'kripto', 'bitcoin',
+        #     'ihracat', 'export', 'ihracatçı', 'dış ticaret',
+        #     'emlak', 'gayrimenkul', 'reit', 'real estate',
+        #     'gıda', 'food', 'tarım', 'agriculture',
+        #     'turizm', 'tourism', 'otel', 'hotel', 'seyahat',
+        #     'banka', 'bank', 'bankacılık', 'finans'
+        # ]) and any(word in question_lower for word in ['fon', 'fund', 'yatırım']):
+        #     return self.thematic_analyzer.analyze_thematic_question(question)
 
 class ThematicFundAnalyzer:
     """Tematik fon analizi sistemi - TÜM VERİTABANI"""
@@ -127,6 +155,40 @@ class ThematicFundAnalyzer:
                 'description': 'Bankacılık ve finansal hizmetler fonları'
             }
         }
+    
+    @staticmethod
+    def is_thematic_question(question):
+        question_lower = question.lower()
+        theme_keywords = [
+            'teknoloji fonları', 'bilişim fonları', 'digital fonlar',
+            'esg fonları', 'sürdürülebilir fonlar', 'yeşil fonlar', 'çevre fonları',
+            'enerji fonları', 'petrol fonları', 'elektrik fonları',
+            'sağlık fonları', 'tıbbi fonlar', 'ilaç fonları', 'healthcare',
+            'fintek fonları', 'blockchain fonları', 'kripto fonları',
+            'ihracat fonları', 'ihracatçı fonlar', 'dış ticaret fonları',
+            'emlak fonları', 'gayrimenkul fonları', 'reit fonları',
+            'gıda fonları', 'tarım fonları', 'agriculture fonları',
+            'turizm fonları', 'otel fonları', 'seyahat fonları',
+            'banka fonları', 'bankacılık fonları', 'finans fonları',
+            # kısa kelimeler
+            'teknoloji', 'bilişim', 'digital', 'yazılım', 'software',
+            'esg', 'sürdürülebilir', 'yeşil', 'çevre', 'sustainability',
+            'enerji', 'energy', 'petrol', 'elektrik', 'güneş', 'rüzgar',
+            'sağlık', 'health', 'tıbbi', 'ilaç', 'medical', 'healthcare',
+            'fintek', 'fintech', 'blockchain', 'kripto', 'bitcoin',
+            'ihracat', 'export', 'ihracatçı', 'dış ticaret',
+            'emlak', 'gayrimenkul', 'reit', 'real estate',
+            'gıda', 'food', 'tarım', 'agriculture',
+            'turizm', 'tourism', 'otel', 'hotel', 'seyahat',
+            'banka', 'bank', 'bankacılık', 'finans'
+        ]
+        single_keywords = ['fon', 'fund', 'yatırım']
+        if any(word in question_lower for word in theme_keywords):
+            return True
+        # ikinci tip (tek kelime tema ve fon)
+        if any(word in question_lower for word in theme_keywords if len(word.split()) == 1) and any(word in question_lower for word in single_keywords):
+            return True
+        return False
     
     def determine_fund_type_from_portfolio(self, fcode):
         """Portföy dağılımından fon tipini belirle"""

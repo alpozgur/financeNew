@@ -16,6 +16,8 @@ from analysis.performance import batch_analyze_funds_by_details
 # Mevcut import'ların altına ekleyin:
 from analysis.hybrid_fund_selector import HybridFundSelector, HighPerformanceFundAnalyzer
 from thematic_fund_analyzer import ThematicFundAnalyzer
+from utils import normalize_turkish_text, extract_company_from_fund_name
+
 class DualAITefasQA:
     """TEFAS Soru-Cevap Sistemi - OpenAI ve Ollama karşılaştırmalı"""
     
@@ -91,7 +93,7 @@ class DualAITefasQA:
     
     def answer_question(self, question):
         """Soruya her iki AI ile de cevap ver"""
-        question_lower =self.normalize_turkish_text(question)
+        question_lower =normalize_turkish_text(question)
 
         # Sayısal değer parsing (10 fon, 5 fon vs.)
         import re
@@ -160,35 +162,8 @@ class DualAITefasQA:
             else:
                 return self._handle_portfolio_companies_overview(question)            
         # 📈 TEMATİK FON SORULARI - TÜM VERİTABANI 
-        if any(word in question_lower for word in [
-            'teknoloji fonları', 'bilişim fonları', 'digital fonlar',
-            'esg fonları', 'sürdürülebilir fonlar', 'yeşil fonlar', 'çevre fonları',
-            'enerji fonları', 'petrol fonları', 'elektrik fonları',
-            'sağlık fonları', 'tıbbi fonlar', 'ilaç fonları', 'healthcare',
-            'fintek fonları', 'blockchain fonları', 'kripto fonları',
-            'ihracat fonları', 'ihracatçı fonlar', 'dış ticaret fonları',
-            'emlak fonları', 'gayrimenkul fonları', 'reit fonları',
-            'gıda fonları', 'tarım fonları', 'agriculture fonları',
-            'turizm fonları', 'otel fonları', 'seyahat fonları',
-            'banka fonları', 'bankacılık fonları', 'finans fonları'
-        ]):
+        if self.thematic_analyzer.is_thematic_question(question):
             return self.thematic_analyzer.analyze_thematic_question(question)
-        
-        # Tek kelime tema tespiti
-        elif any(word in question_lower for word in [
-            'teknoloji', 'bilişim', 'digital', 'yazılım', 'software',
-            'esg', 'sürdürülebilir', 'yeşil', 'çevre', 'sustainability',
-            'enerji', 'energy', 'petrol', 'elektrik', 'güneş', 'rüzgar',
-            'sağlık', 'health', 'tıbbi', 'ilaç', 'medical', 'healthcare',
-            'fintek', 'fintech', 'blockchain', 'kripto', 'bitcoin',
-            'ihracat', 'export', 'ihracatçı', 'dış ticaret',
-            'emlak', 'gayrimenkul', 'reit', 'real estate',
-            'gıda', 'food', 'tarım', 'agriculture',
-            'turizm', 'tourism', 'otel', 'hotel', 'seyahat',
-            'banka', 'bank', 'bankacılık', 'finans'
-        ]) and any(word in question_lower for word in ['fon', 'fund', 'yatırım']):
-            return self.thematic_analyzer.analyze_thematic_question(question)
-
                # FUNDAMENTAL ANALİZ SORULARI 🆕
         if any(word in question_lower for word in ['kapasite', 'büyüklük', 'büyük fon']):
             return self.fundamental_analyzer._handle_capacity_questions(question)
@@ -317,145 +292,6 @@ class DualAITefasQA:
             return f"❌ Karşılaştırma için 2 şirket gerekli. Örnek: 'İş Portföy vs Ak Portföy karşılaştırması'"
         
         return self.portfolio_analyzer.compare_companies_unlimited(companies[0], companies[1])
-    # def _handle_safest_funds_list(self, count=10, days=60):
-    #     """En güvenli fonların listesi (volatilite bazlı)"""
-    #     print(f"🛡️ En güvenli {count} fon analiz ediliyor...")
-        
-    #     safe_funds = []
-        
-    #     # SQL ile direkt en düşük volatilite fonları (benzersiz)
-    #     try:
-    #         # Her fon için en güncel verileri al ve volatilite hesapla
-    #         query = f"""
-    #         WITH latest_prices AS (
-    #             SELECT fcode, price, pdate,
-    #                 ROW_NUMBER() OVER (PARTITION BY fcode ORDER BY pdate DESC) as rn
-    #             FROM tefasfunds 
-    #             WHERE pdate >= CURRENT_DATE - INTERVAL '{days} days'
-    #             AND price > 0
-    #         ),
-    #         price_series AS (
-    #             SELECT fcode, price, pdate
-    #             FROM latest_prices 
-    #             WHERE rn <= {days}  -- Son {days} günlük veri
-    #         )
-    #         SELECT fcode, COUNT(*) as data_points
-    #         FROM price_series 
-    #         GROUP BY fcode
-    #         HAVING COUNT(*) >= 20  -- En az 20 gün veri
-    #         ORDER BY fcode
-    #         """
-            
-    #         fund_candidates = self.coordinator.db.execute_query(query)
-    #         print(f"   📊 {len(fund_candidates)} fon adayı bulundu")
-            
-    #         # Her fon için volatilite hesapla
-    #         for _, row in fund_candidates.iterrows():
-    #             fcode = row['fcode']
-                
-    #             try:
-    #                 # Fon verilerini al
-    #                 data = self.coordinator.db.get_fund_price_history(fcode, days)
-                    
-    #                 if len(data) >= 20:
-    #                     prices = data.set_index('pdate')['price'].sort_index()
-    #                     returns = prices.pct_change().dropna()
-                        
-    #                     # Risk metrikleri
-    #                     volatility = returns.std() * 100  # Günlük volatilite %
-    #                     annual_vol = volatility * np.sqrt(252)  # Yıllık volatilite
-                        
-    #                     # Getiri metrikleri
-    #                     total_return = (prices.iloc[-1] / prices.iloc[0] - 1) * 100
-                        
-    #                     # Max drawdown
-    #                     cumulative = (1 + returns).cumprod()
-    #                     running_max = cumulative.expanding().max()
-    #                     drawdown = (cumulative - running_max) / running_max
-    #                     max_drawdown = abs(drawdown.min()) * 100
-                        
-    #                     # Fund details
-    #                     details = self.coordinator.db.get_fund_details(fcode)
-    #                     fund_name = details.get('fund_name', 'N/A') if details else 'N/A'
-    #                     fund_type = details.get('fund_type', 'N/A') if details else 'N/A'
-                        
-    #                     safe_funds.append({
-    #                         'fcode': fcode,
-    #                         'volatility': volatility,
-    #                         'annual_volatility': annual_vol,
-    #                         'total_return': total_return,
-    #                         'max_drawdown': max_drawdown,
-    #                         'current_price': prices.iloc[-1],
-    #                         'fund_name': fund_name,
-    #                         'fund_type': fund_type,
-    #                         'data_points': len(prices)
-    #                     })
-                        
-    #             except Exception:
-    #                 continue
-            
-    #         # Volatiliteye göre sırala (en düşük = en güvenli)
-    #         safe_funds.sort(key=lambda x: x['volatility'])
-            
-    #         if safe_funds:
-    #             response = f"\n🛡️ EN GÜVENLİ {count} FON (Düşük Risk/Volatilite)\n"
-    #             response += f"{'='*50}\n\n"
-    #             response += f"📊 ANALİZ PARAMETRELERİ:\n"
-    #             response += f"   • Analiz Periyodu: Son {days} gün\n"
-    #             response += f"   • Bulunan Güvenli Fon: {len(safe_funds)}\n"
-    #             response += f"   • Risk Metriği: Günlük volatilite\n\n"
-                
-    #             response += f"🛡️ EN GÜVENLİ FONLAR LİSTESİ:\n\n"
-                
-    #             for i, fund in enumerate(safe_funds[:count], 1):
-    #                 # Risk kategorisi
-    #                 if fund['volatility'] < 1:
-    #                     risk_category = "🟢 ÇOK DÜŞÜK"
-    #                 elif fund['volatility'] < 2:
-    #                     risk_category = "🟡 DÜŞÜK"
-    #                 elif fund['volatility'] < 5:
-    #                     risk_category = "🟠 ORTA"
-    #                 else:
-    #                     risk_category = "🔴 YÜKSEK"
-                    
-    #                 response += f"{i:2d}. {fund['fcode']} - {risk_category} RİSK\n"
-    #                 response += f"    📉 Günlük Volatilite: %{fund['volatility']:.2f}\n"
-    #                 response += f"    📊 Yıllık Volatilite: %{fund['annual_volatility']:.1f}\n"
-    #                 response += f"    📈 Getiri: %{fund['total_return']:+.2f}\n"
-    #                 response += f"    📉 Max Düşüş: %{fund['max_drawdown']:.2f}\n"
-    #                 response += f"    💲 Güncel Fiyat: {fund['current_price']:.4f} TL\n"
-    #                 response += f"    🏷️ Tür: {fund['fund_type']}\n"
-    #                 if fund['fund_name'] != 'N/A':
-    #                     response += f"    📝 Adı: {fund['fund_name'][:45]}...\n"
-    #                 response += f"\n"
-                
-    #             # İstatistikler
-    #             avg_volatility = sum(f['volatility'] for f in safe_funds[:count]) / min(count, len(safe_funds))
-    #             avg_return = sum(f['total_return'] for f in safe_funds[:count]) / min(count, len(safe_funds))
-                
-    #             response += f"📊 GÜVENLİ FONLAR İSTATİSTİKLERİ:\n"
-    #             response += f"   Ortalama Volatilite: %{avg_volatility:.2f}\n"
-    #             response += f"   Ortalama Getiri: %{avg_return:+.2f}\n"
-    #             response += f"   En Güvenli: {safe_funds[0]['fcode']} (%{safe_funds[0]['volatility']:.2f})\n"
-                
-    #             # Risk/Getiri analizi
-    #             if avg_return > 0:
-    #                 response += f"\n💡 ANALİZ: Bu güvenli fonlar ortalama %{avg_return:.1f} getiri sağladı\n"
-    #             else:
-    #                 response += f"\n⚠️ DİKKAT: Güvenli fonlar %{abs(avg_return):.1f} kayıp yaşadı\n"
-                
-    #             response += f"\n🎯 YATIRIM TAVSİYESİ:\n"
-    #             response += f"   • Düşük risk toleransı için: İlk 3 fon\n"
-    #             response += f"   • Dengeli yaklaşım için: İlk 5 fon karışımı\n"
-    #             response += f"   • Güvenli portföy için: %70 güvenli + %30 büyüme\n"
-                
-    #             return response
-            
-    #         else:
-    #             return f"❌ Son {days} günde analiz edilebilir güvenli fon bulunamadı."
-                
-    #     except Exception as e:
-    #         return f"❌ Güvenli fon analizi hatası: {e}"
 
     def _handle_technical_analysis_questions_full_db(self, question):
         """SQL tabanlı teknik analiz - Tüm veritabanını kullanır"""
@@ -483,25 +319,6 @@ class DualAITefasQA:
         
         else:
             return None
-    @staticmethod
-    def normalize_turkish_text(text):
-        """Türkçe karakterleri normalize et"""
-        # Türkçe karakter dönüşümleri
-        replacements = {
-            'İ': 'i', 'ı': 'i', 'I': 'i',
-            'Ğ': 'g', 'ğ': 'g',
-            'Ü': 'u', 'ü': 'u', 
-            'Ş': 's', 'ş': 's',
-            'Ö': 'o', 'ö': 'o',
-            'Ç': 'c', 'ç': 'c'
-        }
-        
-        normalized = text.lower()
-        for turkish_char, replacement in replacements.items():
-            normalized = normalized.replace(turkish_char.lower(), replacement)
-            normalized = normalized.replace(turkish_char.upper(), replacement)
-        
-        return normalized
 
     def _handle_macd_signals_sql(self, question):
         """SQL ile MACD analizi - TÜM FONLAR"""
