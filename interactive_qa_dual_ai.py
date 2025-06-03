@@ -155,7 +155,8 @@ class DualAITefasQA:
                 return self.portfolio_analyzer.find_best_portfolio_company_unlimited()
             
             else:
-                return self._handle_portfolio_companies_overview(question)   # FUNDAMENTAL ANALİZ SORULARI 🆕
+                return self._handle_portfolio_companies_overview(question)            
+               # FUNDAMENTAL ANALİZ SORULARI 🆕
         if any(word in question_lower for word in ['kapasite', 'büyüklük', 'büyük fon']):
             return self.fundamental_analyzer._handle_capacity_questions(question)
         
@@ -212,6 +213,56 @@ class DualAITefasQA:
             return self._handle_ai_test_question(question)
         else:
             return self._handle_general_question(question)
+    def _handle_portfolio_companies_overview(self, question):
+        """Genel portföy şirketleri genel bakış"""
+        print("🏢 Portföy şirketleri genel analizi...")
+        
+        response = f"\n🏢 PORTFÖY YÖNETİM ŞİRKETLERİ GENEL BAKIŞ\n"
+        response += f"{'='*50}\n\n"
+        
+        # Desteklenen şirketleri listele
+        response += f"📊 DESTEKLENEN ŞİRKETLER:\n\n"
+        
+        for i, company in enumerate(self.portfolio_analyzer.company_keywords.keys(), 1):
+            response += f"{i:2d}. {company}\n"
+        
+        response += f"\n💡 KULLANIM ÖRNEKLERİ:\n"
+        response += f"   • 'İş Portföy analizi'\n"
+        response += f"   • 'Ak Portföy vs Garanti Portföy karşılaştırması'\n"
+        response += f"   • 'En başarılı portföy şirketi hangisi?'\n"
+        response += f"   • 'QNB Portföy fonları nasıl?'\n\n"
+        
+        response += f"🎯 ÖZELLİKLER:\n"
+        response += f"   ✅ Şirket bazında tüm fonları analiz\n"
+        response += f"   ✅ Performans karşılaştırması\n"
+        response += f"   ✅ Risk-getiri analizi\n"
+        response += f"   ✅ Sharpe oranı hesaplama\n"
+        response += f"   ✅ Kapsamlı raporlama\n\n"
+        
+        response += f"📈 EN BAŞARILI ŞİRKET İÇİN:\n"
+        response += f"   'En başarılı portföy şirketi' sorusunu sorun!\n"
+        
+        return response
+
+    def _handle_company_comparison_enhanced(self, question):
+        """Gelişmiş şirket karşılaştırması"""
+        # Sorudan şirket isimlerini çıkar
+        companies = []
+        question_upper = question.upper()
+        
+        for company, keywords in self.portfolio_analyzer.company_keywords.items():
+            for keyword in keywords:
+                if keyword in question_upper:
+                    companies.append(company)
+                    break
+        
+        # Tekrarları kaldır ve ilk 2'sini al
+        companies = list(dict.fromkeys(companies))[:2]
+        
+        if len(companies) < 2:
+            return f"❌ Karşılaştırma için 2 şirket gerekli. Örnek: 'İş Portföy vs Ak Portföy karşılaştırması'"
+        
+        return self.portfolio_analyzer.compare_companies_unlimited(companies[0], companies[1])
 
 
     def handle_company_comparison_enhanced(self, question):
@@ -3742,9 +3793,9 @@ class EnhancedPortfolioCompanyAnalyzer:
             return []
 
     def calculate_comprehensive_performance(self, fund_code, days=252):
-        """Kapsamlı performans hesaplama"""
+        """Kapsamlı performans hesaplama - INF ve NaN hatalarını düzeltilmiş"""
         try:
-            # 🎯 LİMİTSİZ veri çekimi - istenen gün sayısı kadar
+            # Veri çekimi
             data = self.coordinator.db.get_fund_price_history(fund_code, days)
             
             if len(data) < 10:
@@ -3753,28 +3804,69 @@ class EnhancedPortfolioCompanyAnalyzer:
             prices = data.set_index('pdate')['price'].sort_index()
             returns = prices.pct_change().dropna()
             
-            # Temel metrikler
-            total_return = (prices.iloc[-1] / prices.iloc[0] - 1) * 100
+            # ❌ HATA KAYNAĞI: İlk veya son fiyat 0 veya NaN olabilir
+            first_price = prices.iloc[0]
+            last_price = prices.iloc[-1]
+            
+            # 🔧 DÜZELTİLMİŞ: Sıfır kontrolü ekle
+            if first_price <= 0 or last_price <= 0 or pd.isna(first_price) or pd.isna(last_price):
+                print(f"   ⚠️ {fund_code} geçersiz fiyat verisi: başlangıç={first_price}, son={last_price}")
+                return None
+            
+            # Temel metrikler - güvenli hesaplama
+            total_return = (last_price / first_price - 1) * 100
+            
+            # ❌ HATA KAYNAĞI: returns.std() NaN olabilir
+            returns_std = returns.std()
+            if pd.isna(returns_std) or returns_std == 0:
+                print(f"   ⚠️ {fund_code} volatilite hesaplanamadı")
+                return None
+            
             annual_return = total_return * (252 / len(prices))
-            volatility = returns.std() * np.sqrt(252) * 100
-            sharpe = (annual_return - 15) / volatility if volatility > 0 else 0
+            volatility = returns_std * np.sqrt(252) * 100
+            
+            # 🔧 DÜZELTİLMİŞ: Sharpe ratio hesaplama
+            if volatility > 0 and not pd.isna(volatility):
+                sharpe = (annual_return - 15) / volatility
+            else:
+                sharpe = 0
+            
             win_rate = (returns > 0).sum() / len(returns) * 100
             
-            # Max drawdown
-            cumulative = (1 + returns).cumprod()
-            running_max = cumulative.expanding().max()
-            drawdown = (cumulative - running_max) / running_max
-            max_drawdown = abs(drawdown.min()) * 100
+            # Max drawdown hesaplama - güvenli
+            try:
+                cumulative = (1 + returns).cumprod()
+                running_max = cumulative.expanding().max()
+                drawdown = (cumulative - running_max) / running_max
+                max_drawdown = abs(drawdown.min()) * 100
+                
+                # NaN kontrolü
+                if pd.isna(max_drawdown):
+                    max_drawdown = 0
+                    
+            except Exception:
+                max_drawdown = 0
             
-            # Calmar ratio
-            calmar = abs(annual_return / max_drawdown) if max_drawdown > 0 else 0
+            # Calmar ratio - güvenli
+            if max_drawdown > 0 and not pd.isna(max_drawdown):
+                calmar = abs(annual_return / max_drawdown)
+            else:
+                calmar = 0
             
-            # Sortino ratio
+            # Sortino ratio - güvenli
             negative_returns = returns[returns < 0]
-            downside_deviation = negative_returns.std() * np.sqrt(252) * 100 if len(negative_returns) > 0 else 0
-            sortino = (annual_return - 15) / downside_deviation if downside_deviation > 0 else 0
+            if len(negative_returns) > 0:
+                downside_std = negative_returns.std()
+                if not pd.isna(downside_std) and downside_std > 0:
+                    downside_deviation = downside_std * np.sqrt(252) * 100
+                    sortino = (annual_return - 15) / downside_deviation
+                else:
+                    sortino = 0
+            else:
+                sortino = 0
             
-            return {
+            # 🔧 DÜZELTİLMİŞ: Tüm değerlerin geçerliliğini kontrol et
+            result = {
                 'total_return': total_return,
                 'annual_return': annual_return,
                 'volatility': volatility,
@@ -3784,13 +3876,26 @@ class EnhancedPortfolioCompanyAnalyzer:
                 'win_rate': win_rate,
                 'max_drawdown': max_drawdown,
                 'data_points': len(prices),
-                'current_price': prices.iloc[-1]
+                'current_price': last_price
             }
+            
+            # Infinity ve NaN temizleme
+            for key, value in result.items():
+                if pd.isna(value) or np.isinf(value):
+                    print(f"   ⚠️ {fund_code} {key} değeri geçersiz: {value}")
+                    if key in ['sharpe_ratio', 'sortino_ratio', 'calmar_ratio']:
+                        result[key] = 0
+                    elif key in ['volatility', 'max_drawdown']:
+                        result[key] = 0
+                    else:
+                        result[key] = 0
+            
+            return result
             
         except Exception as e:
             print(f"   ❌ {fund_code} performans hatası: {e}")
             return None
-
+    
     def analyze_company_comprehensive(self, company_name, analysis_days=252):
         """Şirket kapsamlı analizi - TÜM FONLARLA"""
         print(f"\n🏢 {company_name.upper()} - KAPSAMLI ANALİZ BAŞLATIYOR...")
@@ -3844,7 +3949,7 @@ class EnhancedPortfolioCompanyAnalyzer:
         return self.format_company_analysis_results(company_name, performance_results, elapsed)
 
     def format_company_analysis_results(self, company_name, results, analysis_time):
-        """Analiz sonuçlarını formatla"""
+        """Analiz sonuçlarını formatla - INF/NaN güvenli"""
         
         # Sonuçları Sharpe ratio'ya göre sırala
         results.sort(key=lambda x: x['sharpe_ratio'], reverse=True)
@@ -3852,13 +3957,19 @@ class EnhancedPortfolioCompanyAnalyzer:
         response = f"\n🏢 {company_name.upper()} - KAPSAMLI ANALİZ RAPORU\n"
         response += f"{'='*55}\n\n"
         
-        # ÖZET İSTATİSTİKLER
+        # ÖZET İSTATİSTİKLER - güvenli hesaplama
         total_funds = len(results)
         total_capacity = sum(r['capacity'] for r in results)
         total_investors = sum(r['investors'] for r in results)
-        avg_return = sum(r['annual_return'] for r in results) / total_funds
-        avg_sharpe = sum(r['sharpe_ratio'] for r in results) / total_funds
-        avg_volatility = sum(r['volatility'] for r in results) / total_funds
+        
+        # 🔧 DÜZELTİLMİŞ: INF ve NaN değerleri filtrele
+        valid_returns = [r['annual_return'] for r in results if not (pd.isna(r['annual_return']) or np.isinf(r['annual_return']))]
+        valid_sharpes = [r['sharpe_ratio'] for r in results if not (pd.isna(r['sharpe_ratio']) or np.isinf(r['sharpe_ratio']))]
+        valid_volatilities = [r['volatility'] for r in results if not (pd.isna(r['volatility']) or np.isinf(r['volatility']))]
+        
+        avg_return = sum(valid_returns) / len(valid_returns) if valid_returns else 0
+        avg_sharpe = sum(valid_sharpes) / len(valid_sharpes) if valid_sharpes else 0
+        avg_volatility = sum(valid_volatilities) / len(valid_volatilities) if valid_volatilities else 0
         
         response += f"📊 ŞİRKET GENEL İSTATİSTİKLERİ:\n"
         response += f"   🔢 Toplam Fon Sayısı: {total_funds}\n"
@@ -3867,12 +3978,15 @@ class EnhancedPortfolioCompanyAnalyzer:
         response += f"   📈 Ortalama Yıllık Getiri: %{avg_return:+.2f}\n"
         response += f"   ⚡ Ortalama Sharpe Oranı: {avg_sharpe:.3f}\n"
         response += f"   📊 Ortalama Volatilite: %{avg_volatility:.2f}\n"
-        response += f"   ⏱️ Analiz Süresi: {analysis_time:.1f} saniye\n\n"
+        response += f"   ⏱️ Analiz Süresi: {analysis_time:.1f} saniye\n"
+        response += f"   📊 Geçerli Veri: {len(valid_returns)}/{total_funds} fon\n\n"
         
-        # EN İYİ PERFORMANS FONLARI (TOP 10)
+        # EN İYİ PERFORMANS FONLARI (TOP 10) - geçerli veriler
+        valid_results = [r for r in results if not (pd.isna(r['sharpe_ratio']) or np.isinf(r['sharpe_ratio']))]
+        
         response += f"🏆 EN İYİ PERFORMANS FONLARI (Sharpe Oranına Göre):\n\n"
         
-        for i, fund in enumerate(results[:10], 1):
+        for i, fund in enumerate(valid_results[:10], 1):
             # Performance tier belirleme
             if fund['sharpe_ratio'] > 1.0:
                 tier = "🌟 MÜKEMMEL"
@@ -3897,25 +4011,32 @@ class EnhancedPortfolioCompanyAnalyzer:
             response += f"    📝 Adı: {fund['fund_name'][:45]}...\n"
             response += f"\n"
         
-        # KATEGORİ LİDERLERİ
-        response += f"🏅 KATEGORİ LİDERLERİ:\n"
-        response += f"   🥇 En Yüksek Getiri: {max(results, key=lambda x: x['annual_return'])['fcode']} (%{max(results, key=lambda x: x['annual_return'])['annual_return']:+.1f})\n"
-        response += f"   🛡️ En Düşük Risk: {min(results, key=lambda x: x['volatility'])['fcode']} (%{min(results, key=lambda x: x['volatility'])['volatility']:.1f})\n"
-        response += f"   ⚡ En Yüksek Sharpe: {max(results, key=lambda x: x['sharpe_ratio'])['fcode']} ({max(results, key=lambda x: x['sharpe_ratio'])['sharpe_ratio']:.3f})\n"
-        response += f"   💰 En Büyük Fon: {max(results, key=lambda x: x['capacity'])['fcode']} ({max(results, key=lambda x: x['capacity'])['capacity']/1000000:.0f}M TL)\n"
-        response += f"   👥 En Popüler: {max(results, key=lambda x: x['investors'])['fcode']} ({max(results, key=lambda x: x['investors'])['investors']:,} kişi)\n"
+        # KATEGORİ LİDERLERİ - güvenli
+        if valid_results:
+            # En yüksek getiri - INF olmayan
+            best_return_fund = max(valid_results, key=lambda x: x['annual_return'] if not np.isinf(x['annual_return']) else -999)
+            best_sharpe_fund = max(valid_results, key=lambda x: x['sharpe_ratio'])
+            lowest_vol_fund = min(valid_results, key=lambda x: x['volatility'] if x['volatility'] > 0 else 999)
+            
+            response += f"🏅 KATEGORİ LİDERLERİ:\n"
+            response += f"   🥇 En Yüksek Getiri: {best_return_fund['fcode']} (%{best_return_fund['annual_return']:+.1f})\n"
+            response += f"   🛡️ En Düşük Risk: {lowest_vol_fund['fcode']} (%{lowest_vol_fund['volatility']:.1f})\n"
+            response += f"   ⚡ En Yüksek Sharpe: {best_sharpe_fund['fcode']} ({best_sharpe_fund['sharpe_ratio']:.3f})\n"
+            response += f"   💰 En Büyük Fon: {max(results, key=lambda x: x['capacity'])['fcode']} ({max(results, key=lambda x: x['capacity'])['capacity']/1000000:.0f}M TL)\n"
+            response += f"   👥 En Popüler: {max(results, key=lambda x: x['investors'])['fcode']} ({max(results, key=lambda x: x['investors'])['investors']:,} kişi)\n"
         
-        # PERFORMANCE DAĞILIMI
-        excellent_funds = len([f for f in results if f['sharpe_ratio'] > 1.0])
-        good_funds = len([f for f in results if 0.5 < f['sharpe_ratio'] <= 1.0])
-        average_funds = len([f for f in results if 0 < f['sharpe_ratio'] <= 0.5])
-        poor_funds = len([f for f in results if f['sharpe_ratio'] <= 0])
-        
-        response += f"\n📊 PERFORMANS DAĞILIMI:\n"
-        response += f"   🌟 Mükemmel (Sharpe>1.0): {excellent_funds} fon (%{excellent_funds/total_funds*100:.1f})\n"
-        response += f"   ⭐ Çok İyi (0.5-1.0): {good_funds} fon (%{good_funds/total_funds*100:.1f})\n"
-        response += f"   🔶 İyi (0-0.5): {average_funds} fon (%{average_funds/total_funds*100:.1f})\n"
-        response += f"   🔻 Zayıf (≤0): {poor_funds} fon (%{poor_funds/total_funds*100:.1f})\n"
+        # PERFORMANCE DAĞILIMI - geçerli verilerle
+        if valid_results:
+            excellent_funds = len([f for f in valid_results if f['sharpe_ratio'] > 1.0])
+            good_funds = len([f for f in valid_results if 0.5 < f['sharpe_ratio'] <= 1.0])
+            average_funds = len([f for f in valid_results if 0 < f['sharpe_ratio'] <= 0.5])
+            poor_funds = len([f for f in valid_results if f['sharpe_ratio'] <= 0])
+            
+            response += f"\n📊 PERFORMANS DAĞILIMI:\n"
+            response += f"   🌟 Mükemmel (Sharpe>1.0): {excellent_funds} fon (%{excellent_funds/len(valid_results)*100:.1f})\n"
+            response += f"   ⭐ Çok İyi (0.5-1.0): {good_funds} fon (%{good_funds/len(valid_results)*100:.1f})\n"
+            response += f"   🔶 İyi (0-0.5): {average_funds} fon (%{average_funds/len(valid_results)*100:.1f})\n"
+            response += f"   🔻 Zayıf (≤0): {poor_funds} fon (%{poor_funds/len(valid_results)*100:.1f})\n"
         
         # GENEL DEĞERLENDİRME
         if avg_sharpe > 0.5:
@@ -3939,8 +4060,14 @@ class EnhancedPortfolioCompanyAnalyzer:
         else:
             response += "performansını iyileştirmesi gerekiyor.\n"
         
+        # VERİ KALİTESİ UYARISI
+        invalid_count = total_funds - len(valid_results)
+        if invalid_count > 0:
+            response += f"\n⚠️ VERİ KALİTESİ NOTU:\n"
+            response += f"   {invalid_count} fon geçersiz veri nedeniyle hariç tutuldu\n"
+            response += f"   (INF, NaN veya sıfır değerler içeren fonlar)\n"
+        
         return response
-
     def compare_companies_unlimited(self, company1, company2, analysis_days=252):
         """İki şirketi kapsamlı karşılaştır - LİMİTSİZ"""
         print(f"\n⚖️ {company1} vs {company2} - KAPSAMLI KARŞILAŞTIRMA")
