@@ -22,6 +22,8 @@ from currency_inflation_analyzer import CurrencyInflationAnalyzer
 from time_based_analyzer import TimeBasedAnalyzer
 from scenario_analysis import ScenarioAnalyzer
 from personal_finance_analyzer import PersonalFinanceAnalyzer
+from mathematical_calculations import MathematicalCalculator
+
 
 class DualAITefasQA:
     """TEFAS Soru-Cevap Sistemi - OpenAI ve Ollama karşılaştırmalı"""
@@ -45,6 +47,7 @@ class DualAITefasQA:
         self.personal_analyzer = PersonalFinanceAnalyzer(self.coordinator, self.active_funds)
         self.time_analyzer = TimeBasedAnalyzer(self.coordinator, self.active_funds)
         self.scenario_analyzer = ScenarioAnalyzer(self.coordinator, self.active_funds)
+        self.math_calculator = MathematicalCalculator(self.coordinator, self.active_funds)
         # AI durumunu kontrol et
         
     def _load_active_funds(self, max_funds=None, mode="comprehensive"):
@@ -114,6 +117,8 @@ class DualAITefasQA:
             return self.scenario_analyzer.analyze_scenario_question(question)
         if CurrencyInflationAnalyzer.is_currency_inflation_question(question):
             return self.currency_analyzer.analyze_currency_inflation_question(question)
+        if MathematicalCalculator.is_mathematical_question(question):
+            return self.math_calculator.analyze_mathematical_question(question)
         # KİŞİSEL FİNANS SORULARI
         if self.personal_analyzer.is_personal_finance_question(question):
             return self.personal_analyzer.analyze_personal_finance_question(question)
