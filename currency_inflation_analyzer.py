@@ -1228,3 +1228,59 @@ if __name__ == "__main__":
     print("\n" + "="*50)
     # Demo çalıştır
     demo_currency_inflation_analysis()
+
+
+    @staticmethod
+    def get_examples():
+        """Döviz ve enflasyon analiz örnekleri"""
+        return [
+            "Dolar fonlarının bu ayki performansı",
+            "Euro bazlı fonlar",
+            "Enflasyon korumalı fonlar",
+            "Döviz hedge fonları",
+            "USD cinsinden fonlar",
+            "Altın fonları analizi",
+            "Kıymetli maden fonları"
+        ]
+    
+    @staticmethod
+    def get_keywords():
+        """Döviz/enflasyon anahtar kelimeleri"""
+        return [
+            "dolar", "dollar", "usd", "euro", "eur", "döviz", "currency",
+            "enflasyon", "inflation", "hedge", "koruma", "altın", "gold",
+            "kıymetli maden", "precious metals", "fx", "yabancı para"
+        ]
+    
+    @staticmethod
+    def get_patterns():
+        """Döviz pattern'leri - GÜÇLENDİRİLMİŞ"""
+        return [
+            {
+                'type': 'regex',
+                'pattern': r'(dolar|euro|usd|eur)\s+fon',
+                'score': 0.98
+            },
+            {
+                'type': 'regex',
+                'pattern': r'(dolar|euro|usd|eur).*?(performans|getiri|analiz)',
+                'score': 0.97
+            },
+            {
+                'type': 'contains_all',
+                'words': ['döviz', 'fon'],
+                'score': 0.95
+            },
+            {
+                'type': 'contains_all',
+                'words': ['enflasyon', 'korumalı'],
+                'score': 0.95
+            }
+        ]    
+    @staticmethod
+    def get_method_patterns():
+        """Method mapping"""
+        return {
+            'analyze_currency_funds': ['dolar', 'euro', 'döviz', 'currency'],
+            'analyze_inflation_funds_mv': ['enflasyon', 'inflation', 'korumalı']
+        }

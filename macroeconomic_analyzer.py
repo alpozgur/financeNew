@@ -754,3 +754,48 @@ class MacroeconomicAnalyzer:
         except Exception as e:
             print(f"AI TCMB analiz hatası: {e}")
             return ""
+        
+    @staticmethod
+    def get_examples():
+        """Makroekonomik analiz örnekleri"""
+        return [
+            "Faiz artışı fonları nasıl etkiler?",
+            "TCMB kararının fon piyasasına etkisi",
+            "Fed faiz kararı sonrası strateji",
+            "Enflasyon verisi fonları nasıl etkiler?",
+            "Seçim döneminde hangi fonlar tercih edilmeli?"
+        ]
+    
+    @staticmethod
+    def get_keywords():
+        """Makro anahtar kelimeler"""
+        return [
+            "faiz", "tcmb", "fed", "merkez bankası", "enflasyon",
+            "makro", "ekonomik", "seçim", "jeopolitik", "kriz"
+        ]
+    
+    @staticmethod
+    def get_patterns():
+        """Makro pattern'leri"""
+        return [
+            {
+                'type': 'regex',
+                'pattern': r'(faiz|tcmb|fed)\s*(artış|kararı|etkisi)',
+                'score': 0.95
+            },
+            {
+                'type': 'contains_all',
+                'words': ['ekonomik', 'etki'],
+                'score': 0.85
+            }
+        ]
+    
+    @staticmethod
+    def get_method_patterns():
+        """Method mapping"""
+        return {
+            'analyze_interest_rate_impact': ['faiz', 'interest rate'],
+            'analyze_tcmb_decisions': ['tcmb', 'merkez bankası'],
+            'analyze_election_impact': ['seçim', 'election'],
+            'analyze_geopolitical_impact': ['jeopolitik', 'savaş', 'kriz']
+        }

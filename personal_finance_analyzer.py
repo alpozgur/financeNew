@@ -715,3 +715,55 @@ class PersonalFinanceAnalyzer:
         
         future_value = monthly_payment * (((1 + monthly_rate)**months - 1) / monthly_rate)
         return future_value
+    
+    @staticmethod
+    def get_examples():
+        """Kişisel finans örnekleri"""
+        return [
+            "Emekliliğe 10 yıl kala nasıl yatırım yapmalıyım?",
+            "Emeklilik için birikim planı",
+            "Çocuğum için eğitim fonu",
+            "Ev almak için birikim stratejisi",
+            "35 yaşındayım, emeklilik planım nasıl olmalı?",
+            "Acil durum fonu oluşturma"
+        ]
+    
+    @staticmethod
+    def get_keywords():
+        """Kişisel finans anahtar kelimeleri"""
+        return [
+            "emeklilik", "emekliliğe", "retirement", "birikim", "yaş",
+            "eğitim fonu", "ev alma", "acil fon", "kişisel", "planlama",
+            "gelecek", "birikim planı"
+        ]
+    
+    @staticmethod
+    def get_patterns():
+        """Kişisel finans pattern'leri"""
+        return [
+            {
+                'type': 'regex',
+                'pattern': r'emekliliğe?\s*\d*\s*(yıl|sene)',
+                'score': 0.95
+            },
+            {
+                'type': 'contains_all',
+                'words': ['yaş', 'emeklilik'],
+                'score': 0.9
+            },
+            {
+                'type': 'contains_all',
+                'words': ['eğitim', 'fon'],
+                'score': 0.9
+            }
+        ]
+    
+    @staticmethod
+    def get_method_patterns():
+        """Method mapping"""
+        return {
+            'handle_retirement_planning': ['emeklilik', 'emekliliğe', 'retirement'],
+            'handle_education_planning': ['eğitim', 'okul', 'üniversite'],
+            'handle_house_planning': ['ev', 'konut', 'gayrimenkul'],
+            'handle_emergency_fund': ['acil', 'acil durum']
+        }

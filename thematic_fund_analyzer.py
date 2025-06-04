@@ -989,3 +989,54 @@ def setup_thematic_logging():
 if __name__ == "__main__":
     # Demo çalıştır
     demo_thematic_analysis()
+
+    @staticmethod
+    def get_examples():
+        """Tematik fon analiz örnekleri"""
+        return [
+            "Teknoloji sektörü fonları",
+            "Sağlık sektöründeki fonlar",
+            "Enerji fonları analizi",
+            "Bankacılık sektörü fonları",
+            "Gayrimenkul fonları",
+            "Altyapı fonları",
+            "Sürdürülebilirlik temalı fonlar",
+            "Dijital dönüşüm fonları"
+        ]
+    
+    @staticmethod
+    def get_keywords():
+        """Tematik anahtar kelimeler"""
+        return [
+            "teknoloji", "sağlık", "enerji", "bankacılık", "sektör", 
+            "tema", "tematik", "gayrimenkul", "altyapı", "sürdürülebilir",
+            "dijital", "fintech", "biotech", "yenilenebilir", "tarım"
+        ]
+    
+    @staticmethod
+    def get_patterns():
+        """Tematik pattern'ler"""
+        return [
+            {
+                'type': 'regex',
+                'pattern': r'(teknoloji|sağlık|enerji|bankacılık|gayrimenkul)\s*(sektör|fon|tema)',
+                'score': 0.95
+            },
+            {
+                'type': 'contains_all',
+                'words': ['sektör', 'fon'],
+                'score': 0.85
+            },
+            {
+                'type': 'regex',
+                'pattern': r'(dijital|sürdürülebilir|yenilenebilir)\s*(fon|yatırım)',
+                'score': 0.90
+            }
+        ]
+    
+    @staticmethod
+    def get_method_patterns():
+        """Method mapping"""
+        return {
+            'analyze_thematic_question': ['sektör', 'tema', 'tematik', 'analiz']
+        }

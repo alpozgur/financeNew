@@ -778,3 +778,54 @@ class TimeBasedAnalyzer:
         
         question_lower = question.lower()
         return any(keyword in question_lower for keyword in time_keywords)
+
+    @staticmethod
+    def get_examples():
+        """Zaman bazlı analiz örnekleri"""
+        return [
+            "Bugün en çok kazanan fonlar",
+            "Bu hafta en iyi performans gösteren fonlar",
+            "Bu ay en çok düşen fonlar",
+            "Yıl başından beri kazandıran fonlar",
+            "Dünkü performanslar"
+        ]
+    
+    @staticmethod
+    def get_keywords():
+        """Zaman bazlı anahtar kelimeler"""
+        return [
+            "bugün", "dün", "bu hafta", "bu ay", "bu yıl",
+            "today", "yesterday", "this week", "ytd", "yılbaşından",
+            "günlük", "haftalık", "aylık"
+        ]
+    
+    @staticmethod
+    def get_patterns():
+        """Zaman pattern'leri - YÜKSEK SCORE"""
+        return [
+            {
+                'type': 'regex',
+                'pattern': r'^(bugün|dün|bu hafta|bu ay)',  # Başlangıçta olmalı
+                'score': 0.99
+            },
+            {
+                'type': 'regex',
+                'pattern': r'(bugün|dün|bu hafta|bu ay)\s+(en|kazanan|kaybeden)',
+                'score': 0.98
+            },
+            {
+                'type': 'contains_all',
+                'words': ['yıl', 'başından'],
+                'score': 0.95
+            }
+        ]
+    
+    @staticmethod
+    def get_method_patterns():
+        """Method mapping"""
+        return {
+            'analyze_today_performance': ['bugün', 'today'],
+            'analyze_weekly_trends': ['bu hafta', 'haftalık'],
+            'analyze_monthly_performance': ['bu ay', 'aylık'],
+            'analyze_ytd_performance': ['yıl başından', 'ytd']
+        }

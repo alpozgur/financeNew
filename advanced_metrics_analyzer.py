@@ -818,3 +818,57 @@ class AdvancedMetricsAnalyzer:
                 pass        
         
         return response
+    
+    @staticmethod
+    def get_examples():
+        """İleri metrik analiz örnekleri"""
+        return [
+            "Beta katsayısı 1'den düşük fonlar",
+            "Beta değeri 0.5 altında olan fonlar",
+            "Alpha değeri pozitif olan fonlar",
+            "Sharpe oranı 0.5'ten yüksek fonlar",
+            "Tracking error düşük index fonlar",
+            "Information ratio yüksek aktif fonlar",
+            "Beta 1 üstü agresif fonlar"
+        ]
+    
+    @staticmethod
+    def get_keywords():
+        """İleri metrik anahtar kelimeleri"""
+        return [
+            "beta", "alpha", "sharpe", "tracking error", "information ratio",
+            "katsayı", "katsayısı", "değeri", "oranı", "metrik",
+            "risk-adjusted", "jensen", "treynor"
+        ]
+    
+    @staticmethod
+    def get_patterns():
+        """İleri metrik pattern'leri"""
+        return [
+            {
+                'type': 'regex',
+                'pattern': r'(beta|alpha|sharpe)\s*(katsayısı|değeri|oranı)?',
+                'score': 0.95
+            },
+            {
+                'type': 'regex',
+                'pattern': r'(tracking error|information ratio)',
+                'score': 0.95
+            },
+            {
+                'type': 'contains_all',
+                'words': ['sharpe', 'oranı'],
+                'score': 0.95
+            }
+        ]
+    
+    @staticmethod
+    def get_method_patterns():
+        """Method mapping"""
+        return {
+            'handle_beta_analysis': ['beta', 'beta katsayısı', 'beta değeri'],
+            'handle_alpha_analysis': ['alpha', 'alpha değeri', 'jensen alpha'],
+            'handle_sharpe_ratio_analysis': ['sharpe', 'sharpe oranı'],
+            'handle_tracking_error_analysis': ['tracking error', 'takip hatası'],
+            'handle_information_ratio_analysis': ['information ratio', 'bilgi oranı']
+        }

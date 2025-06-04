@@ -1064,3 +1064,54 @@ class ScenarioAnalyzer:
                 print("   ✅ MV'ler güncellendi")
             except Exception as e:
                 print(f"   ⚠️ MV güncelleme hatası: {e}, mevcut verilerle devam ediliyor")
+
+
+    @staticmethod
+    def get_examples():
+        """Senaryo analiz örnekleri"""
+        return [
+            "Enflasyon %50 olursa hangi fonlara yatırım yapmalıyım?",
+            "Dolar 40 TL olursa ne olur?",
+            "Borsa çökerse hangi fonlar güvenli?",
+            "Faiz %30'a çıkarsa fonlar nasıl etkilenir?",
+            "Kriz durumunda hangi fonlar tercih edilmeli?"
+        ]
+    
+    @staticmethod
+    def get_keywords():
+        """Senaryo anahtar kelimeleri"""
+        return [
+            "olursa", "olsa", "durumda", "senaryosunda", "what if",
+            "eğer", "varsayalım", "kriz", "çöküş", "crash"
+        ]
+    
+    @staticmethod
+    def get_patterns():
+        """Senaryo pattern'leri"""
+        return [
+            {
+                'type': 'regex',
+                'pattern': r'(olursa|olsa|durumda)\s*(ne|hangi|nasıl)',
+                'score': 0.95
+            },
+            {
+                'type': 'contains_all',
+                'words': ['eğer', 'ne'],
+                'score': 0.9
+            },
+            {
+                'type': 'regex',
+                'pattern': r'%\d+\s*(olursa|olsa)',
+                'score': 0.95
+            }
+        ]
+    
+    @staticmethod
+    def get_method_patterns():
+        """Method mapping"""
+        return {
+            'analyze_inflation_scenario': ['enflasyon', 'inflation'],
+            'analyze_stock_crash_scenario': ['borsa', 'çöküş', 'crash'],
+            'analyze_interest_rate_scenario': ['faiz', 'interest'],
+            'analyze_currency_scenario': ['dolar', 'euro', 'kur']
+        }

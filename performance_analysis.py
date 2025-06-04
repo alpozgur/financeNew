@@ -839,3 +839,83 @@ class PerformanceAnalyzerMain:
             response += f"\n"
         
         return response
+
+    @staticmethod
+    def get_examples():
+        """Bu handler'ın işleyebileceği örnek sorular"""
+        return [
+            "En güvenli 5 fon hangileri?",
+            "En güvenli 10 fon",
+            "En çok kazanan fonlar",
+            "Son 30 gün en iyi performans gösteren fonlar",
+            "En riskli fonlar hangileri?",
+            "2025 için hangi fonları önerirsin?",
+            "AKB fonunu analiz et",
+            "En çok kaybettiren fonlar",
+            "Son 1 ayda en çok kazandıran fonlar",
+            "Sharpe oranı en yüksek fonlar",
+            "Volatilitesi düşük fonlar",
+            "TYH fonunu analiz et",
+            "2025 yılı için 100000 TL ile önerilerin nedir?"
+        ]
+    
+    @staticmethod
+    def get_keywords():
+        """Bu handler için anahtar kelimeler"""
+        return [
+            "güvenli", "riskli", "kazanan", "kaybettiren", "performans",
+            "getiri", "analiz", "öneri", "2025", "en iyi", "en kötü",
+            "volatilite", "sharpe", "kazandıran", "kaybeden", "düşen",
+            "yükselen", "artış", "düşüş", "değerlendirme"
+        ]
+    
+    @staticmethod
+    def get_patterns():
+        """Gelişmiş pattern tanımları"""
+        return [
+            {
+                'type': 'regex',
+                'pattern': r'en\s+(güvenli|riskli)\s+\d*\s*fon',
+                'score': 0.95
+            },
+            {
+                'type': 'regex',
+                'pattern': r'en\s+(iyi|kötü|çok)\s+(kazandıran|kaybettiren)\s*fon',
+                'score': 0.95
+            },
+            {
+                'type': 'regex',
+                'pattern': r'son\s+\d+\s*(gün|ay|hafta).*?(performans|getiri|kazandıran)',
+                'score': 0.90  # Time_based ile çakışmasın diye score düşük
+            },
+            {
+                'type': 'regex',
+                'pattern': r'\b[A-Z]{3}\b\s+(fonu?n?u?|analiz)',
+                'score': 0.90
+            },
+            {
+                'type': 'contains_all',
+                'words': ['performans', 'analiz'],
+                'score': 0.85
+            },
+            {
+                'type': 'contains_all',
+                'words': ['2025', 'öneri'],
+                'score': 0.95
+            }
+        ]
+
+    @staticmethod
+    def get_method_patterns():
+        """Method seçimi için pattern'ler - GÜNCELLEME"""
+        return {
+            'handle_safest_funds_sql_fast': ['güvenli', 'en az riskli', 'düşük risk', 'güvenli fon'],
+            'handle_top_gainers': ['kazandıran', 'en iyi performans', 'getiri', 'yükselen', 'son.*gün.*performans'],
+            'handle_worst_funds_list': ['kaybettiren', 'en çok kaybeden', 'düşen', 'kayıp'],
+            'handle_riskiest_funds_list': ['riskli', 'en riskli', 'yüksek risk', 'volatil'],
+            'handle_2025_recommendation_dual': ['2025', 'öneri', 'tavsiye', 'yıl sonu'],
+            'handle_analysis_question_dual': ['analiz et', 'incele', 'değerlendir', 'fonu analiz'],
+            'handle_top_sharpe_funds_question': ['sharpe', 'sharpe oranı'],
+            'handle_low_volatility_funds_question': ['volatilite', 'düşük volatilite'],
+            'handle_fund_past_performance_question': ['geçmiş performans', 'son 1 yıl', 'yıllık getiri']
+        }

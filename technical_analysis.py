@@ -623,3 +623,56 @@ class TechnicalAnalysis:
             print(f"   ❌ SQL Genel Teknik analizi hatası: {e}")
             return f"❌ SQL Genel Teknik analizi hatası: {e}"
 
+    @staticmethod
+    def get_examples():
+        """Teknik analiz örnekleri"""
+        return [
+            "MACD sinyali pozitif olan fonlar",
+            "RSI 30'un altında olan fonlar",
+            "Bollinger bantlarının altında olan fonlar",
+            "Golden cross oluşan fonlar",
+            "Aşırı satım bölgesindeki fonlar",
+            "Teknik alım sinyali veren fonlar",
+            "Death cross yakın fonlar"
+        ]
+    
+    @staticmethod
+    def get_keywords():
+        """Teknik analiz anahtar kelimeleri"""
+        return [
+            "macd", "rsi", "bollinger", "sma", "ema", "golden cross",
+            "death cross", "teknik", "sinyal", "alım sinyali", "satım sinyali",
+            "aşırı alım", "aşırı satım", "hareketli ortalama", "band", "bant"
+        ]
+    
+    @staticmethod
+    def get_patterns():
+        """Teknik analiz pattern'leri"""
+        return [
+            {
+                'type': 'regex',
+                'pattern': r'(macd|rsi|bollinger)\s*(sinyali|değeri|seviyesi)?',
+                'score': 0.95
+            },
+            {
+                'type': 'contains_all',
+                'words': ['teknik', 'sinyal'],
+                'score': 0.9
+            },
+            {
+                'type': 'regex',
+                'pattern': r'(golden|death)\s*cross',
+                'score': 0.95
+            }
+        ]
+    
+    @staticmethod
+    def get_method_patterns():
+        """Method mapping"""
+        return {
+            'handle_macd_signals_sql': ['macd', 'macd sinyali'],
+            'handle_rsi_signals_sql': ['rsi', 'aşırı satım', 'aşırı alım'],
+            'handle_bollinger_signals_sql': ['bollinger', 'bant', 'band'],
+            'handle_moving_average_signals_sql': ['sma', 'ema', 'hareketli ortalama', 'golden cross', 'death cross'],
+            'handle_general_technical_signals_sql': ['teknik sinyal', 'alım sinyali', 'satım sinyali']
+        }

@@ -692,3 +692,54 @@ class FundamentalAnalysisEnhancement:
    • milyar/billion  
    • Sayısal değerler (100, 500, 1.5 vb.)
 """
+
+    @staticmethod
+    def get_examples():
+        """Temel analiz örnekleri"""
+        return [
+            "En büyük 10 fon hangileri?",
+            "Kapasitesi en yüksek fonlar",
+            "En çok yatırımcısı olan fonlar",
+            "Yeni kurulan fonlar",
+            "En eski fonlar hangileri?",
+            "Popüler fonlar listesi"
+        ]
+    
+    @staticmethod
+    def get_keywords():
+        """Temel analiz anahtar kelimeleri"""
+        return [
+            "büyük", "kapasite", "yatırımcı", "popüler", "yeni",
+            "eski", "köklü", "kurulan", "largest", "biggest"
+        ]
+    
+    @staticmethod
+    def get_patterns():
+        """Temel analiz pattern'leri"""
+        return [
+            {
+                'type': 'regex',
+                'pattern': r'en büyük\s*\d*\s*fon',
+                'score': 0.95
+            },
+            {
+                'type': 'contains_all',
+                'words': ['kapasite', 'yüksek'],
+                'score': 0.9
+            },
+            {
+                'type': 'contains_all',
+                'words': ['yatırımcı', 'çok'],
+                'score': 0.9
+            }
+        ]
+    
+    @staticmethod
+    def get_method_patterns():
+        """Method mapping"""
+        return {
+            'handle_largest_funds_questions': ['en büyük', 'largest', 'kapasite'],
+            'handle_investor_count_questions': ['yatırımcı', 'popüler'],
+            'handle_new_funds_questions': ['yeni', 'kurulan'],
+            'handle_fund_age_questions': ['eski', 'köklü']
+        }

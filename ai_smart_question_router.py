@@ -67,10 +67,11 @@ class AISmartQuestionRouter:
             },
             'personal_finance_analyzer': {
                 'description': 'Emeklilik, eğitim, ev alma, kişisel finans planlaması',
-                'keywords': ['emeklilik', 'eğitim', 'ev', 'birikim', 'çocuk'],
+                'keywords': ['emeklilik', 'emekliliğe', 'retirement', 'birikim', 'yaş', 'kala', 'yıl kala'],
                 'methods': {
                     'handle_retirement_planning': 'Emeklilik planlaması',
-                    'handle_education_planning': 'Eğitim birikimleri'
+                    'handle_education_planning': 'Eğitim birikimleri',
+                    'handle_house_planning': 'Ev alma planlaması'
                 }
             },
             'mathematical_calculator': {
@@ -272,23 +273,36 @@ class AISmartQuestionRouter:
                 r'(\d+)\s*yıl.*?kala',
                 r'(\d+)\s*yıl.*?var',
                 r'(\d+)\s*yılım',
-                r'(\d+)\s*sene'
+                r'(\d+)\s*sene',
+                r'emekliliğe\s*(\d+)\s*yıl'  # Yeni pattern
             ]
             
             for pattern in years_patterns:
                 match = re.search(pattern, question_lower)
                 if match:
                     context['years_to_goal'] = int(match.group(1))
+                    context['goal_type'] = 'retirement'  # Yeni context
                     break
         
         return context
+    
     def _parse_ai_response(self, response: str) -> Optional[Dict]:
         """AI yanıtını parse et"""
         try:
             # JSON bloğunu bul
             json_match = re.search(r'\{[\s\S]*\}', response)
             if json_match:
-                return json.loads(json_match.group())
+                parsed = json.loads(json_match.group())
+                
+                # Context None kontrolü
+                if 'routes' in parsed:
+                    for route in parsed['routes']:
+                        if 'context' not in route:
+                            route['context'] = {}
+                        elif route['context'] is None:
+                            route['context'] = {}
+                
+                return parsed
             else:
                 # Basit text parsing
                 return self._parse_text_response(response)
@@ -296,13 +310,15 @@ class AISmartQuestionRouter:
             self.logger.error(f"AI response parsing hatası: {e}")
             return None
     
-    def _convert_ai_routes_to_matches(self, ai_routes: Dict, question: str) -> List[AIRouteMatch]:
+    def _convert_ai_routes_to_matches_old(self, ai_routes: Dict, question: str) -> List[AIRouteMatch]:
         """AI route önerilerini AIRouteMatch objesine çevir - POST-PROCESSING EKLENDİ"""
         matches = []
         question_lower = question.lower()
         
         # Manuel context extraction
         extracted_context = self._extract_context(question)
+        if extracted_context is None:
+            extracted_context = {}
         
         for route in ai_routes.get('routes', []):
             handler = route['handler']
@@ -317,7 +333,15 @@ class AISmartQuestionRouter:
                     route['reasoning'] = "Enflasyon senaryosu tespit edildi"
             
             # Context birleştirme
-            ai_context = route.get('context', {})
+            ai_context = route.get('context')
+            if ai_context is None:
+                ai_context = {}
+            
+            if not isinstance(ai_context, dict):
+                ai_context = {}
+            if not isinstance(extracted_context, dict):
+                extracted_context = {}
+            
             final_context = {**ai_context, **extracted_context}
             
             # Gereksiz requested_count temizleme
@@ -336,34 +360,252 @@ class AISmartQuestionRouter:
             matches.append(match)
         
         matches.sort(key=lambda x: x.confidence, reverse=True)
-        return matches    
+        return matches
+    
+
+    def _convert_ai_routes_to_matches(self, ai_routes: Dict, question: str) -> List[AIRouteMatch]:
+        """AI route önerilerini AIRouteMatch objesine çevir - ÖNCE PATTERN MATCHING"""
+        matches = []
+        question_lower = question.lower()
+        
+        # Manuel context extraction
+        extracted_context = self._extract_context(question)
+        if extracted_context is None:
+            extracted_context = {}
+        
+        # ÖNCELİKLİ PATTERN MATCHING - AI'dan önce kontrol
+        priority_match = self._check_priority_patterns(question_lower, extracted_context)
+        if priority_match:
+            return [priority_match]
+        
+        # AI routes'u işle (normal flow)
+        for route in ai_routes.get('routes', []):
+            handler = route['handler']
+            method = route['method']
+            
+            # Mevcut olursa kuralı
+            if 'olursa' in question_lower and 'enflasyon' in question_lower:
+                if handler == 'currency_inflation_analyzer':
+                    handler = 'scenario_analyzer'
+                    method = 'analyze_inflation_scenario'
+                    route['reasoning'] = "Enflasyon senaryosu tespit edildi"
+            
+            # Context birleştirme
+            ai_context = route.get('context')
+            if ai_context is None:
+                ai_context = {}
+            
+            if not isinstance(ai_context, dict):
+                ai_context = {}
+            
+            final_context = {**ai_context, **extracted_context}
+            
+            # Gereksiz requested_count temizleme
+            if 'requested_count' in final_context:
+                if not re.search(r'\d+\s*(fon|tane|adet)', question.lower()):
+                    final_context.pop('requested_count', None)
+            
+            match = AIRouteMatch(
+                handler=handler,
+                method=method,
+                score=route['confidence'],
+                context=final_context,
+                reasoning=route.get('reasoning', ''),
+                confidence=route['confidence']
+            )
+            matches.append(match)
+        
+        matches.sort(key=lambda x: x.confidence, reverse=True)
+        return matches
+
+    def _check_priority_patterns(self, question_lower: str, context: Dict) -> Optional[AIRouteMatch]:
+        """Öncelikli pattern kontrolü - AI'dan önce çalışır"""
+        
+        # 1. Beta/Alpha/Sharpe patterns
+        if any(word in question_lower for word in ['beta katsayısı', 'beta değeri', 'beta 1']):
+            return AIRouteMatch(
+                handler='advanced_metrics_analyzer',
+                method='handle_beta_analysis',
+                score=1.0,
+                context=context,
+                reasoning="Beta pattern match",
+                confidence=1.0
+            )
+        
+        if 'sharpe oranı' in question_lower:
+            return AIRouteMatch(
+                handler='advanced_metrics_analyzer',
+                method='handle_sharpe_ratio_analysis',
+                score=1.0,
+                context=context,
+                reasoning="Sharpe pattern match",
+                confidence=1.0
+            )
+        
+        # 2. Technical indicators
+        if any(word in question_lower for word in ['macd sinyali', 'macd pozitif']):
+            return AIRouteMatch(
+                handler='technical_analyzer',
+                method='handle_macd_signals_sql',
+                score=1.0,
+                context=context,
+                reasoning="MACD pattern match",
+                confidence=1.0
+            )
+        
+        if 'rsi' in question_lower and any(word in question_lower for word in ['altında', 'üstünde']):
+            return AIRouteMatch(
+                handler='technical_analyzer',
+                method='handle_rsi_signals_sql',
+                score=1.0,
+                context=context,
+                reasoning="RSI pattern match",
+                confidence=1.0
+            )
+        
+        # 3. Currency patterns
+        if 'dolar' in question_lower or 'euro' in question_lower:
+            if 'performans' in question_lower or 'getiri' in question_lower:
+                return AIRouteMatch(
+                    handler='currency_inflation_analyzer',
+                    method='analyze_currency_funds',
+                    score=1.0,
+                    context=context,
+                    reasoning="Currency performance pattern match",
+                    confidence=1.0
+                )
+        
+        # 4. Portfolio company patterns
+        # 4. Portfolio company patterns - DÜZELTME
+        company_patterns = [
+            ('iş portföy', 'İş Portföy'),
+            ('is portfoy', 'İş Portföy'),  # Türkçe karakter sorunu için
+            ('ak portföy', 'Ak Portföy'),
+            ('garanti portföy', 'Garanti Portföy'),
+            ('qnb portföy', 'QNB Portföy')
+        ]
+        
+        for pattern, company_name in company_patterns:
+            if pattern in question_lower:
+                return AIRouteMatch(
+                    handler='portfolio_company_analyzer',
+                    method='analyze_company_comprehensive',
+                    score=1.0,
+                    context={'company_name': company_name},
+                    reasoning=f"{company_name} pattern match",
+                    confidence=1.0
+                )
+        
+        # 5. Time-based patterns
+        if 'bugün' in question_lower and any(word in question_lower for word in ['kazanan', 'kaybeden', 'performans']):
+            return AIRouteMatch(
+                handler='time_based_analyzer',
+                method='analyze_today_performance',
+                score=1.0,
+                context=context,
+                reasoning="Today pattern match",
+                confidence=1.0
+            )
+        
+        # 6. Mathematical patterns - GENİŞLETİLMİŞ
+        if any(word in question_lower for word in ['dağıt', 'böl', 'nasıl dağıtmalı', 'tl\'yi', 'tl yi']):
+            if any(word in question_lower for word in ['fon', 'portföy']):
+                return AIRouteMatch(
+                    handler='mathematical_calculator',
+                    method='handle_portfolio_distribution',
+                    score=1.0,
+                    context=context,
+                    reasoning="Distribution pattern match",
+                    confidence=1.0
+                )
+        
+        # 7. Fundamental patterns
+        if 'en büyük' in question_lower and 'fon' in question_lower:
+            return AIRouteMatch(
+                handler='fundamental_analyzer',
+                method='handle_largest_funds_questions',
+                score=1.0,
+                context=context,
+                reasoning="Largest funds pattern match",
+                confidence=1.0
+            )
+        
+        # No priority pattern found
+        return None
+
     def _legacy_route(self, question: str) -> List[AIRouteMatch]:
         """Fallback: Eski pattern matching sistemi"""
-        # Basit keyword matching
         question_lower = question.lower()
         matches = []
         
-        for module, info in self.module_descriptions.items():
-            keywords = info.get('keywords', [])
-            
-            # Keyword match score
-            match_score = sum(1 for kw in keywords if kw in question_lower) / len(keywords) if keywords else 0
-            
-            if match_score > 0:
-                # En uygun metodu tahmin et
-                method = self._guess_method(question_lower, info.get('methods', {}))
+        # Özel durumlar için öncelikli kontrol
+        if 'emeklilik' in question_lower or 'emekliliğe' in question_lower:
+            context = self._extract_context(question)
+            matches.append(AIRouteMatch(
+                handler='personal_finance_analyzer',
+                method='handle_retirement_planning',
+                score=0.9,
+                context=context,
+                reasoning="Emeklilik keyword match",
+                confidence=0.9
+            ))
+        # YENİ: Sektör/tema kontrolü
+        elif any(sector in question_lower for sector in ['teknoloji', 'sağlık', 'enerji', 'sektör']):
+            matches.append(AIRouteMatch(
+                handler='thematic_analyzer',
+                method='analyze_thematic_question',
+                score=0.9,
+                context={},
+                reasoning="Sektör/tema keyword match",
+                confidence=0.9
+            ))
+
+        # YENİ: Faiz kontrolü
+        elif 'faiz' in question_lower and any(word in question_lower for word in ['artış', 'etkile', 'nasıl']):
+            matches.append(AIRouteMatch(
+                handler='macroeconomic_analyzer',
+                method='analyze_interest_rate_impact',
+                score=0.9,
+                context={},
+                reasoning="Faiz etkisi keyword match",
+                confidence=0.9
+            ))
+        
+        # YENİ: Portföy dağıtımı kontrolü
+        elif any(word in question_lower for word in ['dağıt', 'böl']) and 'fon' in question_lower:
+            matches.append(AIRouteMatch(
+                handler='mathematical_calculator',
+                method='handle_portfolio_distribution',
+                score=0.9,
+                context=self._extract_context(question),
+                reasoning="Portfolio distribution keyword match",
+                confidence=0.9
+            ))
+        
+        # Basit keyword matching (geri kalan kod aynı)
+        else:
+            for module, info in self.module_descriptions.items():
+                keywords = info.get('keywords', [])
                 
-                if method:
-                    matches.append(AIRouteMatch(
-                        handler=module,
-                        method=method,
-                        score=match_score,
-                        context={},
-                        reasoning="Legacy keyword matching",
-                        confidence=match_score
-                    ))
+                # Keyword match score
+                match_score = sum(1 for kw in keywords if kw in question_lower) / len(keywords) if keywords else 0
+                
+                if match_score > 0:
+                    # En uygun metodu tahmin et
+                    method = self._guess_method(question_lower, info.get('methods', {}))
+                    
+                    if method:
+                        matches.append(AIRouteMatch(
+                            handler=module,
+                            method=method,
+                            score=match_score,
+                            context={},
+                            reasoning="Legacy keyword matching",
+                            confidence=match_score
+                        ))
         
         return sorted(matches, key=lambda x: x.score, reverse=True)[:3]
+
     
     def _guess_method(self, question_lower: str, methods: Dict[str, str]) -> Optional[str]:
         """Metodları keyword'lere göre tahmin et"""

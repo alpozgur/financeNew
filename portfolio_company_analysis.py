@@ -701,3 +701,55 @@ class EnhancedPortfolioCompanyAnalyzer:
         response += f"   🔻 Gelişmeli (≤5): {poor} şirket\n"
         
         return response
+
+    @staticmethod
+    def get_examples():
+        """Portföy şirketi analizi örnekleri"""
+        return [
+            "İş Portföy fonları nasıl performans gösteriyor?",
+            "Ak Portföy analizi",
+            "Garanti Portföy fonlarının durumu nedir?",
+            "En başarılı portföy şirketi hangisi?",
+            "İş Portföy vs Ak Portföy karşılaştırması",
+            "QNB Portföy fonları",
+            "Ata Portföy performansı"
+        ]
+    
+    @staticmethod
+    def get_keywords():
+        """Portföy şirketleri için anahtar kelimeler"""
+        return [
+            "portföy", "iş portföy", "ak portföy", "garanti portföy",
+            "qnb portföy", "ata portföy", "fiba portföy", "yapı kredi portföy",
+            "ziraat portföy", "vakıf portföy", "halk portföy"
+        ]
+    
+    @staticmethod
+    def get_patterns():
+        """Portföy şirketi pattern'leri"""
+        return [
+            {
+                'type': 'regex',
+                'pattern': r'(iş|ak|garanti|qnb|ata|fiba)\s*portföy',
+                'score': 1.0
+            },
+            {
+                'type': 'contains_all',
+                'words': ['portföy', 'şirket'],
+                'score': 0.85
+            },
+            {
+                'type': 'contains_all',
+                'words': ['başarılı', 'portföy'],
+                'score': 0.9
+            }
+        ]
+    
+    @staticmethod
+    def get_method_patterns():
+        """Method mapping"""
+        return {
+            'analyze_company_comprehensive': ['analiz', 'performans', 'durum', 'nasıl'],
+            'compare_companies_unlimited': ['vs', 'karşılaştır', 'karşı', 'compare'],
+            'find_best_portfolio_company_unlimited': ['en başarılı', 'en iyi', 'best']
+        }

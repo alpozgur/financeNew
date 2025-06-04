@@ -729,3 +729,55 @@ class MathematicalCalculator:
                 response += f"   Toplam Yatırım: {required_monthly * months:,.0f} TL\n"
         
         return response
+    
+    @staticmethod
+    def get_examples():
+        """Matematiksel hesaplama örnekleri"""
+        return [
+            "100000 TL'yi 3 fona nasıl dağıtmalıyım?",
+            "Aylık 1000 TL yatırımla 10 yılda ne kadar birikir?",
+            "1 milyon TL için kaç yıl yatırım yapmalıyım?",
+            "500000 TL'yi nasıl böleyim?",
+            "Compound faiz hesaplama",
+            "Portföy dağılımı önerisi"
+        ]
+    
+    @staticmethod
+    def get_keywords():
+        """Matematik anahtar kelimeleri"""
+        return [
+            "dağıt", "böl", "hesapla", "birikim", "compound", "faiz",
+            "aylık yatırım", "portföy dağılımı", "ne kadar", "kaç yıl",
+            "hedef tutar", "dağılım", "paylaştır"
+        ]
+    
+    @staticmethod
+    def get_patterns():
+        """Matematik pattern'leri"""
+        return [
+            {
+                'type': 'regex',
+                'pattern': r'\d+\s*(tl|lira|bin|milyon).*?(dağıt|böl|ayır)',
+                'score': 0.95
+            },
+            {
+                'type': 'contains_all',
+                'words': ['aylık', 'yatırım'],
+                'score': 0.9
+            },
+            {
+                'type': 'contains_all',
+                'words': ['hedef', 'tutar'],
+                'score': 0.9
+            }
+        ]
+    
+    @staticmethod
+    def get_method_patterns():
+        """Method mapping"""
+        return {
+            'handle_portfolio_distribution': ['dağıt', 'böl', 'ayır', 'dağılım'],
+            'handle_monthly_investment_calculation': ['aylık yatırım', 'birikim', 'ne kadar birikir'],
+            'handle_target_amount_calculation': ['hedef tutar', 'kaç yıl', 'ne kadar yatırmalı'],
+            'handle_compound_interest_calculation': ['compound', 'bileşik faiz']
+        }

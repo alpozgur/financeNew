@@ -80,6 +80,16 @@ class DualAITefasQA:
         self.enable_multi_handler = True  # Feature flag
         self.ai_router = AISmartQuestionRouter(self.ai_provider)
         self.use_ai_routing = True
+        from initialize_hybrid_router import initialize_hybrid_router
+        self.hybrid_router, self.handler_registry = initialize_hybrid_router(
+            ai_provider=self.ai_provider,
+            use_sbert=True  # SBERT'i etkinleştir
+        )
+        
+        # Feature flags
+        self.use_hybrid_routing = True  # Yeni routing sistemini kullan
+        self.enable_multi_handler = True
+
                 # Makroekonomik analyzer'ı oluştur - HATA KONTROLÜ İLE
         try:
             print("📊 Makroekonomik analyzer yükleniyor...")
