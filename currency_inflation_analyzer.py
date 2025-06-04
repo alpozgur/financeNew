@@ -4,13 +4,11 @@ TEFAS Döviz ve Enflasyon Analiz Sistemi
 Dolar, Euro, TL bazlı fonlar ve enflasyon korumalı yatırım araçları analizi
 """
 
+from datetime import datetime
 import pandas as pd
 import numpy as np
-from typing import Dict, List, Optional, Tuple
 import logging
-import time
-import re
-from datetime import datetime, timedelta
+import time  
 from database.connection import DatabaseManager
 from config.config import Config
 
@@ -117,6 +115,19 @@ class CurrencyInflationAnalyzer:
         return any(combo in question_lower for combo in special_combinations)
     
     def analyze_currency_inflation_question(self, question):
+        """Ana giriş noktası - MV versiyonunu kullan"""
+        question_lower = question.lower()
+        
+        # Enflasyon korumalı fonlar sorusu
+        if any(word in question_lower for word in ['enflasyon korumalı', 'enflasyona karşı', 'inflation protected']):
+            # Önce MV versiyonunu dene
+            return self.analyze_inflation_funds_mv()
+        
+        # Diğer durumlar için mevcut logic...
+        return self._handle_general_inflation_question(question)
+
+
+    def _handle_general_inflation_question(self, question):
         """Ana analiz fonksiyonu"""
         question_lower = question.lower()
         
@@ -138,11 +149,282 @@ class CurrencyInflationAnalyzer:
         else:
             return self._handle_general_currency_overview()
     
+    def analyze_inflation_funds_mv(self):
+        """Enflasyon korumalı fonları MV'den analiz et - ULTRA HIZLI"""
+        print("⚡ Enflasyon korumalı fonlar MV'den yükleniyor...")
+
+
+        
+        try:
+            # MV güncellik kontrolü
+            freshness_check = """
+            SELECT 
+                EXTRACT(EPOCH FROM (NOW() - last_refresh))/3600 as hours_since_refresh
+            FROM pg_matviews
+            WHERE matviewname = 'mv_scenario_analysis_funds'
+            """
+            
+            freshness = self.db.execute_query(freshness_check)
+            if not freshness.empty and freshness.iloc[0]['hours_since_refresh'] > 24:
+                print("   ⚠️ MV 24 saatten eski, güncelleniyor...")
+                self.db.execute_query("REFRESH MATERIALIZED VIEW CONCURRENTLY mv_scenario_analysis_funds")
+            
+            # Kategorilere göre grupla ve en iyileri al
+            query = """
+            WITH ranked_funds AS (
+                SELECT 
+                    *,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY protection_category 
+                        ORDER BY inflation_scenario_score DESC
+                    ) as category_rank
+                FROM mv_scenario_analysis_funds
+                WHERE inflation_protection_score > 15
+                AND investorcount > 100  -- Minimum yatırımcı filtresi
+            ),
+            category_stats AS (
+                -- Her kategori için istatistikler
+                SELECT 
+                    protection_category,
+                    COUNT(*) as category_count,
+                    AVG(inflation_protection_score) as avg_score,
+                    AVG(return_30d) as avg_return_30d,
+                    AVG(volatility_30d) as avg_volatility
+                FROM mv_scenario_analysis_funds
+                WHERE inflation_protection_score > 15
+                GROUP BY protection_category
+            )
+            SELECT 
+                rf.*,
+                cs.category_count,
+                cs.avg_score as category_avg_score,
+                cs.avg_return_30d as category_avg_return
+            FROM ranked_funds rf
+            JOIN category_stats cs ON rf.protection_category = cs.protection_category
+            WHERE rf.category_rank <= 5  -- Her kategoriden en iyi 5
+            ORDER BY rf.protection_category, rf.inflation_scenario_score DESC
+            """
+            
+            start_time = datetime.now().timestamp()
+            result = self.db.execute_query(query)
+            elapsed = datetime.now().timestamp() - start_time
+            
+            if result.empty:
+                print("   ❌ MV'de enflasyon korumalı fon bulunamadı, fallback kullanılıyor...")
+                return self._analyze_inflation_funds_fallback()
+            
+            print(f"   ✅ {len(result)} fon {elapsed:.3f} saniyede yüklendi!")
+            
+            # Sonuçları formatla
+            response = f"\n💹 ENFLASYON KORUMALI FONLAR ANALİZİ\n"
+            response += f"{'='*60}\n\n"
+            response += f"⚡ Süre: {elapsed:.3f} saniye (MV kullanıldı)\n"
+            response += f"📊 Toplam: {len(result)} fon (kategorilere göre gruplu)\n\n"
+            
+            # İstatistikler için ek sorgu
+            stats_query = """
+            SELECT 
+                protection_category,
+                COUNT(*) as fund_count,
+                AVG(inflation_protection_score) as avg_protection_score,
+                AVG(return_30d) as avg_return_30d,
+                AVG(return_90d) as avg_return_90d,
+                AVG(volatility_30d) as avg_volatility,
+                SUM(fcapacity) / 1e9 as total_capacity_billion,
+                SUM(investorcount) as total_investors
+            FROM mv_scenario_analysis_funds
+            WHERE inflation_protection_score > 15
+            GROUP BY protection_category
+            ORDER BY avg_protection_score DESC
+            """
+            
+            stats = self.db.execute_query(stats_query)
+            
+            # Genel istatistikler
+            if not stats.empty:
+                response += f"📊 GENEL İSTATİSTİKLER:\n"
+                response += f"{'='*50}\n"
+                
+                total_funds = stats['fund_count'].sum()
+                total_capacity = stats['total_capacity_billion'].sum()
+                total_investors = stats['total_investors'].sum()
+                
+                response += f"   📈 Toplam Enflasyon Korumalı Fon: {int(total_funds)}\n"
+                response += f"   💰 Toplam Varlık: {total_capacity:.1f} Milyar TL\n"
+                response += f"   👥 Toplam Yatırımcı: {int(total_investors):,}\n\n"
+            
+            # Kategorilere göre göster
+            current_category = None
+            category_names = {
+                'ALTIN_AGIRLIKLI': '🥇 ALTIN AĞIRLIKLI FONLAR',
+                'HISSE_AGIRLIKLI': '📊 HİSSE AĞIRLIKLI FONLAR',
+                'DOVIZ_AGIRLIKLI': '💱 DÖVİZ AĞIRLIKLI FONLAR',
+                'KATILIM_FONU': '🌙 KATILIM FONLARI',
+                'KARMA_KORUMA': '🔄 KARMA KORUMA FONLARI',
+                'TAHVIL_AGIRLIKLI': '📋 TAHVİL AĞIRLIKLI FONLAR',
+                'DIGER': '📌 DİĞER FONLAR'
+            }
+            
+            for _, fund in result.iterrows():
+                category = fund['protection_category']
+                
+                # Yeni kategori başlığı
+                if category != current_category:
+                    current_category = category
+                    
+                    # Kategori istatistikleri
+                    cat_stats = stats[stats['protection_category'] == category]
+                    if not cat_stats.empty:
+                        cat_data = cat_stats.iloc[0]
+                        
+                        response += f"\n{category_names.get(category, category)}:\n"
+                        response += f"{'-'*55}\n"
+                        response += f"📊 Kategori İstatistikleri:\n"
+                        response += f"   • Toplam Fon: {int(cat_data['fund_count'])}\n"
+                        response += f"   • Ort. Koruma Skoru: {cat_data['avg_protection_score']:.1f}\n"
+                        response += f"   • Ort. 30G Getiri: %{cat_data['avg_return_30d']:.2f}\n"
+                        response += f"   • Ort. Volatilite: %{cat_data['avg_volatility']:.2f}\n\n"
+                
+                # Fon detayları
+                fcode = fund['fcode']
+                fname = (fund['fund_name'] or f'Fon {fcode}')[:40]
+                rank = int(fund['category_rank'])
+                
+                # Performans emoji
+                if fund['return_30d'] > 5:
+                    perf_emoji = "🚀"
+                elif fund['return_30d'] > 2:
+                    perf_emoji = "📈"
+                elif fund['return_30d'] > 0:
+                    perf_emoji = "➕"
+                else:
+                    perf_emoji = "➖"
+                
+                response += f"{rank}. {fcode} - {fname}... {perf_emoji}\n"
+                response += f"   🛡️ Enflasyon Koruma: {fund['inflation_protection_score']:.1f}/100\n"
+                response += f"   📊 Senaryo Skoru: {fund['inflation_scenario_score']:.1f}\n"
+                
+                # Performans metrikleri
+                if pd.notna(fund['return_30d']):
+                    response += f"   📈 30 Gün: %{fund['return_30d']:+.2f}\n"
+                if pd.notna(fund['return_90d']):
+                    response += f"   📈 90 Gün: %{fund['return_90d']:+.2f}\n"
+                if pd.notna(fund['volatility_30d']):
+                    response += f"   📉 Risk: %{fund['volatility_30d']:.2f}\n"
+                if pd.notna(fund['sharpe_ratio_approx']) and fund['sharpe_ratio_approx'] > 0:
+                    response += f"   ⚡ Sharpe: {fund['sharpe_ratio_approx']:.2f}\n"
+                
+                response += f"   💰 Fiyat: {fund['current_price']:.4f} TL\n"
+                response += f"   👥 Yatırımcı: {fund['investorcount']:,}\n"
+                
+                # Portföy kompozisyonu (önemli olanlar)
+                if fund['gold_ratio'] > 10:
+                    response += f"   🥇 Altın: %{fund['gold_ratio']:.1f}\n"
+                if fund['equity_ratio'] > 10:
+                    response += f"   📊 Hisse: %{fund['equity_ratio']:.1f}\n"
+                if fund['fx_ratio'] > 10:
+                    response += f"   💱 Döviz: %{fund['fx_ratio']:.1f}\n"
+                
+                response += "\n"
+            
+            # Öneriler
+            response += self._get_inflation_recommendations()
+            
+            return response
+            
+        except Exception as e:
+            print(f"❌ MV analizi hatası: {e}")
+            import traceback
+            traceback.print_exc()
+            # Fallback
+            return self._analyze_inflation_funds_fallback()
+
+    def _get_inflation_recommendations(self):
+        """Enflasyon koruması için genel öneriler"""
+        return f"""
+    💡 ENFLASYON KORUMA STRATEJİLERİ:
+    {'='*40}
+    1. 🥇 **Altın Fonları** - Klasik enflasyon koruması
+    • Fiziki altın destekli fonları tercih edin
+    • Uzun vadeli koruma sağlar
+
+    2. 📊 **Hisse Fonları** - Uzun vadeli reel getiri
+    • Büyük şirketlerin hisse fonları
+    • Temettü getirisi olan fonlar
+
+    3. 💱 **Döviz/Eurobond Fonları** - TL değer kaybına karşı
+    • USD/EUR bazlı fonlar
+    • Eurobond ağırlıklı fonlar
+
+    4. 🌙 **Katılım Fonları** - Alternatif koruma
+    • Kira sertifikaları
+    • Altın katılım fonları
+
+    5. 🔄 **Karma Fonlar** - Dengeli yaklaşım
+    • Çeşitlendirilmiş portföy
+    • Orta risk profili
+
+    ⚠️ **ÖNEMLİ UYARILAR:**
+    • Yatırım tavsiyesi değildir
+    • Portföyünüzü çeşitlendirin
+    • Düzenli gözden geçirin
+    • Risk toleransınıza uygun seçim yapın
+    """
+
+    def _analyze_inflation_funds_fallback(self):
+        """MV çalışmazsa kullanılacak fallback metod"""
+        print("   🔄 Fallback: Standart SQL sorgusu kullanılıyor...")
+        
+        try:
+            # Daha basit bir sorgu
+            query = """
+            SELECT DISTINCT ON (f.fcode)
+                f.fcode,
+                f.ftitle as fund_name,
+                f.price as current_price,
+                f.investorcount,
+                -- Basit kategori tespiti
+                CASE 
+                    WHEN d.preciousmetals > 50 THEN 'ALTIN'
+                    WHEN d.stock > 60 THEN 'HİSSE'
+                    WHEN d.eurobonds > 30 THEN 'DÖVİZ'
+                    ELSE 'DİĞER'
+                END as category
+            FROM tefasfunds f
+            LEFT JOIN tefasfunddetails d ON f.fcode = d.fcode
+            WHERE f.pdate >= CURRENT_DATE - INTERVAL '7 days'
+            AND f.investorcount > 100
+            AND (d.preciousmetals > 20 OR d.stock > 50 OR d.eurobonds > 20)
+            ORDER BY f.fcode, f.pdate DESC
+            LIMIT 30
+            """
+            
+            result = self.db.execute_query(query)
+            
+            if result.empty:
+                return "❌ Enflasyon korumalı fon bulunamadı."
+            
+            response = f"\n💹 ENFLASYON KORUMALI FONLAR (Basit Analiz)\n"
+            response += f"{'='*50}\n\n"
+            response += f"📊 {len(result)} fon bulundu\n\n"
+            
+            for _, fund in result.iterrows():
+                response += f"• {fund['fcode']} - {fund['fund_name'][:40]}...\n"
+                response += f"  Kategori: {fund['category']}\n"
+                response += f"  Fiyat: {fund['current_price']:.4f} TL\n"
+                response += f"  Yatırımcı: {fund['investorcount']:,}\n\n"
+            
+            return response
+            
+        except Exception as e:
+            return f"❌ Enflasyon analizi hatası: {str(e)}"
+
+
     def analyze_currency_funds(self, currency_type, question):
         """Belirli döviz/enflasyon tipinde fonları analiz et"""
         print(f"💱 {currency_type.upper()} fonları analiz ediliyor...")
         
-        start_time = time.time()
+        start_time = datetime.now().timestamp()
         
         # 1. İlgili fonları bul
         currency_funds = self.find_currency_funds_sql(currency_type)
@@ -160,7 +442,7 @@ class CurrencyInflationAnalyzer:
         if not performance_results:
             return f"❌ {currency_type.upper()} fonları için performans verisi hesaplanamadı."
         
-        elapsed = time.time() - start_time
+        elapsed = datetime.now().timestamp() - start_time
         print(f"   ⏱️ Analiz tamamlandı: {elapsed:.1f} saniye")
         
         # 3. Sonuçları formatla

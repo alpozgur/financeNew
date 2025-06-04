@@ -7,8 +7,7 @@ GERÇEK FON VERİLERİ İLE ÇALIŞIR
 
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta
-from typing import Dict, List, Tuple
+from datetime import datetime
 import re
 
 class ScenarioAnalyzer:
@@ -248,7 +247,7 @@ class ScenarioAnalyzer:
         
         return response
     
-    def _analyze_funds_for_inflation(self):
+    def _analyze_funds_for_inflation_old(self):
         """Enflasyona dayanıklı gerçek fonları bul ve analiz et"""
         result = {
             'gold_funds': [],
@@ -351,7 +350,99 @@ class ScenarioAnalyzer:
         
         return result
     
-    def _analyze_defensive_funds(self):
+    def _analyze_funds_for_inflation(self):
+        """Enflasyona dayanıklı gerçek fonları bul ve analiz et - MV VERSİYONU"""
+        result = {
+            'gold_funds': [],
+            'equity_funds': [],
+            'fx_funds': []
+        }
+        
+        try:
+            # MV'den direkt veri çek - ULTRA HIZLI!
+            query = """
+            SELECT 
+                fcode,
+                fund_name,
+                current_price,
+                investorcount,
+                gold_ratio,
+                equity_ratio,
+                fx_ratio,
+                protection_category,
+                inflation_protection_score,
+                return_30d,
+                return_90d,
+                volatility_30d,
+                sharpe_ratio_approx,
+                inflation_scenario_score
+            FROM mv_scenario_analysis_funds
+            WHERE inflation_protection_score > 20
+            ORDER BY inflation_scenario_score DESC
+            LIMIT 60
+            """
+            
+            print("   ⚡ MV'den enflasyon fonları yükleniyor...")
+            start_time = datetime.now().timestamp()
+            
+            funds_data = self.db.execute_query(query)
+            
+            elapsed = datetime.now().timestamp() - start_time
+            print(f"   ✅ {len(funds_data)} fon {elapsed:.3f} saniyede yüklendi!")
+            
+            if funds_data.empty:
+                print("   ❌ MV'de enflasyon fonu bulunamadı")
+                return result
+            
+            # Sonuçları kategorilere ayır
+            for _, fund in funds_data.iterrows():
+                fund_dict = {
+                    'fcode': fund['fcode'],
+                    'fname': fund['fund_name'] or f'Fon {fund["fcode"]}',
+                    'current_price': float(fund['current_price']),
+                    'investors': int(fund['investorcount']) if pd.notna(fund['investorcount']) else 0,
+                    'return_30d': float(fund['return_30d']) if pd.notna(fund['return_30d']) else 0,
+                    'volatility': float(fund['volatility_30d']) if pd.notna(fund['volatility_30d']) else 15
+                }
+                
+                # Altın fonları
+                if fund['protection_category'] in ['ALTIN_AGIRLIKLI', 'KARMA_KORUMA'] or float(fund['gold_ratio']) > 20:
+                    fund_dict['gold_ratio'] = float(fund['gold_ratio'])
+                    if fund['fcode'] not in [f['fcode'] for f in result['gold_funds']]:
+                        result['gold_funds'].append(fund_dict.copy())
+                
+                # Hisse fonları
+                if fund['protection_category'] == 'HISSE_AGIRLIKLI' or float(fund['equity_ratio']) > 50:
+                    fund_dict['equity_ratio'] = float(fund['equity_ratio'])
+                    fund_dict['sharpe'] = float(fund['sharpe_ratio_approx']) if pd.notna(fund['sharpe_ratio_approx']) else 0
+                    if fund['fcode'] not in [f['fcode'] for f in result['equity_funds']]:
+                        result['equity_funds'].append(fund_dict.copy())
+                
+                # Döviz fonları
+                if fund['protection_category'] == 'DOVIZ_AGIRLIKLI' or float(fund['fx_ratio']) > 30:
+                    fund_dict['fx_ratio'] = float(fund['fx_ratio'])
+                    if fund['fcode'] not in [f['fcode'] for f in result['fx_funds']]:
+                        result['fx_funds'].append(fund_dict.copy())
+            
+            # Skorlara göre sırala ve limitle
+            result['gold_funds'].sort(key=lambda x: x.get('gold_ratio', 0), reverse=True)
+            result['equity_funds'].sort(key=lambda x: x.get('sharpe', 0), reverse=True)
+            result['fx_funds'].sort(key=lambda x: x.get('return_30d', 0), reverse=True)
+            
+            result['gold_funds'] = result['gold_funds'][:10]
+            result['equity_funds'] = result['equity_funds'][:10]
+            result['fx_funds'] = result['fx_funds'][:10]
+            
+        except Exception as e:
+            print(f"   ❌ MV sorgu hatası: {e}")
+            # Fallback: Eski metodu çağır
+            print("   🔄 Fallback: Normal SQL sorgusu deneniyor...")
+            return self._analyze_funds_for_inflation_old()  # Eski metod adı
+        
+        return result
+
+
+    def _analyze_defensive_funds_old(self):
         """Defansif fonları analiz et"""
         result = {
             'money_market': [],
@@ -426,7 +517,79 @@ class ScenarioAnalyzer:
         
         return result
     
-    def _analyze_fx_funds(self):
+    def _analyze_defensive_funds(self):
+        """Defansif fonları analiz et - MV VERSİYONU"""
+        result = {
+            'money_market': [],
+            'bond_funds': []
+        }
+        
+        try:
+            # MV'den defansif fonları çek
+            query = """
+            SELECT 
+                fcode,
+                fund_name,
+                current_price,
+                investorcount,
+                money_market_ratio,
+                bond_ratio,
+                volatility_30d,
+                return_30d,
+                crisis_scenario_score,
+                protection_category
+            FROM mv_scenario_analysis_funds
+            WHERE crisis_scenario_score > 50  -- Yüksek kriz skoru = düşük risk
+            AND (money_market_ratio > 50 OR bond_ratio > 50)
+            ORDER BY crisis_scenario_score DESC, volatility_30d ASC
+            LIMIT 40
+            """
+            
+            print("   ⚡ MV'den defansif fonlar yükleniyor...")
+            funds_data = self.db.execute_query(query)
+            
+            if funds_data.empty:
+                print("   ❌ MV'de defansif fon bulunamadı")
+                return result
+            
+            print(f"   ✅ {len(funds_data)} defansif fon bulundu")
+            
+            for _, fund in funds_data.iterrows():
+                fund_dict = {
+                    'fcode': fund['fcode'],
+                    'fname': fund['fund_name'] or f'Fon {fund["fcode"]}',
+                    'current_price': float(fund['current_price']),
+                    'volatility': float(fund['volatility_30d']) if pd.notna(fund['volatility_30d']) else 0,
+                    'return_30d': float(fund['return_30d']) if pd.notna(fund['return_30d']) else 0
+                }
+                
+                # Para piyasası fonları
+                if float(fund['money_market_ratio']) > 50:
+                    fund_dict['repo_ratio'] = float(fund['money_market_ratio'])
+                    result['money_market'].append(fund_dict.copy())
+                
+                # Tahvil fonları
+                if float(fund['bond_ratio']) > 50:
+                    fund_dict['bond_ratio'] = float(fund['bond_ratio'])
+                    result['bond_funds'].append(fund_dict.copy())
+            
+            # Volatiliteye göre sırala (düşük = iyi)
+            result['money_market'].sort(key=lambda x: x['volatility'])
+            result['bond_funds'].sort(key=lambda x: x['volatility'])
+            
+            # İlk 10'ar tane
+            result['money_market'] = result['money_market'][:10]
+            result['bond_funds'] = result['bond_funds'][:10]
+            
+        except Exception as e:
+            print(f"   ❌ MV defansif fon hatası: {e}")
+            # Fallback
+            return self._analyze_defensive_funds_old()
+        
+        return result
+
+
+    def _analyze_fx_funds_old(self):
         """Döviz fonlarını analiz et"""
         result = {
             'high_fx': [],
@@ -501,6 +664,76 @@ class ScenarioAnalyzer:
         
         return result
     
+    def _analyze_fx_funds(self):
+        """Döviz fonlarını analiz et - MV VERSİYONU"""
+        result = {
+            'high_fx': [],
+            'mixed': []
+        }
+        
+        try:
+            query = """
+            SELECT 
+                fcode,
+                fund_name,
+                current_price,
+                investorcount,
+                fx_ratio,
+                equity_ratio,
+                bond_ratio,
+                return_30d,
+                return_90d,
+                volatility_30d,
+                inflation_scenario_score,
+                protection_category
+            FROM mv_scenario_analysis_funds
+            WHERE fx_ratio > 20  -- En az %20 döviz içeriği
+            ORDER BY fx_ratio DESC, return_30d DESC
+            LIMIT 40
+            """
+            
+            print("   ⚡ MV'den döviz fonları yükleniyor...")
+            funds_data = self.db.execute_query(query)
+            
+            if funds_data.empty:
+                print("   ❌ MV'de döviz fonu bulunamadı")
+                return result
+            
+            for _, fund in funds_data.iterrows():
+                total_fx = float(fund['fx_ratio'])
+                
+                fund_info = {
+                    'fcode': fund['fcode'],
+                    'fname': fund['fund_name'] or f'Fon {fund["fcode"]}',
+                    'current_price': float(fund['current_price']),
+                    'return_30d': float(fund['return_30d']) if pd.notna(fund['return_30d']) else 0,
+                    'total_fx': total_fx,
+                    'eurobond': total_fx * 0.6,  # Tahmini dağılım
+                    'fx_bills': total_fx * 0.4,
+                    'equity': float(fund['equity_ratio']),
+                    'bond': float(fund['bond_ratio'])
+                }
+                
+                if total_fx > 60:  # %60'tan fazla döviz
+                    result['high_fx'].append(fund_info)
+                elif total_fx > 20:  # Karma fonlar
+                    result['mixed'].append(fund_info)
+            
+            # Performansa göre sırala
+            result['high_fx'].sort(key=lambda x: x['total_fx'], reverse=True)
+            result['mixed'].sort(key=lambda x: x['return_30d'], reverse=True)
+            
+            # Limitle
+            result['high_fx'] = result['high_fx'][:10]
+            result['mixed'] = result['mixed'][:10]
+            
+        except Exception as e:
+            print(f"   ❌ MV döviz fon hatası: {e}")
+            return self._analyze_fx_funds_old()
+        
+        return result
+
+
     def _create_inflation_portfolio(self, funds_data, inflation_rate):
         """Enflasyon senaryosuna göre portföy oluştur"""
         portfolio = []
@@ -791,3 +1024,43 @@ class ScenarioAnalyzer:
                 return int(match.group(1))
         
         return None
+    
+    # Ek yardımcı metodlar
+    def check_mv_freshness(self):
+        """MV'lerin ne kadar güncel olduğunu kontrol et"""
+        try:
+            query = """
+            SELECT 
+                schemaname,
+                matviewname,
+                last_refresh,
+                EXTRACT(EPOCH FROM (NOW() - last_refresh))/3600 as hours_since_refresh
+            FROM pg_matviews
+            WHERE matviewname LIKE 'mv_%inflation%' OR matviewname LIKE 'mv_%scenario%'
+            ORDER BY last_refresh DESC
+            """
+            
+            result = self.db.execute_query(query)
+            
+            if not result.empty:
+                for _, row in result.iterrows():
+                    hours = row['hours_since_refresh']
+                    if hours > 24:
+                        print(f"   ⚠️ {row['matviewname']} son güncelleme: {hours:.1f} saat önce")
+                        # 24 saatten eskiyse refresh öner
+                        return False
+            return True
+            
+        except:
+            return True  # Hata durumunda devam et
+
+
+    def refresh_mvs_if_needed(self):
+        """Gerekirse MV'leri güncelle"""
+        if not self.check_mv_freshness():
+            try:
+                print("   🔄 MV'ler güncelleniyor...")
+                self.db.execute_query("SELECT refresh_inflation_materialized_views()")
+                print("   ✅ MV'ler güncellendi")
+            except Exception as e:
+                print(f"   ⚠️ MV güncelleme hatası: {e}, mevcut verilerle devam ediliyor")
