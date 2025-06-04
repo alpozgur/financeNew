@@ -178,7 +178,7 @@ class AdvancedMetricsAnalyzer:
         response += f"   En Düşük Beta: {beta_results[0]['fcode']} ({beta_results[0]['beta']:.3f})\n"
         
         # AI Yorumu
-        if self.ai_status['openai'] or self.ai_status['ollama']:
+        if hasattr(self.coordinator, 'ai_provider') and self.coordinator.ai_provider.is_available():
             response += self._get_ai_commentary_for_beta(beta_results, comparison, beta_threshold)
         
         return response
@@ -281,7 +281,7 @@ class AdvancedMetricsAnalyzer:
         response += f"   En Yüksek Alpha: {alpha_results[0]['fcode']} (%{alpha_results[0]['alpha']:.2f})\n"
         
         # AI Yorumu
-        if self.ai_status['openai'] or self.ai_status['ollama']:
+        if hasattr(self.coordinator, 'ai_provider') and self.coordinator.ai_provider.is_available():
             response += self._get_ai_commentary_for_alpha(alpha_results)
         
         return response
@@ -474,7 +474,7 @@ class AdvancedMetricsAnalyzer:
         response += f"   En Yüksek: {ir_results[0]['fcode']} ({ir_results[0]['information_ratio']:.3f})\n"
         
         # AI Yorumu
-        if self.ai_status['openai'] or self.ai_status['ollama']:
+        if hasattr(self.coordinator, 'ai_provider') and self.coordinator.ai_provider.is_available():
             response += self._get_ai_commentary_for_ir(ir_results)
         
         return response
@@ -748,24 +748,15 @@ class AdvancedMetricsAnalyzer:
         Bu fonların risk profili ve yatırımcı için uygunluğu hakkında kısa yorum yap (max 150 kelime).
         """
         
-        if self.ai_status['openai']:
+        if hasattr(self.coordinator, 'ai_provider') and self.coordinator.ai_provider.is_available():
             try:
-                openai_comment = self.coordinator.ai_analyzer.query_openai(
+                ai_comment = self.coordinator.ai_provider.query(
                     prompt, "Sen finansal risk analisti uzmanısın."
                 )
-                response += f"\n📱 OpenAI Yorumu:\n{openai_comment}\n"
-            except:
-                pass
-        
-        if self.ai_status['ollama']:
-            try:
-                ollama_comment = self.coordinator.ai_analyzer.query_ollama(
-                    prompt, "Sen finansal risk analisti uzmanısın."
-                )
-                response += f"\n🦙 Ollama Yorumu:\n{ollama_comment}\n"
-            except:
-                pass
-        
+                response += f"\n🤖 AI Yorumu:\n{ai_comment}\n"
+            except Exception as e:
+                self.logger.warning(f"AI yorum hatası: {e}")
+                pass        
         return response
     
     def _get_ai_commentary_for_alpha(self, alpha_results: List[Dict]) -> str:
@@ -786,15 +777,15 @@ class AdvancedMetricsAnalyzer:
         Bu sonuçların anlamı ve aktif fon yönetiminin başarısı hakkında yorum yap (max 150 kelime).
         """
         
-        if self.ai_status['openai']:
+        if hasattr(self.coordinator, 'ai_provider') and self.coordinator.ai_provider.is_available():
             try:
-                openai_comment = self.coordinator.ai_analyzer.query_openai(
+                ai_comment = self.coordinator.ai_provider.query(
                     prompt, "Sen portföy yönetimi uzmanısın."
                 )
-                response += f"\n📱 OpenAI Yorumu:\n{openai_comment}\n"
-            except:
-                pass
-        
+                response += f"\n🤖 AI Yorumu:\n{ai_comment}\n"
+            except Exception as e:
+                self.logger.warning(f"AI yorum hatası: {e}")
+                pass        
         return response
     
     def _get_ai_commentary_for_ir(self, ir_results: List[Dict]) -> str:
@@ -816,13 +807,14 @@ class AdvancedMetricsAnalyzer:
         Aktif fon yönetiminin risk-ayarlı performansı hakkında yorum yap (max 150 kelime).
         """
         
-        if self.ai_status['ollama']:
+        if hasattr(self.coordinator, 'ai_provider') and self.coordinator.ai_provider.is_available():
             try:
-                ollama_comment = self.coordinator.ai_analyzer.query_ollama(
-                    prompt, "Sen aktif portföy yönetimi uzmanısın."
+                ai_comment = self.coordinator.ai_provider.query(
+                    prompt, "Sen portföy yönetimi uzmanısın."
                 )
-                response += f"\n🦙 Ollama Yorumu:\n{ollama_comment}\n"
-            except:
-                pass
+                response += f"\n🤖 AI Yorumu:\n{ai_comment}\n"
+            except Exception as e:
+                self.logger.warning(f"AI yorum hatası: {e}")
+                pass        
         
         return response

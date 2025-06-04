@@ -29,6 +29,7 @@ from mathematical_calculations import MathematicalCalculator
 from macroeconomic_analyzer import MacroeconomicAnalyzer
 from smart_question_router import SmartQuestionRouter
 from response_merger import ResponseMerger
+from ai_provider import AIProvider
 
 @dataclass
 class RouteMatch:
@@ -51,7 +52,17 @@ class DualAITefasQA:
         print("📊 Loading active funds...")
         self.active_funds = self._load_active_funds()
         print(f"✅ Loaded {len(self.active_funds)} active funds")
-        self.ai_status = self._check_ai_availability()
+        # YENİ: AI Provider
+        self.ai_provider = AIProvider(self.coordinator)
+      #  self.ai_status = self._check_ai_availability()
+         # ESKİ: self.ai_status = self._check_ai_availability()
+        # YENİ: Compatibility için ai_status'u tut ama ai_provider'dan al
+        self.ai_status = {
+            'openai': self.ai_provider.get_status()['openai_status'],
+            'ollama': self.ai_provider.get_status()['ollama_status']
+        }
+        
+        # Modüllere ai_status yerine ai_provider geçebiliriz ama şimdilik uyumluluk için böyle
         self.advanced_metrics_analyzer = AdvancedMetricsAnalyzer(self.coordinator, self.active_funds, self.ai_status)
         self.technical_analyzer = TechnicalAnalysis(self.coordinator, self.active_funds)
         self.fundamental_analyzer = FundamentalAnalysisEnhancement(self.coordinator, self.active_funds)
@@ -112,25 +123,33 @@ class DualAITefasQA:
         
     def _check_ai_availability(self):
         """AI sistemlerinin durumunu kontrol et"""
+        # AI Provider'dan status al
+        provider_status = self.ai_provider.get_status()
+        
+        print(f"\n🤖 AI SİSTEMİ DURUMU:")
+        print(f"   📋 Provider: {provider_status['provider_type'].upper()}")
+        print(f"   ✅ Durum: {'Hazır' if provider_status['is_available'] else 'Mevcut değil'}")
+        
+        # Legacy uyumluluk için eski formatı döndür
         ai_status = {
-            'openai': self.coordinator.ai_analyzer.openai_available,
-            'ollama': self.coordinator.ai_analyzer.ollama_available
+            'openai': provider_status['openai_status'],
+            'ollama': provider_status['ollama_status']
         }
         
-        print(f"\n🤖 AI SİSTEMLERİ DURUMU:")
         print(f"   📱 OpenAI: {'✅ Hazır' if ai_status['openai'] else '❌ Mevcut değil'}")
         print(f"   🦙 Ollama: {'✅ Hazır' if ai_status['ollama'] else '❌ Mevcut değil'}")
         
-        if ai_status['openai'] and ai_status['ollama']:
-            print("   🎯 Her iki AI de aktif - Karşılaştırmalı analiz mevcut!")
+        if provider_status['provider_type'] == 'dual' and ai_status['openai'] and ai_status['ollama']:
+            print("   🎯 Dual mode aktif - Karşılaştırmalı analiz mevcut!")
         elif ai_status['openai']:
             print("   🎯 Sadece OpenAI aktif")
         elif ai_status['ollama']:
             print("   🎯 Sadece Ollama aktif")
         else:
             print("   ⚠️ Hiçbir AI sistemi aktif değil")
-            
+        
         return ai_status
+    
 
     def answer_question(self, question):
         """Multi-handler desteği ile soru cevaplama"""
@@ -878,36 +897,19 @@ class DualAITefasQA:
                 
                 Bu verilere dayanarak piyasa durumu ve yatırımcı önerileri hakkında kısa yorum yap.
                 """
-                
-                response += f"🤖 DUAL AI PİYASA YORUMLARI:\n"
+                                # YENİ KOD:
+                response += f"\n🤖 AI PİYASA YORUMU:\n"
                 response += f"{'='*30}\n"
-                
-                # OpenAI yorumu
-                if self.ai_status['openai']:
-                    try:
-                        openai_market = self.coordinator.ai_analyzer.query_openai(
-                            market_prompt,
-                            "Sen piyasa analisti uzmanısın."
-                        )
-                        response += f"\n📱 OpenAI Piyasa Yorumu:\n{openai_market}\n"
-                    except Exception as e:
-                        response += f"\n📱 OpenAI: ❌ Piyasa analizi alınamadı\n"
-                
-                # Ollama yorumu
-                if self.ai_status['ollama']:
-                    try:
-                        ollama_market = self.coordinator.ai_analyzer.query_ollama(
-                            market_prompt,
-                            "Sen piyasa analisti uzmanısın."
-                        )
-                        response += f"\n🦙 Ollama Piyasa Yorumu:\n{ollama_market}\n"
-                    except Exception as e:
-                        response += f"\n🦙 Ollama: ❌ Piyasa analizi alınamadı\n"
-                
-                return response
-            else:
-                return "❌ Piyasa analizi için yeterli veri bulunamadı"
-                
+
+                try:
+                    ai_market_analysis = self.ai_provider.query(
+                        market_prompt,
+                        "Sen piyasa analisti uzmanısın."
+                    )
+                    response += ai_market_analysis
+                except Exception as e:
+                    response += "❌ AI piyasa analizi alınamadı\n"                
+
         except Exception as e:
             return f"❌ Piyasa analizi hatası: {e}"
     
@@ -916,37 +918,28 @@ class DualAITefasQA:
         response = f"\n🧪 AI SİSTEMLERİ TEST RAPORU\n"
         response += f"{'='*30}\n\n"
         
+        # Provider status
+        status = self.ai_provider.get_status()
+        
         response += f"📊 DURUM RAPORU:\n"
-        response += f"   📱 OpenAI: {'✅ Aktif' if self.ai_status['openai'] else '❌ İnaktif'}\n"
-        response += f"   🦙 Ollama: {'✅ Aktif' if self.ai_status['ollama'] else '❌ İnaktif'}\n\n"
+        response += f"   📋 Provider Tipi: {status['provider_type'].upper()}\n"
+        response += f"   ✅ Hazır: {'Evet' if status['is_available'] else 'Hayır'}\n"
+        response += f"   🔄 Fallback: {'Aktif' if status['fallback_enabled'] else 'Kapalı'}\n\n"
         
         # Test prompt'u
         test_prompt = "TEFAS fonları hakkında 2 cümlelik kısa bilgi ver."
         
-        response += f"🧪 TEST SONUÇLARI:\n"
+        response += f"🧪 TEST SONUCU:\n"
         
-        # OpenAI test
-        if self.ai_status['openai']:
-            try:
-                openai_test = self.coordinator.ai_analyzer.query_openai(test_prompt)
-                response += f"\n📱 OpenAI Test:\n   ✅ Çalışıyor\n   Yanıt: {openai_test[:100]}...\n"
-            except Exception as e:
-                response += f"\n📱 OpenAI Test:\n   ❌ Hata: {str(e)[:50]}\n"
-        else:
-            response += f"\n📱 OpenAI Test:\n   ❌ Kullanılamıyor\n"
+        try:
+            test_result = self.ai_provider.query(test_prompt)
+            response += f"✅ AI Testi Başarılı\n"
+            response += f"Yanıt: {test_result[:100]}...\n"
+        except Exception as e:
+            response += f"❌ AI Testi Başarısız: {str(e)[:50]}\n"
         
-        # Ollama test
-        if self.ai_status['ollama']:
-            try:
-                ollama_test = self.coordinator.ai_analyzer.query_ollama(test_prompt)
-                response += f"\n🦙 Ollama Test:\n   ✅ Çalışıyor\n   Yanıt: {ollama_test[:100]}...\n"
-            except Exception as e:
-                response += f"\n🦙 Ollama Test:\n   ❌ Hata: {str(e)[:50]}\n"
-        else:
-            response += f"\n🦙 Ollama Test:\n   ❌ Kullanılamıyor\n"
-        
-        return response
-        
+        return response        
+    
     def _handle_risk_question(self, question):
         """Risk soruları (önceki kodla aynı)"""
         response = f"\n🛡️ RİSK ANALİZİ VE GÜVENLİ YATIRIM\n"

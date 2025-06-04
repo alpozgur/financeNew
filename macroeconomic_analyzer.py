@@ -699,7 +699,7 @@ class MacroeconomicAnalyzer:
             
             if self.coordinator.ai_analyzer.openai_available:
                 try:
-                    ai_response = self.coordinator.ai_analyzer.query_openai(
+                    ai_response = self.coordinator.ai_provider.query(
                         prompt,
                         "Sen makroekonomi ve yatırım fonları uzmanısın."
                     )
@@ -730,23 +730,24 @@ class MacroeconomicAnalyzer:
             # Her iki AI'dan da yorum al
             if self.coordinator.ai_analyzer.openai_available:
                 try:
-                    openai_response = self.coordinator.ai_analyzer.query_openai(
+                    ai_response = self.coordinator.ai_provider.query(
                         prompt,
                         "Sen Türkiye ekonomisi ve para politikası uzmanısın."
                     )
-                    response += f"\n📱 OpenAI Değerlendirmesi:\n{openai_response}\n"
+
+                    response += f"\n📱 OpenAI Değerlendirmesi:\n{ai_response}\n"
                 except:
                     pass
             
-            if self.coordinator.ai_analyzer.ollama_available:
-                try:
-                    ollama_response = self.coordinator.ai_analyzer.query_ollama(
-                        prompt,
-                        "Sen Türkiye ekonomisi ve para politikası uzmanısın."
-                    )
-                    response += f"\n🦙 Ollama Değerlendirmesi:\n{ollama_response}\n"
-                except:
-                    pass
+            # if self.coordinator.ai_analyzer.ollama_available:
+            #     try:
+            #         ollama_response = self.coordinator.ai_analyzer.query_ollama(
+            #             prompt,
+            #             "Sen Türkiye ekonomisi ve para politikası uzmanısın."
+            #         )
+            #         response += f"\n🦙 Ollama Değerlendirmesi:\n{ollama_response}\n"
+            #     except:
+            #         pass
             
             return response
             

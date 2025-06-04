@@ -180,20 +180,27 @@ class PerformanceAnalyzerMain:
             response += f"🤖 DUAL AI DEĞERLENDİRMESİ:\n"
             response += f"{'='*30}\n"
 
-            response += f"\n🤖 AI DEĞERLENDİRMESİ:\n"
-            response += f"{'='*30}\n"
-
-            if hasattr(self.coordinator, 'ai_provider') and self.coordinator.ai_provider.is_available():
+            # OpenAI
+            if self.ai_status['openai']:
                 try:
-                    ai_analysis = self.coordinator.ai_provider.query(
+                    openai_analysis = self.coordinator.ai_analyzer.query_openai(
                         ai_prompt,
                         "Sen TEFAS fonu uzmanısın."
                     )
-                    response += ai_analysis
+                    response += f"\n📱 OpenAI Analizi:\n{openai_analysis}\n"
                 except Exception as e:
-                    response += f"❌ AI analizi alınamadı: {str(e)[:50]}\n"
-            else:
-                response += "⚠️ AI sistemi şu anda kullanılamıyor.\n"
+                    response += f"\n📱 OpenAI: ❌ Analiz alınamadı\n"
+
+            # Ollama
+            if self.ai_status['ollama']:
+                try:
+                    ollama_analysis = self.coordinator.ai_analyzer.query_ollama(
+                        ai_prompt,
+                        "Sen TEFAS fonu uzmanısın."
+                    )
+                    response += f"\n🦙 Ollama Analizi:\n{ollama_analysis}\n"
+                except Exception as e:
+                    response += f"\n🦙 Ollama: ❌ Analiz alınamadı\n"
 
             response += f"\n✅ Analiz tamamlandı: {datetime.now().strftime('%H:%M:%S')}\n"
 
@@ -355,27 +362,43 @@ class PerformanceAnalyzerMain:
             Yukarıdaki bilgilerle bu fonların yatırımcısı için risk/getiri profili ve stratejisi hakkında maksimum 300 kelimeyle değerlendirme ve öneri yap.
             """
             
-            response += f"\n🤖 AI YORUM VE ÖNERİLER:\n"
-            response += f"{'='*25}\n"
-
-            if hasattr(self.coordinator, 'ai_provider') and self.coordinator.ai_provider.is_available():
-                print("🤖 AI analizi yapılıyor...")
+            # OpenAI Analizi
+            if self.ai_status['openai']:
+                print("🤖 OpenAI analizi yapılıyor...")
                 try:
-                    ai_response = self.coordinator.ai_provider.query(
+                    openai_response = self.coordinator.ai_analyzer.query_openai(
+                        ai_prompt, 
+                        "Sen TEFAS uzmanı bir finansal analistsin."
+                    )
+                    response += f"\n📱 OpenAI (GPT) Değerlendirmesi:\n"
+                    response += f"   {openai_response}\n"
+                except Exception as e:
+                    response += f"\n📱 OpenAI Değerlendirmesi:\n"
+                    response += f"   ❌ Analiz alınamadı: {str(e)[:100]}\n"
+            else:
+                response += f"\n📱 OpenAI: ❌ Mevcut değil\n"
+            
+            # Ollama Analizi
+            if self.ai_status['ollama']:
+                print("🦙 Ollama analizi yapılıyor...")
+                try:
+                    ollama_response = self.coordinator.ai_analyzer.query_ollama(
                         ai_prompt,
                         "Sen TEFAS uzmanı bir finansal analistsin."
                     )
-                    response += f"\n{ai_response}\n"
+                    response += f"\n🦙 Ollama (Mistral) Değerlendirmesi:\n"
+                    response += f"   {ollama_response}\n"
                 except Exception as e:
-                    response += f"\n❌ AI analizi alınamadı: {str(e)[:100]}\n"
+                    response += f"\n🦙 Ollama Değerlendirmesi:\n"
+                    response += f"   ❌ Analiz alınamadı: {str(e)[:100]}\n"
             else:
-                response += f"\n⚠️ AI sistemi şu anda kullanılamıyor.\n"
+                response += f"\n🦙 Ollama: ❌ Mevcut değil\n"
             
             # AI Karşılaştırma Özeti
-            # if self.ai_status['openai'] and self.ai_status['ollama']:
-            #     response += f"\n🎯 AI KARŞILAŞTIRMASI:\n"
-            #     response += f"   Her iki AI de analiz tamamlandı. Yukarıdaki yorumları karşılaştırabilirsiniz.\n"
-            #     response += f"   OpenAI genellikle daha detaylı, Ollama daha özlü yorumlar yapar.\n"
+            if self.ai_status['openai'] and self.ai_status['ollama']:
+                response += f"\n🎯 AI KARŞILAŞTIRMASI:\n"
+                response += f"   Her iki AI de analiz tamamlandı. Yukarıdaki yorumları karşılaştırabilirsiniz.\n"
+                response += f"   OpenAI genellikle daha detaylı, Ollama daha özlü yorumlar yapar.\n"
             
             # RİSK UYARILARI
             response += f"\n⚠️ 2025 RİSK UYARILARI:\n"

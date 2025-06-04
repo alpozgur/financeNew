@@ -13,7 +13,7 @@ from analysis.technical import TechnicalAnalyzer
 from analysis.monte_carlo import MonteCarloAnalyzer, RiskAnalyzer
 from analysis.ai_analysis import AIAnalyzer
 from analysis.portfolio_optimization import PortfolioOptimizer
-
+from ai_provider import AIProvider
 class AnalysisCoordinator:
     """Tüm analiz modüllerini koordine eden ana sınıf"""
     
@@ -31,7 +31,7 @@ class AnalysisCoordinator:
         self.risk_analyzer = RiskAnalyzer(self.db, config)
         self.ai_analyzer = AIAnalyzer(self.db, config)
         self.portfolio_optimizer = PortfolioOptimizer(self.db, config)
-        
+        self.ai_provider = AIProvider(self)
         self.logger.info("Analysis Coordinator başlatıldı")
     
     def comprehensive_fund_analysis(self, fcode: str, days: int = 252) -> Dict:
