@@ -3,6 +3,7 @@
 TEFAS Analysis System - Dual AI Q&A (OpenAI vs Ollama)
 Her iki AI'ın da yanıt vermesi için güncellenmiş versiyon
 """
+import numbers
 import re
 import sys
 from typing import List, Dict, Optional, Any, Tuple
@@ -30,7 +31,7 @@ from macroeconomic_analyzer import MacroeconomicAnalyzer
 from smart_question_router import SmartQuestionRouter
 from response_merger import ResponseMerger
 from ai_provider import AIProvider
-
+from ai_smart_question_router import AISmartQuestionRouter
 @dataclass
 class RouteMatch:
     """Route eşleşme sonucu"""
@@ -77,7 +78,8 @@ class DualAITefasQA:
         self.router = SmartQuestionRouter()
         self.response_merger = ResponseMerger()
         self.enable_multi_handler = True  # Feature flag
-        
+        self.ai_router = AISmartQuestionRouter(self.ai_provider)
+        self.use_ai_routing = True
                 # Makroekonomik analyzer'ı oluştur - HATA KONTROLÜ İLE
         try:
             print("📊 Makroekonomik analyzer yükleniyor...")
@@ -155,25 +157,28 @@ class DualAITefasQA:
         """Multi-handler desteği ile soru cevaplama"""
         question_lower = normalize_turkish_text(question)
         
-        if self.enable_multi_handler:
-            # Multi-handler routing
-            route_results = self.router.route_question_multi(question)
-            
-            if route_results:
-                # Score threshold kontrolü
-                valid_routes = [r for r in route_results if r.score >= self.router.min_score_threshold]
+        if self.use_ai_routing:
+            # AI destekli routing
+            try:
+                route_results = self.ai_router.route_question_multi(question)
                 
-                if valid_routes:
+                if route_results:
+                    print(f"AI Routing: {len(route_results)} handler bulundu")
+                    for route in route_results:
+                        print(f"  - {route.handler}.{route.method} (confidence: {route.confidence:.2f})")
+                    
                     # Multi-handler execution
-                    responses = self._execute_multi_handlers(valid_routes, question, question_lower)
+                    responses = self._execute_multi_handlers(route_results, question, question_lower)
                     
                     if responses:
-                        # Yanıtları birleştir
                         return self.response_merger.merge_responses(responses, question)
+            
+            except Exception as e:
+                print(f"AI routing hatası, fallback kullanılıyor: {e}")
         
-        # Fallback: Legacy routing (eski sistem)
+        # Fallback: Legacy routing
         numbers_in_question = re.findall(r'(\d+)', question)
-        requested_count = int(numbers_in_question[0]) if numbers_in_question else 1
+        requested_count = int(numbers_in_question[0]) if numbers else 1
         return self._legacy_routing(question, question_lower, requested_count)
 
     def _execute_multi_handlers(self, routes: List[RouteMatch], question: str, question_lower: str) -> List[Dict]:

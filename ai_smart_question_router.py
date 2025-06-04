@@ -152,39 +152,35 @@ class AISmartQuestionRouter:
         
         prompt = f"""
         Kullanıcı sorusu: "{question}"
-        
+
         Mevcut modüller ve yetenekleri:
         {modules_info}
-        
-        Bu soruyu en iyi cevaplayabilecek modül(leri) ve metod(ları) belirle.
-        Multi-handler mümkün - birden fazla modül gerekebilir.
-        
-        Önemli kurallar:
-        1. Sadece yukarıdaki modüllerden ve metodlardan seç
-        2. En spesifik ve uygun olanı tercih et
-        3. Confidence score 0-1 arası olmalı
-        4. Context'e sayısal değerleri ekle (varsa)
-        
-        JSON formatında döndür:
+
+        KURALLAR:
+        1. Birden fazla modül gerekiyorsa hepsini döndür
+        2. requested_count sadece "kaç tane", "5 fon", "10 fon" gibi durumlar için
+        3. Beta/threshold değerleri için "threshold" veya "value" kullan
+        4. Multi-handler örnek: Dolar fonları hem currency_inflation_analyzer hem performance_analyzer kullanabilir
+
+        Örnek multi-handler response:
         {{
             "routes": [
                 {{
-                    "handler": "module_name",
-                    "method": "method_name",
-                    "confidence": 0.95,
-                    "reasoning": "Neden bu modül/metod seçildi",
-                    "context": {{
-                        "requested_count": 5,  // eğer sayı varsa
-                        "days": 30,  // eğer zaman aralığı varsa
-                        "currency": "usd"  // eğer döviz varsa
-                    }}
+                    "handler": "currency_inflation_analyzer",
+                    "method": "analyze_currency_funds",
+                    "confidence": 0.90,
+                    "reasoning": "Dolar fonlarını filtrelemek için"
+                }},
+                {{
+                    "handler": "performance_analyzer",
+                    "method": "handle_analysis_question_dual",
+                    "confidence": 0.85,
+                    "reasoning": "Performans analizi için"
                 }}
             ],
-            "requires_multi_handler": false,
-            "explanation": "Genel açıklama"
+            "requires_multi_handler": true
         }}
-        """
-        
+        """        
         try:
             response = self.ai_provider.query(
                 prompt,
@@ -198,6 +194,94 @@ class AISmartQuestionRouter:
             self.logger.error(f"AI routing hatası: {e}")
             return None
     
+    def _extract_context(self, question: str) -> Dict:
+        """Sorudan context bilgilerini çıkar"""
+        context = {}
+        
+        # Sayılar
+        numbers = re.findall(r'(\d+)', question)
+        
+        # "X fon", "X tane" pattern'i - SADECE bu durumda requested_count
+        count_pattern = re.search(r'(\d+)\s*(fon|tane|adet)', question.lower())
+        if count_pattern:
+            context['requested_count'] = int(count_pattern.group(1))
+        
+        # Beta, alpha gibi threshold değerleri
+        threshold_patterns = [
+            (r'beta.*?(\d+\.?\d*)', 'beta_threshold'),
+            (r'alpha.*?(\d+\.?\d*)', 'alpha_threshold'),
+            (r'sharpe.*?(\d+\.?\d*)', 'sharpe_threshold'),
+            (r'%\s*(\d+)', 'percentage'),  # %50 gibi
+            (r'(\d+).*?den\s*(düşük|az|küçük)', 'max_threshold'),
+            (r'(\d+).*?den\s*(yüksek|fazla|büyük)', 'min_threshold')
+        ]
+        
+        for pattern, context_key in threshold_patterns:
+            match = re.search(pattern, question.lower())
+            if match:
+                # Eğer "den düşük/yüksek" pattern'i ise
+                if context_key in ['max_threshold', 'min_threshold']:
+                    context[context_key] = float(match.group(1))
+                else:
+                    context[context_key] = float(match.group(1))
+        
+        # Para birimleri
+        currency_patterns = {
+            'dolar': 'usd',
+            'usd': 'usd',
+            'euro': 'eur',
+            'eur': 'eur',
+            'sterlin': 'gbp',
+            'pound': 'gbp'
+        }
+        
+        question_lower = question.lower()
+        for currency_word, currency_code in currency_patterns.items():
+            if currency_word in question_lower:
+                context['currency'] = currency_code
+                break
+        
+        # Zaman aralıkları
+        time_patterns = [
+            (r'bugün', {'period': 'today', 'days': 1}),
+            (r'bu hafta', {'period': 'week', 'days': 7}),
+            (r'bu ay', {'period': 'month', 'days': 30}),
+            (r'bu yıl', {'period': 'year', 'days': 365}),
+            (r'son\s*(\d+)\s*gün', lambda m: {'days': int(m.group(1))}),
+            (r'son\s*(\d+)\s*ay', lambda m: {'days': int(m.group(1)) * 30}),
+            (r'son\s*(\d+)\s*yıl', lambda m: {'days': int(m.group(1)) * 365})
+        ]
+        
+        for pattern, value in time_patterns:
+            match = re.search(pattern, question_lower)
+            if match:
+                if callable(value):
+                    context.update(value(match))
+                else:
+                    context.update(value)
+                break
+        
+        # YENİ: Sharpe için min_threshold da ekle
+        if 'sharpe_threshold' in context and 'yüksek' in question_lower:
+            context['min_threshold'] = context['sharpe_threshold']
+        
+        # Emeklilik pattern'i - DÜZELTME
+        if 'emeklilik' in question_lower or 'emekliliğe' in question_lower:
+            # "10 yıl kala", "10 yıl var", "10 yılım var" gibi pattern'ler
+            years_patterns = [
+                r'(\d+)\s*yıl.*?kala',
+                r'(\d+)\s*yıl.*?var',
+                r'(\d+)\s*yılım',
+                r'(\d+)\s*sene'
+            ]
+            
+            for pattern in years_patterns:
+                match = re.search(pattern, question_lower)
+                if match:
+                    context['years_to_goal'] = int(match.group(1))
+                    break
+        
+        return context
     def _parse_ai_response(self, response: str) -> Optional[Dict]:
         """AI yanıtını parse et"""
         try:
@@ -213,34 +297,46 @@ class AISmartQuestionRouter:
             return None
     
     def _convert_ai_routes_to_matches(self, ai_routes: Dict, question: str) -> List[AIRouteMatch]:
-        """AI route önerilerini AIRouteMatch objesine çevir"""
+        """AI route önerilerini AIRouteMatch objesine çevir - POST-PROCESSING EKLENDİ"""
         matches = []
+        question_lower = question.lower()
+        
+        # Manuel context extraction
+        extracted_context = self._extract_context(question)
         
         for route in ai_routes.get('routes', []):
-            # Context'i zenginleştir
-            context = route.get('context', {})
+            handler = route['handler']
+            method = route['method']
             
-            # Sayıları otomatik detect et (AI yapmamışsa)
-            if 'requested_count' not in context:
-                numbers = re.findall(r'(\d+)', question)
-                if numbers:
-                    context['requested_count'] = int(numbers[0])
+            # ÖZEL KURAL: "olursa" içeren enflasyon soruları
+            if 'olursa' in question_lower and 'enflasyon' in question_lower:
+                if handler == 'currency_inflation_analyzer':
+                    # Scenario analyzer'a yönlendir
+                    handler = 'scenario_analyzer'
+                    method = 'analyze_inflation_scenario'
+                    route['reasoning'] = "Enflasyon senaryosu tespit edildi"
+            
+            # Context birleştirme
+            ai_context = route.get('context', {})
+            final_context = {**ai_context, **extracted_context}
+            
+            # Gereksiz requested_count temizleme
+            if 'requested_count' in final_context:
+                if not re.search(r'\d+\s*(fon|tane|adet)', question.lower()):
+                    final_context.pop('requested_count', None)
             
             match = AIRouteMatch(
-                handler=route['handler'],
-                method=route['method'],
+                handler=handler,
+                method=method,
                 score=route['confidence'],
-                context=context,
+                context=final_context,
                 reasoning=route.get('reasoning', ''),
                 confidence=route['confidence']
             )
             matches.append(match)
         
-        # Confidence'a göre sırala
         matches.sort(key=lambda x: x.confidence, reverse=True)
-        
-        return matches
-    
+        return matches    
     def _legacy_route(self, question: str) -> List[AIRouteMatch]:
         """Fallback: Eski pattern matching sistemi"""
         # Basit keyword matching
