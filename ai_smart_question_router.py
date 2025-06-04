@@ -474,7 +474,20 @@ class AISmartQuestionRouter:
                     reasoning="Currency performance pattern match",
                     confidence=1.0
                 )
-        
+
+        # YENİ: AI Pattern Recognition öncelik kontrolü
+        if any(word in question_lower for word in ['ai teknik', 'ai pattern', 'yapay zeka teknik', 
+                                                    'ai sinyal', 'pattern analiz']):
+            return AIRouteMatch(
+                handler='technical_analyzer',
+                method='handle_ai_pattern_analysis',
+                score=1.0,
+                context=context,
+                reasoning="AI technical pattern match",
+                confidence=1.0
+            )
+
+
         # 4. Portfolio company patterns
         # 4. Portfolio company patterns - DÜZELTME
         company_patterns = [

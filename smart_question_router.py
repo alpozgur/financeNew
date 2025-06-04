@@ -306,6 +306,21 @@ class SmartQuestionRouter:
                 requested_count = max(big_numbers) if big_numbers else int(numbers[-1])
             else:
                 requested_count = None
+        # 🤖 ÖNCELİKLİ AI PATTERN KONTROLÜ
+        if any(word in question_lower for word in ['ai teknik', 'ai pattern', 'ai sinyal', 
+                                                'yapay zeka teknik', 'pattern analiz']):
+            # Direkt AI pattern handler'a yönlendir
+            match = RouteMatch(
+                handler='technical_analyzer',
+                method='handle_ai_pattern_analysis',
+                score=100,  # En yüksek skor
+                context={'requested_count': requested_count if 'requested_count' in locals() else None},
+                matched_patterns=['ai_pattern_priority'],
+                route_name='ai_pattern_analysis',
+                priority=100,
+                execution_order=1
+            )
+            return [match]  # Sadece bunu döndür
         
         # DEBUG
         print(f"[ROUTER] Question: {question}")

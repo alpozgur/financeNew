@@ -65,7 +65,11 @@ class DualAITefasQA:
         
         # Modüllere ai_status yerine ai_provider geçebiliriz ama şimdilik uyumluluk için böyle
         self.advanced_metrics_analyzer = AdvancedMetricsAnalyzer(self.coordinator, self.active_funds, self.ai_status)
-        self.technical_analyzer = TechnicalAnalysis(self.coordinator, self.active_funds)
+        self.technical_analyzer = TechnicalAnalysis(
+            self.coordinator, 
+            self.active_funds,
+            self.ai_provider  # YENİ - ai_provider'ı geç
+        )
         self.fundamental_analyzer = FundamentalAnalysisEnhancement(self.coordinator, self.active_funds)
         self.portfolio_analyzer = EnhancedPortfolioCompanyAnalyzer(self.coordinator)
         self.thematic_analyzer = ThematicFundAnalyzer(self.coordinator.db, self.config)
@@ -166,7 +170,11 @@ class DualAITefasQA:
     def answer_question(self, question):
         """Multi-handler desteği ile soru cevaplama"""
         question_lower = normalize_turkish_text(question)
-        
+        # 🚀 ÖNCELİKLİ KONTROL - AI PATTERN
+        if any(word in question_lower for word in ['ai pattern', 'ai teknik', 'pattern analiz', 
+                                                'ai sinyal', 'yapay zeka teknik']):
+            print("🎯 AI Pattern Analysis'e direkt yönlendiriliyor")
+            return self.technical_analyzer.handle_ai_pattern_analysis(question)        
         if self.use_ai_routing:
             # AI destekli routing
             try:
@@ -311,6 +319,11 @@ class DualAITefasQA:
     def _legacy_routing(self, question, question_lower, requested_count):
         """Mevcut if-else routing mantığınız - TAM OLARAK AYNI"""
         
+        # 🤖 AI PATTERN RECOGNITION - EN ÖNCE KONTROL ET!
+        if any(word in question_lower for word in ['ai teknik', 'ai pattern', 'ai sinyal', 
+                                                'yapay zeka teknik', 'pattern analiz',
+                                                'ai analiz']):
+            return self.technical_analyzer.handle_ai_pattern_analysis(question)
         # 🎲 SENARYO ANALİZİ SORULARI - YENİ
         if self.scenario_analyzer.is_scenario_question(question):
             return self.scenario_analyzer.analyze_scenario_question(question)
@@ -469,6 +482,7 @@ class DualAITefasQA:
              return self._handle_risk_question(question)
         elif any(word in question_lower for word in ['piyasa', 'market', 'durum']):
              return self._handle_market_question_dual(question)
+
         elif any(word in question_lower for word in ['macd', 'bollinger', 'rsi', 'hareketli ortalama', 
                                                      'moving average', 'sma', 'ema', 'teknik sinyal',
                                                      'alım sinyali', 'satım sinyali', 'aşırı satım',
@@ -478,6 +492,7 @@ class DualAITefasQA:
                  return technical_result
              else:
                  return self._handle_general_question(question)
+
         elif any(word in question_lower for word in ['ai', 'yapay zeka', 'test']):
             return self._handle_ai_test_question(question)
         else:
