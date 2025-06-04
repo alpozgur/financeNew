@@ -459,6 +459,66 @@ class PerformanceAnalyzerMain:
         except Exception as e:
             return f"❌ Karşılaştırma hatası: {e}"
     
+    def handle_top_gainers(self, question, count=10):
+        """En çok kazandıran fonların listesi"""
+        print(f"[PERF] handle_top_gainers called with question='{question}', count={count}")
+        
+        # Zaman periyodunu belirle
+        if 'son 1 ay' in question.lower() or '1 ay' in question.lower():
+            days = 30
+            period_name = "1 AY"
+        elif 'son 3 ay' in question.lower():
+            days = 90
+            period_name = "3 AY"
+        elif 'son 6 ay' in question.lower():
+            days = 180
+            period_name = "6 AY"
+        else:
+            days = 30
+            period_name = "30 GÜN"
+        
+        top_gainers = []
+        
+        for fcode in self.active_funds[:50]:  # İlk 50 fonu kontrol et
+            try:
+                data = self.coordinator.db.get_fund_price_history(fcode, days)
+                
+                if len(data) >= 10:
+                    prices = data['price']
+                    total_return = (prices.iloc[-1] / prices.iloc[0] - 1) * 100
+                    
+                    details = self.coordinator.db.get_fund_details(fcode)
+                    fund_name = details.get('fund_name', 'N/A') if details else 'N/A'
+                    
+                    top_gainers.append({
+                        'fcode': fcode,
+                        'total_return': total_return,
+                        'current_price': prices.iloc[-1],
+                        'fund_name': fund_name
+                    })
+                    
+            except Exception:
+                continue
+        
+        # Getiriye göre sırala
+        top_gainers.sort(key=lambda x: x['total_return'], reverse=True)
+        
+        if top_gainers:
+            response = f"\n📈 SON {period_name} EN ÇOK KAZANDIRAN {count} FON\n"
+            response += f"{'='*50}\n\n"
+            
+            for i, fund in enumerate(top_gainers[:count], 1):
+                response += f"{i:2d}. {fund['fcode']}\n"
+                response += f"    📊 {period_name} Getiri: %{fund['total_return']:.2f}\n"
+                response += f"    💰 Güncel Fiyat: {fund['current_price']:.4f} TL\n"
+                if fund['fund_name'] != 'N/A':
+                    response += f"    📝 Adı: {fund['fund_name'][:45]}...\n"
+                response += f"\n"
+            
+            return response
+        else:
+            return f"❌ {period_name} getiri analizi yapılamadı."
+    
     def handle_safest_funds_sql_fast(self, count=10):
         """SQL tabanlı süper hızlı güvenli fonlar - Kullanıcı sayısına göre"""
         print(f"🛡️ SQL ile en güvenli {count} fon analizi...")

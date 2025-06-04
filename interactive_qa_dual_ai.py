@@ -5,6 +5,8 @@ Her iki AI'ın da yanıt vermesi için güncellenmiş versiyon
 """
 import re
 import sys
+from typing import List, Dict, Optional, Any, Tuple
+from dataclasses import dataclass
 import pandas as pd
 import numpy as np
 from config.config import Config
@@ -25,8 +27,18 @@ from scenario_analysis import ScenarioAnalyzer
 from personal_finance_analyzer import PersonalFinanceAnalyzer
 from mathematical_calculations import MathematicalCalculator
 from macroeconomic_analyzer import MacroeconomicAnalyzer
+from smart_question_router import SmartQuestionRouter
+from response_merger import ResponseMerger
 
-
+@dataclass
+class RouteMatch:
+    """Route eşleşme sonucu"""
+    handler: str
+    method: str
+    score: float
+    context: Dict[str, Any]
+    matched_pattern: Optional[str] = None
+    route_name: Optional[str] = None
 class DualAITefasQA:
     """TEFAS Soru-Cevap Sistemi - OpenAI ve Ollama karşılaştırmalı"""
     
@@ -51,7 +63,11 @@ class DualAITefasQA:
         self.time_analyzer = TimeBasedAnalyzer(self.coordinator, self.active_funds)
         self.scenario_analyzer = ScenarioAnalyzer(self.coordinator, self.active_funds)
         self.math_calculator = MathematicalCalculator(self.coordinator, self.active_funds)
-        # Makroekonomik analyzer'ı oluştur - HATA KONTROLÜ İLE
+        self.router = SmartQuestionRouter()
+        self.response_merger = ResponseMerger()
+        self.enable_multi_handler = True  # Feature flag
+        
+                # Makroekonomik analyzer'ı oluştur - HATA KONTROLÜ İLE
         try:
             print("📊 Makroekonomik analyzer yükleniyor...")
             self.macro_analyzer = MacroeconomicAnalyzer(self.coordinator.db, self.config, self.coordinator)
@@ -115,21 +131,159 @@ class DualAITefasQA:
             print("   ⚠️ Hiçbir AI sistemi aktif değil")
             
         return ai_status
-    
+
     def answer_question(self, question):
-        """Soruya her iki AI ile de cevap ver"""
-        question_lower =normalize_turkish_text(question)
-        print(f"DEBUG - Question lower: {question_lower}")
-        print(f"DEBUG - Alpha check: {any(word in question_lower for word in ['alpha degeri', 'alpha pozitif'])}")
-        print(f"DEBUG - Tracking check: {any(word in question_lower for word in ['tracking error', 'takip hatasi'])}")
-        # Sayısal değer parsing (10 fon, 5 fon vs.)
+        """Multi-handler desteği ile soru cevaplama"""
+        question_lower = normalize_turkish_text(question)
+        
+        if self.enable_multi_handler:
+            # Multi-handler routing
+            route_results = self.router.route_question_multi(question)
+            
+            if route_results:
+                # Score threshold kontrolü
+                valid_routes = [r for r in route_results if r.score >= self.router.min_score_threshold]
+                
+                if valid_routes:
+                    # Multi-handler execution
+                    responses = self._execute_multi_handlers(valid_routes, question, question_lower)
+                    
+                    if responses:
+                        # Yanıtları birleştir
+                        return self.response_merger.merge_responses(responses, question)
+        
+        # Fallback: Legacy routing (eski sistem)
         numbers_in_question = re.findall(r'(\d+)', question)
         requested_count = int(numbers_in_question[0]) if numbers_in_question else 1
-    # 🎲 SENARYO ANALİZİ SORULARI - YENİ
+        return self._legacy_routing(question, question_lower, requested_count)
+
+    def _execute_multi_handlers(self, routes: List[RouteMatch], question: str, question_lower: str) -> List[Dict]:
+        """Birden fazla handler'ı çalıştır"""
+        responses = []
+        executed_handlers = set()  # Aynı handler'ı iki kez çalıştırma
+
+        print(f"[EXEC] Total routes: {len(routes)}")
+        for route in routes:
+            print(f"[EXEC] Route: {route.handler}.{route.method}, Context: {route.context}")
+        for route in routes:
+            handler_name = route.handler
+            
+            # Aynı handler'ı tekrar çalıştırma
+            if handler_name in executed_handlers:
+                continue
+                
+            # Handler'ı bul
+            handler = self._get_handler_instance(handler_name)
+            if not handler:
+                continue
+            
+            try:
+                # Method'u çalıştır
+                method = getattr(handler, route.method, None)
+                if method:
+                    # Context'ten parametreleri hazırla
+                    params = {'question': question}
+                    
+                    # Context'ten gelen parametreleri ekle
+                    if route.context.get('requested_count'):
+                        params['count'] = route.context['requested_count']
+
+                    print(f"[EXEC] Calling {handler_name}.{route.method} with params: {params}")
+
+                    if route.context.get('days'):
+                        params['days'] = route.context['days']
+                    
+                    if route.context.get('currency'):
+                        params['currency'] = route.context['currency']
+                    
+                    # Method signature kontrolü (basit versiyon)
+                    import inspect
+                    sig = inspect.signature(method)
+                    valid_params = {}
+                    for param_name, param_value in params.items():
+                        if param_name in sig.parameters:
+                            valid_params[param_name] = param_value
+                    print(f"[EXEC] Valid params after signature check: {valid_params}")
+
+
+                    # Handler'ı çalıştır
+                    result = method(**valid_params)
+                    
+                    if result:
+                        responses.append({
+                            'handler': handler_name,
+                            'response': result,
+                            'score': route.score,
+                            'context': route.context
+                        })
+                        executed_handlers.add(handler_name)
+                        
+            except Exception as e:
+                print(f"[EXEC] Handler execution error ({handler_name}): {e}")
+                import traceback
+                traceback.print_exc()
+                continue
+        
+        return responses
+
+    def _get_handler_instance(self, handler_name: str):
+        """Handler instance'ını döndür"""
+        handler_map = {
+            'performance_analyzer': self.performanceMain,
+            'scenario_analyzer': self.scenario_analyzer,
+            'personal_finance_analyzer': self.personal_analyzer,
+            'technical_analyzer': self.technical_analyzer,
+            'currency_inflation_analyzer': self.currency_analyzer,
+            'portfolio_company_analyzer': self.portfolio_analyzer,
+            'mathematical_calculator': self.math_calculator,
+            'time_based_analyzer': self.time_analyzer,
+            'macroeconomic_analyzer': self.macro_analyzer,
+            'advanced_metrics_analyzer': self.advanced_metrics_analyzer,
+            'thematic_analyzer': self.thematic_analyzer,
+            'fundamental_analyzer': self.fundamental_analyzer
+        }
+        return handler_map.get(handler_name)
+    
+    def _prepare_handler_params(self, route: RouteMatch, question: str, question_lower: str) -> Dict:
+        """Handler için parametreleri hazırla"""
+        params = {'question': question}
+        
+        # Context'ten parametreleri al
+        if 'requested_count' in route.context:
+            params['count'] = route.context['requested_count']
+            params['requested_count'] = route.context['requested_count']
+        
+        if 'days' in route.context:
+            params['days'] = route.context['days']
+        
+        if 'currency' in route.context:
+            params['currency'] = route.context['currency']
+        
+        # Method signature'a göre filtrele
+        # (Gerçek implementasyonda method signature kontrolü yapılmalı)
+        
+        return params
+
+    def _legacy_single_handler(self, question: str, question_lower: str) -> str:
+        """Eski tek handler sistemi (fallback)"""
+        # Mevcut _legacy_routing metodunuzu buraya taşıyın
+        numbers_in_question = re.findall(r'(\d+)', question)
+        requested_count = int(numbers_in_question[0]) if numbers_in_question else 1
+        
+        return self._legacy_routing(question, question_lower, requested_count)
+
+    
+
+    def _legacy_routing(self, question, question_lower, requested_count):
+        """Mevcut if-else routing mantığınız - TAM OLARAK AYNI"""
+        
+        # 🎲 SENARYO ANALİZİ SORULARI - YENİ
         if self.scenario_analyzer.is_scenario_question(question):
             return self.scenario_analyzer.analyze_scenario_question(question)
+            
         if CurrencyInflationAnalyzer.is_currency_inflation_question(question):
             return self.currency_analyzer.analyze_currency_inflation_question(question)
+            
         # Makroekonomik sorular - HATA AYIKLAMA İÇİN TRY-EXCEPT EKLE
         try:
             if hasattr(self, 'macro_analyzer') and self.macro_analyzer.is_macroeconomic_question(question):
@@ -140,17 +294,19 @@ class DualAITefasQA:
             traceback.print_exc()
             return f"❌ Makroekonomik analiz hatası: {str(e)}\n\nLütfen soruyu farklı şekilde sorun."
 
-
         if MathematicalCalculator.is_mathematical_question(question):
             return self.math_calculator.analyze_mathematical_question(question)
+            
         # KİŞİSEL FİNANS SORULARI
         if self.personal_analyzer.is_personal_finance_question(question):
             return self.personal_analyzer.analyze_personal_finance_question(question)
+            
         # ZAMAN BAZLI ANALİZLER - YENİ
         if TimeBasedAnalyzer.is_time_based_question(question):
             time_result = self.time_analyzer.analyze_time_based_question(question)
             if time_result:
-                return time_result        
+                return time_result
+                
         # GÜVENLİ FONLAR - ÇOKLU LİSTE DESTEĞİ
         if any(word in question_lower for word in ['en güvenli', 'en az riskli', 'güvenli fonlar']):
             # Eğer sayı belirtilmişse (örn: "en güvenli 10 fon") -> liste ver
@@ -172,127 +328,309 @@ class DualAITefasQA:
             if requested_count > 1 or 'fonlar' in question_lower:
                 return self.performanceMain.handle_worst_funds_list(requested_count)
             else:
-                return self.performanceMain.handle_worst_fund()        
-        # Özel risk sorusu yakalama
+                return self.performanceMain.handle_worst_fund()
+                     # Özel risk sorusu yakalama
         if "en riskli" in question_lower:
-            return self.performanceMain.handle_most_risky_fund()
+             return self.performanceMain.handle_most_risky_fund()
         if "en güvenli" in question_lower or "en az riskli" in question_lower:
-            return self.performanceMain.handle_safest_fund()
+             return self.performanceMain.handle_safest_fund()
         if "en çok kaybettiren" in question_lower or "en çok düşen" in question_lower:
-            return self.performanceMain.handle_worst_fund()
-
+             return self.performanceMain.handle_worst_fund()
         if any(word in question_lower for word in ['portföy', 'portfolio']):
-            
+           
             # Belirli şirket kapsamlı analizi
-            if any(word in question_lower for word in ['iş portföy', 'is portfoy', 'işbank portföy']):
-                return self.portfolio_analyzer.analyze_company_comprehensive('İş Portföy')
+             if any(word in question_lower for word in ['iş portföy', 'is portfoy', 'işbank portföy']):
+                 return self.portfolio_analyzer.analyze_company_comprehensive('İş Portföy')
             
-            elif any(word in question_lower for word in ['ak portföy', 'akbank portföy']):
-                return self.portfolio_analyzer.analyze_company_comprehensive('Ak Portföy')
+             elif any(word in question_lower for word in ['ak portföy', 'akbank portföy']):
+                 return self.portfolio_analyzer.analyze_company_comprehensive('Ak Portföy')
             
-            elif any(word in question_lower for word in ['garanti portföy', 'garantibank portföy']):
-                return self.portfolio_analyzer.analyze_company_comprehensive('Garanti Portföy')
+             elif any(word in question_lower for word in ['garanti portföy', 'garantibank portföy']):
+                 return self.portfolio_analyzer.analyze_company_comprehensive('Garanti Portföy')
             
-            elif any(word in question_lower for word in ['ata portföy']):
-                return self.portfolio_analyzer.analyze_company_comprehensive('Ata Portföy')
+             elif any(word in question_lower for word in ['ata portföy']):
+                 return self.portfolio_analyzer.analyze_company_comprehensive('Ata Portföy')
             
-            elif any(word in question_lower for word in ['qnb portföy']):
-                return self.portfolio_analyzer.analyze_company_comprehensive('QNB Portföy')
+             elif any(word in question_lower for word in ['qnb portföy']):
+                 return self.portfolio_analyzer.analyze_company_comprehensive('QNB Portföy')
             
-            elif any(word in question_lower for word in ['fiba portföy', 'fibabank portföy']):
-                return self.portfolio_analyzer.analyze_company_comprehensive('Fiba Portföy')
+             elif any(word in question_lower for word in ['fiba portföy', 'fibabank portföy']):
+                 return self.portfolio_analyzer.analyze_company_comprehensive('Fiba Portföy')
             
-            # Şirket karşılaştırması
-            elif any(word in question_lower for word in ['vs', 'karşı', 'karşılaştır', 'compare']):
-                return self._handle_company_comparison_enhanced(question)
+             # Şirket karşılaştırması
+             elif any(word in question_lower for word in ['vs', 'karşı', 'karşılaştır', 'compare']):
+                 return self._handle_company_comparison_enhanced(question)
             
-            # En başarılı şirket
-            elif any(word in question_lower for word in ['en başarılı', 'en iyi', 'best', 'most successful']):
-                return self.portfolio_analyzer.find_best_portfolio_company_unlimited()
+             # En başarılı şirket
+             elif any(word in question_lower for word in ['en başarılı', 'en iyi', 'best', 'most successful']):
+                 return self.portfolio_analyzer.find_best_portfolio_company_unlimited()
             
-            else:
-                return self._handle_portfolio_companies_overview(question)     
+             else:
+                 return self._handle_portfolio_companies_overview(question)     
             
         elif any(word in question_lower for word in ['beta katsayısı', 'beta değeri', 'beta 1', 
-                                                        'beta düşük', 'beta yüksek', 'beta altında','beta katsayisi', 'beta degeri', 'beta coefficient', 
-                                            'beta 1', 'beta dusuk', 'beta yuksek', 'beta altinda',
-                                            'beta less than', 'beta greater than']):
-            return self.advanced_metrics_analyzer.handle_beta_analysis(question)
+                                                         'beta düşük', 'beta yüksek', 'beta altında','beta katsayisi', 'beta degeri', 'beta coefficient', 
+                                             'beta 1', 'beta dusuk', 'beta yuksek', 'beta altinda',
+                                             'beta less than', 'beta greater than']):
+             return self.advanced_metrics_analyzer.handle_beta_analysis(question)
             
         elif any(word in question_lower for word in ['alpha değeri', 'alpha pozitif', 'jensen alpha', 
-                                                        'alpha negatif', 'alfa değeri', 'alfa pozitif']):
-            return self.advanced_metrics_analyzer.handle_alpha_analysis(question)
+                                                         'alpha negatif', 'alfa değeri', 'alfa pozitif']):
+             return self.advanced_metrics_analyzer.handle_alpha_analysis(question)
             
         elif any(word in question_lower for word in ['tracking error', 'takip hatası', 'index fon tracking',
-                                                        'endeks fon tracking', 'tracking error düşük']):
-            return self.advanced_metrics_analyzer.handle_tracking_error_analysis(question)
+                                                         'endeks fon tracking', 'tracking error düşük']):
+             return self.advanced_metrics_analyzer.handle_tracking_error_analysis(question)
             
         elif any(word in question_lower for word in ['information ratio', 'bilgi oranı', 'ir yüksek',
-                                                        'information ratio yüksek', 'aktif fon ir']):
-            return self.advanced_metrics_analyzer.handle_information_ratio_analysis(question)
+                                                         'information ratio yüksek', 'aktif fon ir']):
+             return self.advanced_metrics_analyzer.handle_information_ratio_analysis(question)
        
-        # 📈 TEMATİK FON SORULARI - TÜM VERİTABANI 
+         # 📈 TEMATİK FON SORULARI - TÜM VERİTABANI 
         if self.thematic_analyzer.is_thematic_question(question):
-            return self.thematic_analyzer.analyze_thematic_question(question)
-               # FUNDAMENTAL ANALİZ SORULARI 🆕
+             return self.thematic_analyzer.analyze_thematic_question(question)
+                # FUNDAMENTAL ANALİZ SORULARI 🆕
         if any(word in question_lower for word in ['kapasite', 'büyüklük', 'büyük fon']):
-            return self.fundamental_analyzer.handle_capacity_questions(question)
+             return self.fundamental_analyzer.handle_capacity_questions(question)
         
         if any(word in question_lower for word in ['yatırımcı sayısı', 'popüler fon']):
-            return self.fundamental_analyzer.handle_investor_count_questions(question)
+             return self.fundamental_analyzer.handle_investor_count_questions(question)
         
         if any(word in question_lower for word in ['yeni fon', 'yeni kurulan']):
-            return self.fundamental_analyzer.handle_new_funds_questions(question)
+             return self.fundamental_analyzer.handle_new_funds_questions(question)
         
         if any(word in question_lower for word in ['en büyük', 'largest']):
-            return self.fundamental_analyzer.handle_largest_funds_questions(question)
+             return self.fundamental_analyzer.handle_largest_funds_questions(question)
         
         if any(word in question_lower for word in ['en eski', 'köklü']):
-            return self.fundamental_analyzer.handle_fund_age_questions(question)
+             return self.fundamental_analyzer.handle_fund_age_questions(question)
         
         if any(word in question_lower for word in ['kategori', 'tür']):
-            return self.fundamental_analyzer.handle_fund_category_questions(question)        
-        # --- Gelişmiş anahtar kelime tabanlı analizler ---
+             return self.fundamental_analyzer.handle_fund_category_questions(question)        
+         # --- Gelişmiş anahtar kelime tabanlı analizler ---
         if any(word in question_lower for word in ['yatırım dağılımı', 'varlık dağılımı', 'kompozisyon', 'içerik', 'portföy içerik']):
-            return self._handle_fund_allocation_question(question)
+             return self._handle_fund_allocation_question(question)
         if 'fon kategorisi' in question_lower or 'fon türü' in question_lower:
-            return self._handle_fund_category_question(question)
+             return self._handle_fund_category_question(question)
         if any(word in question_lower for word in ['kazanç', 'getiri', 'son 1 yıl', 'son 12 ay', 'geçtiğimiz yıl', 'son yıl']):
-            return self.performanceMain.handle_fund_past_performance_question(question)
+             return self.performanceMain.handle_fund_past_performance_question(question)
         if any(word in question_lower for word in ['en çok kazandıran', 'en çok getiri']):
-            return self.performanceMain.handle_top_gainer_fund_question(question)
+             return self.performanceMain.handle_top_gainer_fund_question(question)
         if 'en çok kazandıran' in question_lower or 'en çok getiri' in question_lower:
-            return self.performanceMain.handle_top_gainer_fund_question(question)
+             return self.performanceMain.handle_top_gainer_fund_question(question)
         if 'düşüşte olan fonlar' in question_lower or 'en çok kaybettiren' in question_lower:
-            return self.performanceMain.handle_top_loser_fund_question(question)
+             return self.performanceMain.handle_top_loser_fund_question(question)
         if 'sharpe oranı en yüksek' in question_lower:
-            return self.performanceMain.handle_top_sharpe_funds_question(question)
+             return self.performanceMain.handle_top_sharpe_funds_question(question)
         if 'volatilite' in question_lower and 'altında' in question_lower:
-            return self.performanceMain.handle_low_volatility_funds_question(question)
-        # --- mevcut kalan kodun ---
+             return self.performanceMain.handle_low_volatility_funds_question(question)
+         # --- mevcut kalan kodun ---
         if any(word in question_lower for word in ['2025', 'öneri', 'öner', 'recommend', 'suggest']):
-            return self.performanceMain.handle_2025_recommendation_dual(question)
+             return self.performanceMain.handle_2025_recommendation_dual(question)
         elif any(word in question_lower for word in ['analiz', 'analyze', 'performance']):
-            return self.performanceMain.handle_analysis_question_dual(question)
+             return self.performanceMain.handle_analysis_question_dual(question)
         elif any(word in question_lower for word in ['karşılaştır', 'compare', 'vs']):
-            return self.performanceMain.handle_comparison_question(question)
+             return self.performanceMain.handle_comparison_question(question)
         elif any(word in question_lower for word in ['risk', 'güvenli', 'safe']):
-            return self._handle_risk_question(question)
+             return self._handle_risk_question(question)
         elif any(word in question_lower for word in ['piyasa', 'market', 'durum']):
-            return self._handle_market_question_dual(question)
+             return self._handle_market_question_dual(question)
         elif any(word in question_lower for word in ['macd', 'bollinger', 'rsi', 'hareketli ortalama', 
-                                                    'moving average', 'sma', 'ema', 'teknik sinyal',
-                                                    'alım sinyali', 'satım sinyali', 'aşırı satım',
-                                                    'aşırı alım', 'golden cross', 'death cross']):
-            technical_result = self._handle_technical_analysis_questions_full_db(question)
-            if technical_result:
-                return technical_result
-            else:
-                return self._handle_general_question(question)
+                                                     'moving average', 'sma', 'ema', 'teknik sinyal',
+                                                     'alım sinyali', 'satım sinyali', 'aşırı satım',
+                                                     'aşırı alım', 'golden cross', 'death cross']):
+             technical_result = self._handle_technical_analysis_questions_full_db(question)
+             if technical_result:
+                 return technical_result
+             else:
+                 return self._handle_general_question(question)
         elif any(word in question_lower for word in ['ai', 'yapay zeka', 'test']):
             return self._handle_ai_test_question(question)
         else:
-            return self._handle_general_question(question)
+             return self._handle_general_question(question)
+
+
+
+
+
+
+    # def answer_question(self, question):
+    #     """Soruya her iki AI ile de cevap ver"""
+    #     question_lower =normalize_turkish_text(question)
+    #     print(f"DEBUG - Question lower: {question_lower}")
+    #     print(f"DEBUG - Alpha check: {any(word in question_lower for word in ['alpha degeri', 'alpha pozitif'])}")
+    #     print(f"DEBUG - Tracking check: {any(word in question_lower for word in ['tracking error', 'takip hatasi'])}")
+    #     # Sayısal değer parsing (10 fon, 5 fon vs.)
+    #     numbers_in_question = re.findall(r'(\d+)', question)
+    #     requested_count = int(numbers_in_question[0]) if numbers_in_question else 1
+    # # 🎲 SENARYO ANALİZİ SORULARI - YENİ
+    #     if self.scenario_analyzer.is_scenario_question(question):
+    #         return self.scenario_analyzer.analyze_scenario_question(question)
+    #     if CurrencyInflationAnalyzer.is_currency_inflation_question(question):
+    #         return self.currency_analyzer.analyze_currency_inflation_question(question)
+    #     # Makroekonomik sorular - HATA AYIKLAMA İÇİN TRY-EXCEPT EKLE
+    #     try:
+    #         if hasattr(self, 'macro_analyzer') and self.macro_analyzer.is_macroeconomic_question(question):
+    #             return self.macro_analyzer.analyze_macroeconomic_impact(question)
+    #     except Exception as e:
+    #         import traceback
+    #         print(f"Makro analiz hatası detayı:")
+    #         traceback.print_exc()
+    #         return f"❌ Makroekonomik analiz hatası: {str(e)}\n\nLütfen soruyu farklı şekilde sorun."
+
+
+    #     if MathematicalCalculator.is_mathematical_question(question):
+    #         return self.math_calculator.analyze_mathematical_question(question)
+    #     # KİŞİSEL FİNANS SORULARI
+    #     if self.personal_analyzer.is_personal_finance_question(question):
+    #         return self.personal_analyzer.analyze_personal_finance_question(question)
+    #     # ZAMAN BAZLI ANALİZLER - YENİ
+    #     if TimeBasedAnalyzer.is_time_based_question(question):
+    #         time_result = self.time_analyzer.analyze_time_based_question(question)
+    #         if time_result:
+    #             return time_result        
+    #     # GÜVENLİ FONLAR - ÇOKLU LİSTE DESTEĞİ
+    #     if any(word in question_lower for word in ['en güvenli', 'en az riskli', 'güvenli fonlar']):
+    #         # Eğer sayı belirtilmişse (örn: "en güvenli 10 fon") -> liste ver
+    #         if requested_count > 1 or 'fonlar' in question_lower:
+    #             return self.performanceMain.handle_safest_funds_sql_fast(requested_count)
+    #         else:
+    #             # Tek fon istiyorsa -> eski metodu kullan
+    #             return self.performanceMain.handle_safest_fund()
+        
+    #     # RİSKLİ FONLAR - ÇOKLU LİSTE DESTEĞİ  
+    #     if "en riskli" in question_lower:
+    #         if requested_count > 1 or 'fonlar' in question_lower:
+    #             return self.performanceMain.handle_riskiest_funds_list(requested_count)
+    #         else:
+    #             return self.performanceMain.handle_most_risky_fund()
+        
+    #     # EN ÇOK KAYBETTİREN - ÇOKLU LİSTE DESTEĞİ
+    #     if any(word in question_lower for word in ['en çok kaybettiren', 'en çok düşen']):
+    #         if requested_count > 1 or 'fonlar' in question_lower:
+    #             return self.performanceMain.handle_worst_funds_list(requested_count)
+    #         else:
+    #             return self.performanceMain.handle_worst_fund()        
+    #     # Özel risk sorusu yakalama
+    #     if "en riskli" in question_lower:
+    #         return self.performanceMain.handle_most_risky_fund()
+    #     if "en güvenli" in question_lower or "en az riskli" in question_lower:
+    #         return self.performanceMain.handle_safest_fund()
+    #     if "en çok kaybettiren" in question_lower or "en çok düşen" in question_lower:
+    #         return self.performanceMain.handle_worst_fund()
+
+    #     if any(word in question_lower for word in ['portföy', 'portfolio']):
+            
+    #         # Belirli şirket kapsamlı analizi
+    #         if any(word in question_lower for word in ['iş portföy', 'is portfoy', 'işbank portföy']):
+    #             return self.portfolio_analyzer.analyze_company_comprehensive('İş Portföy')
+            
+    #         elif any(word in question_lower for word in ['ak portföy', 'akbank portföy']):
+    #             return self.portfolio_analyzer.analyze_company_comprehensive('Ak Portföy')
+            
+    #         elif any(word in question_lower for word in ['garanti portföy', 'garantibank portföy']):
+    #             return self.portfolio_analyzer.analyze_company_comprehensive('Garanti Portföy')
+            
+    #         elif any(word in question_lower for word in ['ata portföy']):
+    #             return self.portfolio_analyzer.analyze_company_comprehensive('Ata Portföy')
+            
+    #         elif any(word in question_lower for word in ['qnb portföy']):
+    #             return self.portfolio_analyzer.analyze_company_comprehensive('QNB Portföy')
+            
+    #         elif any(word in question_lower for word in ['fiba portföy', 'fibabank portföy']):
+    #             return self.portfolio_analyzer.analyze_company_comprehensive('Fiba Portföy')
+            
+    #         # Şirket karşılaştırması
+    #         elif any(word in question_lower for word in ['vs', 'karşı', 'karşılaştır', 'compare']):
+    #             return self._handle_company_comparison_enhanced(question)
+            
+    #         # En başarılı şirket
+    #         elif any(word in question_lower for word in ['en başarılı', 'en iyi', 'best', 'most successful']):
+    #             return self.portfolio_analyzer.find_best_portfolio_company_unlimited()
+            
+    #         else:
+    #             return self._handle_portfolio_companies_overview(question)     
+            
+    #     elif any(word in question_lower for word in ['beta katsayısı', 'beta değeri', 'beta 1', 
+    #                                                     'beta düşük', 'beta yüksek', 'beta altında','beta katsayisi', 'beta degeri', 'beta coefficient', 
+    #                                         'beta 1', 'beta dusuk', 'beta yuksek', 'beta altinda',
+    #                                         'beta less than', 'beta greater than']):
+    #         return self.advanced_metrics_analyzer.handle_beta_analysis(question)
+            
+    #     elif any(word in question_lower for word in ['alpha değeri', 'alpha pozitif', 'jensen alpha', 
+    #                                                     'alpha negatif', 'alfa değeri', 'alfa pozitif']):
+    #         return self.advanced_metrics_analyzer.handle_alpha_analysis(question)
+            
+    #     elif any(word in question_lower for word in ['tracking error', 'takip hatası', 'index fon tracking',
+    #                                                     'endeks fon tracking', 'tracking error düşük']):
+    #         return self.advanced_metrics_analyzer.handle_tracking_error_analysis(question)
+            
+    #     elif any(word in question_lower for word in ['information ratio', 'bilgi oranı', 'ir yüksek',
+    #                                                     'information ratio yüksek', 'aktif fon ir']):
+    #         return self.advanced_metrics_analyzer.handle_information_ratio_analysis(question)
+       
+    #     # 📈 TEMATİK FON SORULARI - TÜM VERİTABANI 
+    #     if self.thematic_analyzer.is_thematic_question(question):
+    #         return self.thematic_analyzer.analyze_thematic_question(question)
+    #            # FUNDAMENTAL ANALİZ SORULARI 🆕
+    #     if any(word in question_lower for word in ['kapasite', 'büyüklük', 'büyük fon']):
+    #         return self.fundamental_analyzer.handle_capacity_questions(question)
+        
+    #     if any(word in question_lower for word in ['yatırımcı sayısı', 'popüler fon']):
+    #         return self.fundamental_analyzer.handle_investor_count_questions(question)
+        
+    #     if any(word in question_lower for word in ['yeni fon', 'yeni kurulan']):
+    #         return self.fundamental_analyzer.handle_new_funds_questions(question)
+        
+    #     if any(word in question_lower for word in ['en büyük', 'largest']):
+    #         return self.fundamental_analyzer.handle_largest_funds_questions(question)
+        
+    #     if any(word in question_lower for word in ['en eski', 'köklü']):
+    #         return self.fundamental_analyzer.handle_fund_age_questions(question)
+        
+    #     if any(word in question_lower for word in ['kategori', 'tür']):
+    #         return self.fundamental_analyzer.handle_fund_category_questions(question)        
+    #     # --- Gelişmiş anahtar kelime tabanlı analizler ---
+    #     if any(word in question_lower for word in ['yatırım dağılımı', 'varlık dağılımı', 'kompozisyon', 'içerik', 'portföy içerik']):
+    #         return self._handle_fund_allocation_question(question)
+    #     if 'fon kategorisi' in question_lower or 'fon türü' in question_lower:
+    #         return self._handle_fund_category_question(question)
+    #     if any(word in question_lower for word in ['kazanç', 'getiri', 'son 1 yıl', 'son 12 ay', 'geçtiğimiz yıl', 'son yıl']):
+    #         return self.performanceMain.handle_fund_past_performance_question(question)
+    #     if any(word in question_lower for word in ['en çok kazandıran', 'en çok getiri']):
+    #         return self.performanceMain.handle_top_gainer_fund_question(question)
+    #     if 'en çok kazandıran' in question_lower or 'en çok getiri' in question_lower:
+    #         return self.performanceMain.handle_top_gainer_fund_question(question)
+    #     if 'düşüşte olan fonlar' in question_lower or 'en çok kaybettiren' in question_lower:
+    #         return self.performanceMain.handle_top_loser_fund_question(question)
+    #     if 'sharpe oranı en yüksek' in question_lower:
+    #         return self.performanceMain.handle_top_sharpe_funds_question(question)
+    #     if 'volatilite' in question_lower and 'altında' in question_lower:
+    #         return self.performanceMain.handle_low_volatility_funds_question(question)
+    #     # --- mevcut kalan kodun ---
+    #     if any(word in question_lower for word in ['2025', 'öneri', 'öner', 'recommend', 'suggest']):
+    #         return self.performanceMain.handle_2025_recommendation_dual(question)
+    #     elif any(word in question_lower for word in ['analiz', 'analyze', 'performance']):
+    #         return self.performanceMain.handle_analysis_question_dual(question)
+    #     elif any(word in question_lower for word in ['karşılaştır', 'compare', 'vs']):
+    #         return self.performanceMain.handle_comparison_question(question)
+    #     elif any(word in question_lower for word in ['risk', 'güvenli', 'safe']):
+    #         return self._handle_risk_question(question)
+    #     elif any(word in question_lower for word in ['piyasa', 'market', 'durum']):
+    #         return self._handle_market_question_dual(question)
+    #     elif any(word in question_lower for word in ['macd', 'bollinger', 'rsi', 'hareketli ortalama', 
+    #                                                 'moving average', 'sma', 'ema', 'teknik sinyal',
+    #                                                 'alım sinyali', 'satım sinyali', 'aşırı satım',
+    #                                                 'aşırı alım', 'golden cross', 'death cross']):
+    #         technical_result = self._handle_technical_analysis_questions_full_db(question)
+    #         if technical_result:
+    #             return technical_result
+    #         else:
+    #             return self._handle_general_question(question)
+    #     elif any(word in question_lower for word in ['ai', 'yapay zeka', 'test']):
+    #         return self._handle_ai_test_question(question)
+    #     else:
+    #         return self._handle_general_question(question)
 
     def _handle_portfolio_companies_overview(self, question):
         """Genel portföy şirketleri genel bakış"""
