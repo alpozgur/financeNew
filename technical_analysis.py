@@ -1,6 +1,7 @@
 # technical_analysis.py
 
 import pandas as pd
+from risk_assessment import RiskAssessment
 
 class TechnicalAnalysis:
     def __init__(self, coordinator, active_funds, ai_provider=None):
@@ -17,21 +18,25 @@ class TechnicalAnalysis:
         operator = ">" if is_positive else "<"
 
         try:
-            # SQL ile MACD hesaplama ve filtreleme
+            # SQL ile MACD hesaplama ve filtreleme - GÜNCELLEME
             query = f"""
-                    SELECT 
-                        ti.fcode,
-                        ti.macd_line,
-                        ti.current_price,
-                        ti.investorcount,
-                        ti.sma_10 as ema_12_approx,
-                        ti.sma_20 as ema_26_approx,
-                        ti.data_points
-                    FROM mv_fund_technical_indicators ti
-                    WHERE ti.macd_line {operator} 0
-                    ORDER BY ABS(ti.macd_line) DESC
-                    LIMIT 20
-                    """
+            SELECT 
+                ti.fcode,
+                ti.macd_line,
+                ti.current_price,
+                ti.investorcount,
+                ti.rsi_14,  -- YENİ
+                ti.stochastic_14,  -- YENİ
+                ti.bb_position,
+                ti.price_vs_sma20,
+                ti.days_since_last_trade,  -- YENİ
+                ti.data_points
+            FROM mv_fund_technical_indicators ti
+            WHERE ti.macd_line {operator} 0
+            AND ti.days_since_last_trade < 14  -- Aktif fonlar
+            ORDER BY ABS(ti.macd_line) DESC
+            LIMIT 20
+            """
 
             result = self.coordinator.db.execute_query(query)
             if result.empty:
@@ -62,7 +67,9 @@ class TechnicalAnalysis:
                 macd_value = float(row['macd_line'])
                 current_price = float(row['current_price'])
                 investors = int(row['investorcount']) if pd.notna(row['investorcount']) else 0
-
+                days_inactive = int(row['days_since_last_trade'])
+                rsi = float(row['rsi_14'])
+                
                 fund_info = fund_details_dict.get(fcode, {'name': 'N/A', 'type': 'N/A'})
 
                 if abs(macd_value) > 0.01:
@@ -72,9 +79,13 @@ class TechnicalAnalysis:
                 else:
                     strength = "🟠 ZAYIF"
 
-                response += f"{i:2d}. {fcode} - {strength}\n"
+                # İnaktif uyarısı
+                activity_warning = f" ⚠️ {days_inactive} gündür işlem yok" if days_inactive > 7 else ""
+
+                response += f"{i:2d}. {fcode} - {strength}{activity_warning}\n"
                 response += f"    📊 MACD: {macd_value:+.6f}\n"
                 response += f"    💲 Fiyat: {current_price:.4f} TL\n"
+                response += f"    📈 RSI: {rsi:.1f}\n"
                 response += f"    👥 Yatırımcı: {investors:,} kişi\n"
                 response += f"    🏷️ Tür: {fund_info['type']}\n"
                 if fund_info['name'] != 'N/A':
@@ -95,6 +106,7 @@ class TechnicalAnalysis:
             print(f"   ❌ SQL MACD analizi hatası: {e}")
             return f"❌ SQL MACD analizi hatası: {e}"
 
+    # 2. handle_bollinger_signals_sql - Zaten güncellendi, ekstra güncellemeler
     def handle_bollinger_signals_sql(self, question):
         """SQL ile Bollinger Bantları analizi - TÜM FONLAR"""
         print("📊 SQL ile Bollinger Bantları analiz ediliyor (TÜM VERİTABANI)...")
@@ -106,20 +118,24 @@ class TechnicalAnalysis:
         
         try:
             query = f"""
-                SELECT 
-                    fcode,
-                    current_price,
-                    sma_20,
-                    bb_upper as upper_band,
-                    bb_lower as lower_band,
-                    bb_position as bb_percent,
-                    investorcount
-                FROM mv_fund_technical_indicators
-                WHERE bb_position {bb_condition}
-                ORDER BY {'bb_position ASC' if is_lower_band else 'bb_position DESC'}
-                LIMIT 20
-                """
-            # SQL sorgusunu çalıştır            
+            SELECT 
+                fcode,
+                current_price,
+                sma_20,
+                bb_upper as upper_band,
+                bb_lower as lower_band,
+                bb_position as bb_percent,
+                investorcount,
+                rsi_14,  -- YENİ
+                stochastic_14,  -- YENİ
+                days_since_last_trade  -- YENİ
+            FROM mv_fund_technical_indicators
+            WHERE bb_position {bb_condition}
+            AND days_since_last_trade < 30  -- Aktif fonlar
+            ORDER BY {'bb_position ASC' if is_lower_band else 'bb_position DESC'}
+            LIMIT 20
+            """
+            
             result = self.coordinator.db.execute_query(query)
             
             if result.empty:
@@ -154,6 +170,8 @@ class TechnicalAnalysis:
                 lower_band = float(row['lower_band'])
                 sma_20 = float(row['sma_20'])
                 investors = int(row['investorcount']) if pd.notna(row['investorcount']) else 0
+                rsi = float(row['rsi_14'])
+                days_inactive = int(row['days_since_last_trade'])
                 
                 fund_info = fund_details_dict.get(fcode, {'name': 'N/A', 'type': 'N/A'})
                 
@@ -169,9 +187,12 @@ class TechnicalAnalysis:
                 else:
                     position = "⚪ ORTA BÖLGE"
                 
-                response += f"{i:2d}. {fcode} - {position}\n"
+                activity_warning = f" ({days_inactive}g)" if days_inactive > 7 else ""
+                
+                response += f"{i:2d}. {fcode} - {position}{activity_warning}\n"
                 response += f"    💲 Fiyat: {current_price:.4f} TL\n"
                 response += f"    📊 BB%: {bb_percent:.3f} (%{bb_percent*100:.1f})\n"
+                response += f"    📈 RSI: {rsi:.1f}\n"
                 response += f"    📈 Üst Bant: {upper_band:.4f} TL\n"
                 response += f"    📉 Alt Bant: {lower_band:.4f} TL\n"
                 response += f"    📊 SMA(20): {sma_20:.4f} TL\n"
@@ -193,6 +214,8 @@ class TechnicalAnalysis:
         except Exception as e:
             print(f"   ❌ SQL Bollinger analizi hatası: {e}")
             return f"❌ SQL Bollinger analizi hatası: {e}"
+
+
 
     def handle_rsi_signals_sql(self, question):
         """SQL ile RSI analizi - TÜM FONLAR"""
@@ -309,47 +332,31 @@ class TechnicalAnalysis:
         ma_condition = ">" if is_golden_cross else "<"
         
         try:
+            # MV kullanan alternatif sorgu
             query = f"""
-            WITH recent_prices AS (
-                SELECT fcode, price, pdate,
-                    ROW_NUMBER() OVER (PARTITION BY fcode ORDER BY pdate DESC) as rn
-                FROM tefasfunds 
-                WHERE pdate >= CURRENT_DATE - INTERVAL '60 days'
-                AND price > 0
-                AND investorcount > 50
-            ),
-            ma_calculations AS (
-                SELECT fcode,
-                    AVG(CASE WHEN rn <= 20 THEN price END) as sma_20,
-                    AVG(CASE WHEN rn <= 50 THEN price END) as sma_50,
-                    COUNT(*) as data_points,
-                    (SELECT price FROM recent_prices WHERE fcode = rp.fcode AND rn = 1) as current_price
-                FROM recent_prices rp
-                GROUP BY fcode
-                HAVING COUNT(*) >= 50  -- En az 50 gün veri gerekli
-            ),
-            ma_signals AS (
-                SELECT fcode, current_price, sma_20, sma_50,
-                    ((sma_20 / sma_50) - 1) * 100 as ma_spread,
-                    CASE 
-                        WHEN sma_20 > sma_50 THEN 'Golden Cross'
-                        WHEN sma_20 < sma_50 THEN 'Death Cross'
-                        ELSE 'Neutral'
-                    END as signal_type
-                FROM ma_calculations
-                WHERE sma_20 IS NOT NULL AND sma_50 IS NOT NULL
-            )
-            SELECT ms.fcode, ms.current_price, ms.sma_20, ms.sma_50, 
-                ms.ma_spread, ms.signal_type, f.investorcount
-            FROM ma_signals ms
-            JOIN (
-                SELECT DISTINCT ON (fcode) fcode, investorcount
-                FROM tefasfunds 
-                WHERE pdate >= CURRENT_DATE - INTERVAL '7 days'
-                ORDER BY fcode, pdate DESC
-            ) f ON ms.fcode = f.fcode
-            WHERE ms.sma_20 {ma_condition} ms.sma_50
-            ORDER BY ABS(ms.ma_spread) DESC
+            SELECT 
+                t.fcode,
+                t.current_price,
+                t.sma_10,
+                t.sma_20,
+                t.sma_50,
+                t.rsi_14,
+                t.bb_position,
+                t.investorcount,
+                t.days_since_last_trade,
+                ((t.sma_20 / NULLIF(t.sma_50, 0)) - 1) * 100 as ma_spread,
+                CASE 
+                    WHEN t.sma_20 > t.sma_50 THEN 'Golden Cross'
+                    WHEN t.sma_20 < t.sma_50 THEN 'Death Cross'
+                    ELSE 'Neutral'
+                END as signal_type
+            FROM mv_fund_technical_indicators t
+            WHERE t.sma_20 {ma_condition} t.sma_50
+            AND t.sma_20 IS NOT NULL 
+            AND t.sma_50 IS NOT NULL
+            AND t.days_since_last_trade < 14
+            AND t.data_points >= 50
+            ORDER BY ABS(((t.sma_20 / NULLIF(t.sma_50, 0)) - 1) * 100) DESC
             LIMIT 25
             """
             
@@ -386,6 +393,8 @@ class TechnicalAnalysis:
                 sma_50 = float(row['sma_50'])
                 ma_spread = float(row['ma_spread'])
                 investors = int(row['investorcount']) if pd.notna(row['investorcount']) else 0
+                rsi = float(row['rsi_14'])
+                days_inactive = int(row['days_since_last_trade'])
                 
                 fund_info = fund_details_dict.get(fcode, {'name': 'N/A', 'type': 'N/A'})
                 
@@ -400,12 +409,14 @@ class TechnicalAnalysis:
                     strength = "⚪ ZAYIF"
                 
                 signal_icon = "🚀" if is_golden_cross else "📉"
+                activity_note = f" ({days_inactive}g)" if days_inactive > 7 else ""
                 
-                response += f"{i:2d}. {fcode} - {strength} {signal_icon}\n"
+                response += f"{i:2d}. {fcode} - {strength} {signal_icon}{activity_note}\n"
                 response += f"    💲 Fiyat: {current_price:.4f} TL\n"
                 response += f"    📊 SMA20: {sma_20:.4f} TL\n"
                 response += f"    📈 SMA50: {sma_50:.4f} TL\n"
                 response += f"    📍 Fark: %{ma_spread:+.2f}\n"
+                response += f"    📈 RSI: {rsi:.1f}\n"
                 response += f"    👥 Yatırımcı: {investors:,} kişi\n"
                 response += f"    🏷️ Tür: {fund_info['type']}\n"
                 response += f"\n"
@@ -424,6 +435,8 @@ class TechnicalAnalysis:
         except Exception as e:
             print(f"   ❌ SQL Moving Average analizi hatası: {e}")
             return f"❌ SQL Moving Average analizi hatası: {e}"
+
+
 
     def handle_general_technical_signals_sql(self, question):
         """SQL ile Genel Teknik Sinyal analizi - TÜM FONLAR"""
@@ -889,7 +902,7 @@ class TechnicalAnalysis:
             SELECT * FROM mv_fund_technical_indicators 
             WHERE fcode = '{fcode}'
             """
-            
+
             try:
                 mv_result = self.coordinator.db.execute_query(mv_query)
                 
@@ -922,7 +935,30 @@ class TechnicalAnalysis:
                 else:
                     support = current_price * 0.95
                     resistance = current_price * 1.05
+                # RİSK DEĞERLENDİRMESİ - AI PROMPT'TAN ÖNCE
+                risk_data = {
+                    'fcode': fcode,
+                    'price_vs_sma20': price_vs_sma20,
+                    'rsi_14': rsi,
+                    'stochastic_14': float(row['stochastic_14']),
+                    'days_since_last_trade': int(row['days_since_last_trade']),
+                    'investorcount': investors
+                }
                 
+                risk_assessment = RiskAssessment.assess_fund_risk(risk_data)
+                risk_warning = RiskAssessment.format_risk_warning(risk_assessment)
+                
+                # Eğer EXTREME risk varsa, AI analizi yapma
+                if risk_assessment['risk_level'] == 'EXTREME':
+                    response = f"\n🤖 {fcode} - RİSK ANALİZİ\n"
+                    response += f"{'='*55}\n\n"
+                    response += risk_warning
+                    response += f"\n\n❌ Bu fon için AI pattern analizi yapılamıyor.\n"
+                    response += f"Önce risk faktörlerini araştırın!\n"
+                    return response
+
+
+
                 # AI Prompt hazırla
                 prompt = f"""
 {fcode} fonu için teknik pattern analizi:
@@ -980,7 +1016,16 @@ Kısa, net ve aksiyona yönelik ol.
                 response += f"🤖 AI PATTERN ANALİZİ:\n"
                 response += f"{'='*55}\n"
                 response += ai_analysis
+                # RESPONSE'A RİSK UYARISI EKLE
+                response += f"\n🤖 AI PATTERN ANALİZİ:\n"
+                response += f"{'='*55}\n"
+                response += ai_analysis
                 
+                # Risk uyarısını ekle
+                if risk_warning and risk_assessment['risk_level'] in ['HIGH', 'MEDIUM']:
+                    response += f"\n{risk_warning}"
+
+
                 return response
                 
             except Exception as e:
@@ -1158,6 +1203,7 @@ Kısa, net ve aksiyona yönelik ol.
         
         return analysis
 
+    # 4. _handle_general_ai_pattern_analysis - ORDER BY HATASI DÜZELTMESİ
     def _handle_general_ai_pattern_analysis(self):
         """Genel AI pattern taraması - MEVCUT MV KOLONLARI İLE"""
         print("🤖 AI ile pattern taraması yapılıyor...")
@@ -1167,25 +1213,27 @@ Kısa, net ve aksiyona yönelik ol.
         SELECT 
             fcode,
             current_price,
-           rsi_14,
-           stochastic_14,
+            rsi_14,
+            stochastic_14,
             macd_line,
             bb_position,
             price_vs_sma20,
             sma_10,
             sma_20,
             sma_50,
-            investorcount
+            investorcount,
+            days_since_last_trade
         FROM mv_fund_technical_indicators
         WHERE data_points >= 30
+        AND days_since_last_trade < 30  -- Aktif fonlar
         AND (
             rsi_14 < 30 OR rsi_14 > 70 OR
             ABS(macd_line) > 0.01 OR
             bb_position < 0.2 OR bb_position > 0.8 OR
             ABS(price_vs_sma20) > 5
         )
-    ORDER BY days_since_last_trade ASC, ABS(price_vs_sma20) DESC
-    LIMIT 10
+        ORDER BY days_since_last_trade ASC, ABS(price_vs_sma20) DESC
+        LIMIT 10
         """
         
         try:
@@ -1199,7 +1247,26 @@ Kısa, net ve aksiyona yönelik ol.
             
             for idx, row in results.iterrows():
                 fcode = row['fcode']
+                days_inactive = int(row['days_since_last_trade'])
+                # RİSK DEĞERLENDİRMESİ
+                risk_data = {
+                    'fcode': fcode,
+                    'price_vs_sma20': row['price_vs_sma20'],
+                    'rsi_14': row['rsi_14'],
+                    'stochastic_14': row['stochastic_14'],
+                    'days_since_last_trade': int(row['days_since_last_trade']),
+                    'investorcount': int(row['investorcount'])
+                }
                 
+                risk_assessment = RiskAssessment.assess_fund_risk(risk_data)
+                
+                # Risk seviyesine göre sinyal güncelle
+                if risk_assessment['risk_level'] == 'EXTREME':
+                    signal = "⛔ EXTREME RİSK"
+                elif risk_assessment['risk_level'] == 'HIGH' and signal == "🟢 GÜÇLÜ AL SİNYALİ":
+                    signal = "🟡 RİSKLİ AL"
+
+
                 # Pattern sinyalleri
                 patterns = []
                 
@@ -1227,6 +1294,15 @@ Kısa, net ve aksiyona yönelik ol.
                 elif row['price_vs_sma20'] < -5:
                     patterns.append("💥 SMA20 %5+ altında")
                 
+                # Stochastic/RSI uyumsuzluk kontrolü
+                if abs(row['stochastic_14'] - row['rsi_14']) > 80:
+                    patterns.append("⚠️ RSI/Stoch uyumsuzluğu")
+                # Risk faktörlerini pattern'lere ekle
+                if risk_assessment['risk_factors']:
+                    for factor in risk_assessment['risk_factors']:
+                        if factor['severity'] in ['CRITICAL', 'HIGH']:
+                            patterns.append(f"⚠️ {factor['factor']}")
+                
                 # Genel sinyal
                 bullish_score = 0
                 if row['rsi_14'] < 30: bullish_score += 2
@@ -1241,9 +1317,12 @@ Kısa, net ve aksiyona yönelik ol.
                 else:
                     signal = "🟡 NÖTR"
                 
-                response += f"{idx+1}. {fcode} - {signal}\n"
+                # İnaktif uyarısı
+                activity_warning = f" (⚠️ {days_inactive} gündür işlem yok)" if days_inactive > 7 else ""
+                
+                response += f"{idx+1}. {fcode} - {signal}{activity_warning}\n"
                 response += f"   💲 Fiyat: {row['current_price']:.4f} TL\n"
-                response += f"   📊 RSI: {row['rsi_14']:.1f}\n"
+                response += f"   📊 RSI: {row['rsi_14']:.1f} / Stoch: {row['stochastic_14']:.1f}\n"
                 response += f"   📈 MACD: {row['macd_line']:.6f}\n"
                 response += f"   📍 BB Pozisyon: %{row['bb_position']*100:.0f}\n"
                 response += f"   📊 SMA20 Fark: {row['price_vs_sma20']:+.1f}%\n"

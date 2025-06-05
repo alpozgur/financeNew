@@ -1,10 +1,15 @@
+# portfolio_company_analysis.py
+"""
+Gelişmiş Portföy Şirketi Analiz Sistemi - Risk Assessment Entegre Edilmiş
+Portföy yönetim şirketlerinin kapsamlı analizi ve risk değerlendirmesi
+"""
 import time
-
 import numpy as np
 import pandas as pd
+from risk_assessment import RiskAssessment
 
 class EnhancedPortfolioCompanyAnalyzer:
-    """Gelişmiş Portföy Şirketi Analiz Sistemi"""
+    """Gelişmiş Portföy Şirketi Analiz Sistemi - Risk Kontrolü İle"""
     
     def __init__(self, coordinator):
         self.coordinator = coordinator
@@ -225,9 +230,9 @@ class EnhancedPortfolioCompanyAnalyzer:
             return None
 
     def analyze_company_comprehensive(self, company_name, analysis_days=252):
-        """Şirket kapsamlı analizi - TÜM FONLARLA"""
-        print(f"\n🏢 {company_name.upper()} - KAPSAMLI ANALİZ BAŞLATIYOR...")
-        print("="*60)
+        """Şirket kapsamlı analizi - TÜM FONLARLA + RİSK DEĞERLENDİRME"""
+        print(f"\n🏢 {company_name.upper()} - KAPSAMLI ANALİZ BAŞLATIYOR (RİSK KONTROLÜ İLE)...")
+        print("="*70)
         
         start_time = time.time()
         
@@ -239,54 +244,137 @@ class EnhancedPortfolioCompanyAnalyzer:
         
         print(f"📊 BULUNAN FONLAR: {len(company_funds)}")
         print(f"📅 ANALİZ PERİYODU: {analysis_days} gün")
+        print(f"🛡️ RİSK DEĞERLENDİRMESİ: Aktif")
         
-        # 2. HER FON İÇİN DETAYLI PERFORMANS ANALİZİ
-        print(f"\n🔍 PERFORMANS ANALİZİ BAŞLATIYOR...")
+        # 2. HER FON İÇİN DETAYLI PERFORMANS ANALİZİ + RİSK KONTROLÜ
+        print(f"\n🔍 PERFORMANS + RİSK ANALİZİ BAŞLATIYOR...")
         
         performance_results = []
+        high_risk_funds = []
+        blocked_extreme_funds = []
         successful_analysis = 0
         
         for i, fund_info in enumerate(company_funds, 1):
             fcode = fund_info['fcode']
             print(f"   [{i}/{len(company_funds)}] {fcode}...", end='')
             
+            # 1. Performans hesaplama
             perf = self.calculate_comprehensive_performance(fcode, analysis_days)
             
             if perf:
-                fund_result = {
-                    'fcode': fcode,
-                    'fund_name': fund_info['fund_name'],
-                    'capacity': fund_info['capacity'],
-                    'investors': fund_info['investors'],
-                    **perf  # Performans metriklerini ekle
-                }
-                performance_results.append(fund_result)
-                successful_analysis += 1
-                print(f" ✅ ({perf['annual_return']:+.1f}%)")
+                # 2. Risk değerlendirmesi - MV'den risk verileri çek
+                risk_data = self._get_fund_risk_data(fcode)
+                
+                if risk_data:
+                    risk_assessment = RiskAssessment.assess_fund_risk(risk_data)
+                    
+                    fund_result = {
+                        'fcode': fcode,
+                        'fund_name': fund_info['fund_name'],
+                        'capacity': fund_info['capacity'],
+                        'investors': fund_info['investors'],
+                        'risk_level': risk_assessment['risk_level'],
+                        'risk_factors': risk_assessment['risk_factors'],
+                        'risk_score': risk_assessment['risk_score'],
+                        **perf  # Performans metriklerini ekle
+                    }
+                    
+                    # Risk seviyesine göre kategorize et
+                    if risk_assessment['risk_level'] == 'EXTREME':
+                        blocked_extreme_funds.append(fund_result)
+                        print(f" 🔴 EXTREME RİSK - ENGELLENDİ")
+                    elif risk_assessment['risk_level'] in ['HIGH']:
+                        high_risk_funds.append(fund_result)
+                        performance_results.append(fund_result)
+                        print(f" 🟠 YÜKSEK RİSK ({perf['annual_return']:+.1f}%)")
+                    else:
+                        performance_results.append(fund_result)
+                        print(f" ✅ {risk_assessment['risk_level']} ({perf['annual_return']:+.1f}%)")
+                    
+                    successful_analysis += 1
+                else:
+                    # Risk verisi yoksa sadece performans kaydet
+                    fund_result = {
+                        'fcode': fcode,
+                        'fund_name': fund_info['fund_name'],
+                        'capacity': fund_info['capacity'],
+                        'investors': fund_info['investors'],
+                        'risk_level': 'UNKNOWN',
+                        'risk_factors': [],
+                        'risk_score': 0,
+                        **perf
+                    }
+                    performance_results.append(fund_result)
+                    successful_analysis += 1
+                    print(f" ⚪ RİSK BİLİNMİYOR ({perf['annual_return']:+.1f}%)")
             else:
                 print(f" ❌")
         
         elapsed = time.time() - start_time
         print(f"\n⏱️ ANALİZ TAMAMLANDI: {elapsed:.1f} saniye")
         print(f"✅ BAŞARILI: {successful_analysis}/{len(company_funds)} fon")
+        print(f"🛡️ GÜVENLİ/ORTA: {len(performance_results) - len(high_risk_funds)} fon")
+        print(f"🟠 YÜKSEK RİSK: {len(high_risk_funds)} fon")
+        print(f"🔴 EXTREME (ENGELLENEN): {len(blocked_extreme_funds)} fon")
         
         if not performance_results:
             return f"❌ {company_name} için performans verisi hesaplanamadı."
         
-        # 3. SONUÇLARI FORMATLA
-        return self.format_company_analysis_results(company_name, performance_results, elapsed)
+        # 3. SONUÇLARI FORMATLA - RİSK BİLGİLERİ İLE
+        return self.format_company_analysis_results_with_risk(
+            company_name, 
+            performance_results, 
+            high_risk_funds,
+            blocked_extreme_funds, 
+            elapsed
+        )
 
-    def format_company_analysis_results(self, company_name, results, analysis_time):
-        """Analiz sonuçlarını formatla - INF/NaN güvenli"""
+    def _get_fund_risk_data(self, fcode):
+        """Fonun risk verilerini MV'den çek"""
+        try:
+            query = """
+            SELECT 
+                price_vs_sma20,
+                rsi_14,
+                stochastic_14,
+                days_since_last_trade,
+                investorcount
+            FROM mv_fund_technical_indicators
+            WHERE fcode = %s
+            """
+            
+            result = self.coordinator.db.execute_query(query, [fcode])
+            
+            if not result.empty:
+                row = result.iloc[0]
+                
+                return {
+                    'fcode': fcode,
+                    'price_vs_sma20': float(row.get('price_vs_sma20', 0)),
+                    'rsi_14': float(row.get('rsi_14', 50)),
+                    'stochastic_14': float(row.get('stochastic_14', 50)),
+                    'days_since_last_trade': int(row.get('days_since_last_trade', 0)),
+                    'investorcount': int(row.get('investorcount', 0))
+                }
+            else:
+                return None
+                
+        except Exception as e:
+            print(f"Risk veri hatası ({fcode}): {e}")
+            return None
+
+    def format_company_analysis_results_with_risk(self, company_name, results, high_risk_funds, blocked_funds, analysis_time):
+        """Analiz sonuçlarını formatla - RİSK BİLGİLERİ İLE"""
         
         # Sonuçları Sharpe ratio'ya göre sırala
         results.sort(key=lambda x: x['sharpe_ratio'], reverse=True)
         
-        response = f"\n🏢 {company_name.upper()} - KAPSAMLI ANALİZ RAPORU\n"
-        response += f"{'='*55}\n\n"
+        response = f"\n🏢 {company_name.upper()} - KAPSAMLI ANALİZ RAPORU (RİSK KONTROLÜ İLE)\n"
+        response += f"{'='*70}\n\n"
         
         # ÖZET İSTATİSTİKLER - güvenli hesaplama
-        total_funds = len(results)
+        total_funds = len(results) + len(blocked_funds)
+        safe_funds = len(results) - len(high_risk_funds)
         total_capacity = sum(r['capacity'] for r in results)
         total_investors = sum(r['investors'] for r in results)
         
@@ -301,18 +389,20 @@ class EnhancedPortfolioCompanyAnalyzer:
         
         response += f"📊 ŞİRKET GENEL İSTATİSTİKLERİ:\n"
         response += f"   🔢 Toplam Fon Sayısı: {total_funds}\n"
+        response += f"   🛡️ Güvenli/Orta Risk: {safe_funds} fon (%{safe_funds/total_funds*100:.1f})\n"
+        response += f"   🟠 Yüksek Risk: {len(high_risk_funds)} fon (%{len(high_risk_funds)/total_funds*100:.1f})\n"
+        response += f"   🔴 Extreme (Engellenen): {len(blocked_funds)} fon (%{len(blocked_funds)/total_funds*100:.1f})\n"
         response += f"   💰 Toplam Varlık: {total_capacity:,.0f} TL ({total_capacity/1000000000:.1f} milyar)\n"
         response += f"   👥 Toplam Yatırımcı: {total_investors:,} kişi\n"
         response += f"   📈 Ortalama Yıllık Getiri: %{avg_return:+.2f}\n"
         response += f"   ⚡ Ortalama Sharpe Oranı: {avg_sharpe:.3f}\n"
         response += f"   📊 Ortalama Volatilite: %{avg_volatility:.2f}\n"
-        response += f"   ⏱️ Analiz Süresi: {analysis_time:.1f} saniye\n"
-        response += f"   📊 Geçerli Veri: {len(valid_returns)}/{total_funds} fon\n\n"
+        response += f"   ⏱️ Analiz Süresi: {analysis_time:.1f} saniye\n\n"
         
-        # EN İYİ PERFORMANS FONLARI (TOP 10) - geçerli veriler
+        # EN İYİ PERFORMANS FONLARI (GÜÇEK REHBERLİK İLE)
         valid_results = [r for r in results if not (pd.isna(r['sharpe_ratio']) or np.isinf(r['sharpe_ratio']))]
         
-        response += f"🏆 EN İYİ PERFORMANS FONLARI (Sharpe Oranına Göre):\n\n"
+        response += f"🏆 EN İYİ PERFORMANS FONLARI (Risk-Ayarlı):\n\n"
         
         for i, fund in enumerate(valid_results[:10], 1):
             # Performance tier belirleme
@@ -327,16 +417,53 @@ class EnhancedPortfolioCompanyAnalyzer:
             else:
                 tier = "🔻 ZAYIF"
             
-            response += f"{i:2d}. {fund['fcode']} - {tier}\n"
+            # Risk göstergesi
+            risk_indicator = self._get_risk_indicator(fund['risk_level'])
+            
+            response += f"{i:2d}. {fund['fcode']} - {tier} {risk_indicator}\n"
             response += f"    📈 Yıllık Getiri: %{fund['annual_return']:+.2f}\n"
             response += f"    ⚡ Sharpe Oranı: {fund['sharpe_ratio']:.3f}\n"
             response += f"    📊 Volatilite: %{fund['volatility']:.2f}\n"
             response += f"    🎯 Kazanma Oranı: %{fund['win_rate']:.1f}\n"
             response += f"    📉 Max Düşüş: %{fund['max_drawdown']:.2f}\n"
+            response += f"    🛡️ Risk Seviyesi: {fund['risk_level']}\n"
             response += f"    💰 Kapasite: {fund['capacity']:,.0f} TL\n"
             response += f"    👥 Yatırımcı: {fund['investors']:,} kişi\n"
-            response += f"    💲 Güncel Fiyat: {fund['current_price']:.4f} TL\n"
+            
+            # Risk faktörleri varsa göster
+            if fund['risk_factors'] and fund['risk_level'] in ['HIGH', 'EXTREME']:
+                top_risks = [f['factor'] for f in fund['risk_factors'][:2]]
+                response += f"    ⚠️ Risk Faktörleri: {', '.join(top_risks)}\n"
+            
             response += f"    📝 Adı: {fund['fund_name'][:45]}...\n"
+            response += f"\n"
+        
+        # YÜKSEK RİSKLİ FONLAR UYARISI
+        if high_risk_funds:
+            response += f"🟠 YÜKSEK RİSKLİ FONLAR ({len(high_risk_funds)} adet):\n"
+            response += f"   ⚠️ Bu fonlar yüksek risk taşımaktadır, dikkatli olun!\n\n"
+            
+            for i, fund in enumerate(high_risk_funds[:5], 1):
+                risk_factors = [f['factor'] for f in fund['risk_factors'][:2]]
+                response += f"   {i}. {fund['fcode']} - %{fund['annual_return']:+.1f} getiri\n"
+                response += f"      ⚠️ Risk: {', '.join(risk_factors)}\n"
+            
+            if len(high_risk_funds) > 5:
+                response += f"      ... ve {len(high_risk_funds) - 5} fon daha\n"
+            response += f"\n"
+        
+        # EXTREME RİSKLİ (ENGELLENEN) FONLAR
+        if blocked_funds:
+            response += f"🔴 EXTREME RİSKLİ FONLAR - ÖNERİLMİYOR ({len(blocked_funds)} adet):\n"
+            response += f"   ❌ Bu fonlar extreme risk taşıdığı için portföy önerilerinde yer almaz!\n\n"
+            
+            for i, fund in enumerate(blocked_funds[:5], 1):
+                top_risk_factors = [f['factor'] for f in fund['risk_factors'][:2]]
+                response += f"   {i}. {fund['fcode']} - ENGELLENEN\n"
+                response += f"      🚨 Sebepler: {', '.join(top_risk_factors)}\n"
+            
+            if len(blocked_funds) > 5:
+                response += f"      ... ve {len(blocked_funds) - 5} fon daha\n"
             response += f"\n"
         
         # KATEGORİ LİDERLERİ - güvenli
@@ -345,13 +472,29 @@ class EnhancedPortfolioCompanyAnalyzer:
             best_return_fund = max(valid_results, key=lambda x: x['annual_return'] if not np.isinf(x['annual_return']) else -999)
             best_sharpe_fund = max(valid_results, key=lambda x: x['sharpe_ratio'])
             lowest_vol_fund = min(valid_results, key=lambda x: x['volatility'] if x['volatility'] > 0 else 999)
+            safest_fund = min(valid_results, key=lambda x: 0 if x['risk_level'] == 'LOW' else 1 if x['risk_level'] == 'MEDIUM' else 2)
             
             response += f"🏅 KATEGORİ LİDERLERİ:\n"
             response += f"   🥇 En Yüksek Getiri: {best_return_fund['fcode']} (%{best_return_fund['annual_return']:+.1f})\n"
             response += f"   🛡️ En Düşük Risk: {lowest_vol_fund['fcode']} (%{lowest_vol_fund['volatility']:.1f})\n"
             response += f"   ⚡ En Yüksek Sharpe: {best_sharpe_fund['fcode']} ({best_sharpe_fund['sharpe_ratio']:.3f})\n"
+            response += f"   🔒 En Güvenli: {safest_fund['fcode']} ({safest_fund['risk_level']} risk)\n"
             response += f"   💰 En Büyük Fon: {max(results, key=lambda x: x['capacity'])['fcode']} ({max(results, key=lambda x: x['capacity'])['capacity']/1000000:.0f}M TL)\n"
             response += f"   👥 En Popüler: {max(results, key=lambda x: x['investors'])['fcode']} ({max(results, key=lambda x: x['investors'])['investors']:,} kişi)\n"
+        
+        # RİSK DAĞILIMI ANALİZİ
+        risk_distribution = {}
+        for fund in results + blocked_funds:
+            risk_level = fund['risk_level']
+            risk_distribution[risk_level] = risk_distribution.get(risk_level, 0) + 1
+        
+        response += f"\n🛡️ RİSK SEVİYESİ DAĞILIMI:\n"
+        for risk_level in ['LOW', 'MEDIUM', 'HIGH', 'EXTREME', 'UNKNOWN']:
+            count = risk_distribution.get(risk_level, 0)
+            if count > 0:
+                percentage = count / total_funds * 100
+                indicator = self._get_risk_indicator(risk_level)
+                response += f"   {indicator} {risk_level}: {count} fon (%{percentage:.1f})\n"
         
         # PERFORMANCE DAĞILIMI - geçerli verilerle
         if valid_results:
@@ -366,7 +509,7 @@ class EnhancedPortfolioCompanyAnalyzer:
             response += f"   🔶 İyi (0-0.5): {average_funds} fon (%{average_funds/len(valid_results)*100:.1f})\n"
             response += f"   🔻 Zayıf (≤0): {poor_funds} fon (%{poor_funds/len(valid_results)*100:.1f})\n"
         
-        # GENEL DEĞERLENDİRME
+        # GENEL DEĞERLENDİRME - RİSK DAHİL
         if avg_sharpe > 0.5:
             overall_rating = "🌟 MÜKEMMEL"
         elif avg_sharpe > 0.2:
@@ -378,51 +521,85 @@ class EnhancedPortfolioCompanyAnalyzer:
         else:
             overall_rating = "🔻 ZAYIF"
         
-        response += f"\n🎯 GENEL DEĞERLENDİRME: {overall_rating}\n"
+        # Risk faktörü de değerlendirmeye dahil et
+        risk_penalty = 0
+        if len(blocked_funds) > total_funds * 0.2:  # %20'den fazla extreme risk
+            risk_penalty = 1
+        elif len(high_risk_funds) > total_funds * 0.3:  # %30'dan fazla yüksek risk
+            risk_penalty = 0.5
+        
+        response += f"\n🎯 GENEL DEĞERLENDİRME: {overall_rating}"
+        if risk_penalty > 0:
+            response += f" ⚠️ (Risk cezası: -{risk_penalty:.1f})"
+        response += f"\n"
+        
         response += f"   Ortalama Sharpe {avg_sharpe:.3f} ile {company_name} "
         
-        if avg_sharpe > 0.3:
-            response += "güçlü performans sergiliyor.\n"
-        elif avg_sharpe > 0:
-            response += "makul bir performans gösteriyor.\n"
+        if avg_sharpe > 0.3 and risk_penalty < 0.5:
+            response += "güçlü ve güvenli performans sergiliyor.\n"
+        elif avg_sharpe > 0 and risk_penalty < 1:
+            response += "makul performans gösteriyor ancak risk kontrolü önemli.\n"
         else:
-            response += "performansını iyileştirmesi gerekiyor.\n"
+            response += "performansını ve risk yönetimini iyileştirmesi gerekiyor.\n"
         
-        # VERİ KALİTESİ UYARISI
-        invalid_count = total_funds - len(valid_results)
-        if invalid_count > 0:
-            response += f"\n⚠️ VERİ KALİTESİ NOTU:\n"
-            response += f"   {invalid_count} fon geçersiz veri nedeniyle hariç tutuldu\n"
-            response += f"   (INF, NaN veya sıfır değerler içeren fonlar)\n"
+        # YATIRIM TAVSİYELERİ
+        response += f"\n💡 YATIRIM TAVSİYELERİ:\n"
+        
+        if safe_funds > total_funds * 0.7:
+            response += f"   ✅ {company_name} genel olarak güvenli fonlar sunuyor\n"
+        
+        if len(high_risk_funds) > 0:
+            response += f"   ⚠️ {len(high_risk_funds)} yüksek riskli fon var - dikkatli seçim yapın\n"
+        
+        if len(blocked_funds) > 0:
+            response += f"   🚨 {len(blocked_funds)} extreme riskli fon var - bunlardan kaçının\n"
+        
+        if valid_results:
+            best_fund = valid_results[0]
+            response += f"   🎯 En güvenli seçim: {best_fund['fcode']} ({best_fund['risk_level']} risk)\n"
+        
+        response += f"   🔍 Yatırım öncesi mutlaka risk seviyelerini kontrol edin\n"
         
         return response
 
+    def _get_risk_indicator(self, risk_level):
+        """Risk seviyesi göstergesi"""
+        indicators = {
+            'LOW': '🟢',
+            'MEDIUM': '🟡',
+            'HIGH': '🟠',
+            'EXTREME': '🔴',
+            'UNKNOWN': '⚪'
+        }
+        return indicators.get(risk_level, '⚪')
+
     def compare_companies_unlimited(self, company1, company2, analysis_days=252):
-        """İki şirketi kapsamlı karşılaştır - LİMİTSİZ"""
-        print(f"\n⚖️ {company1} vs {company2} - KAPSAMLI KARŞILAŞTIRMA")
-        print("="*65)
+        """İki şirketi kapsamlı karşılaştır - LİMİTSİZ + RİSK KONTROLÜ"""
+        print(f"\n⚖️ {company1} vs {company2} - KAPSAMLI KARŞILAŞTIRMA (RİSK KONTROLÜ İLE)")
+        print("="*75)
         
         # Her iki şirket için analiz
-        results1 = self.analyze_company_detailed_data(company1, analysis_days)
-        results2 = self.analyze_company_detailed_data(company2, analysis_days)
+        results1 = self.analyze_company_detailed_data_with_risk(company1, analysis_days)
+        results2 = self.analyze_company_detailed_data_with_risk(company2, analysis_days)
         
         if not results1['success'] or not results2['success']:
             return f"❌ Karşılaştırma için yeterli veri yok."
         
-        response = f"\n⚖️ {company1.upper()} vs {company2.upper()} - DETAYLI KARŞILAŞTIRMA\n"
-        response += f"{'='*70}\n\n"
+        response = f"\n⚖️ {company1.upper()} vs {company2.upper()} - DETAYLI KARŞILAŞTIRMA (RİSK DAHİL)\n"
+        response += f"{'='*75}\n\n"
         
         # GENEL İSTATİSTİKLER KARŞILAŞTIRMASI
         metrics = [
             ('Fon Sayısı', 'total_funds', 'adet', 'higher'),
+            ('Güvenli Fon %', 'safe_fund_ratio', '%', 'higher'),
             ('Toplam Varlık', 'total_capacity', 'milyar TL', 'higher'), 
             ('Ortalama Getiri', 'avg_return', '%', 'higher'),
             ('Ortalama Sharpe', 'avg_sharpe', '', 'higher'),
             ('Ortalama Risk', 'avg_volatility', '%', 'lower'),
-            ('Toplam Yatırımcı', 'total_investors', 'K kişi', 'higher')
+            ('Risk Skoru', 'risk_score', '/10', 'higher')
         ]
         
-        response += f"📊 GENEL KARŞILAŞTIRMA:\n\n"
+        response += f"📊 GENEL KARŞILAŞTIRMA (RİSK DAHİL):\n\n"
         response += f"{'Metrik':<15} | {company1:<15} | {company2:<15} | Kazanan\n"
         response += f"{'-'*15}|{'-'*16}|{'-'*16}|{'-'*15}\n"
         
@@ -437,12 +614,15 @@ class EnhancedPortfolioCompanyAnalyzer:
             if 'milyar' in unit:
                 val1_display = f"{val1/1000000000:.1f}"
                 val2_display = f"{val2/1000000000:.1f}"
-            elif 'K kişi' in unit:
-                val1_display = f"{val1/1000:.0f}"
-                val2_display = f"{val2/1000:.0f}"
+            elif '%' in unit and key == 'safe_fund_ratio':
+                val1_display = f"{val1:.1f}"
+                val2_display = f"{val2:.1f}"
             elif '%' in unit:
                 val1_display = f"{val1:+.1f}"
                 val2_display = f"{val2:+.1f}"
+            elif '/10' in unit:
+                val1_display = f"{val1:.1f}"
+                val2_display = f"{val2:.1f}"
             else:
                 val1_display = f"{val1:.2f}"
                 val2_display = f"{val2:.2f}"
@@ -475,39 +655,71 @@ class EnhancedPortfolioCompanyAnalyzer:
         else:
             response += f"🤝 BERABERE\n"
         
+        # RİSK KARŞILAŞTIRMASI
+        response += f"\n🛡️ RİSK ANALİZİ KARŞILAŞTIRMASI:\n\n"
+        
+        response += f"🏢 {company1.upper()}:\n"
+        response += f"   🟢 Düşük Risk: {results1['risk_stats']['low_risk']} fon\n"
+        response += f"   🟡 Orta Risk: {results1['risk_stats']['medium_risk']} fon\n"
+        response += f"   🟠 Yüksek Risk: {results1['risk_stats']['high_risk']} fon\n"
+        response += f"   🔴 Extreme Risk: {results1['risk_stats']['extreme_risk']} fon\n"
+        
+        response += f"\n🏢 {company2.upper()}:\n"
+        response += f"   🟢 Düşük Risk: {results2['risk_stats']['low_risk']} fon\n"
+        response += f"   🟡 Orta Risk: {results2['risk_stats']['medium_risk']} fon\n"
+        response += f"   🟠 Yüksek Risk: {results2['risk_stats']['high_risk']} fon\n"
+        response += f"   🔴 Extreme Risk: {results2['risk_stats']['extreme_risk']} fon\n"
+        
         # EN İYİ FONLAR KARŞILAŞTIRMASI
-        response += f"\n🌟 EN İYİ FONLAR KARŞILAŞTIRMASI:\n\n"
+        response += f"\n🌟 EN İYİ FONLAR KARŞILAŞTIRMASI (Risk-Ayarlı):\n\n"
         
         response += f"🏢 {company1.upper()} EN İYİLERİ:\n"
         for i, fund in enumerate(results1['top_funds'][:3], 1):
-            response += f"   {i}. {fund['fcode']}: Sharpe {fund['sharpe_ratio']:.3f}, Getiri %{fund['annual_return']:+.1f}\n"
+            risk_indicator = self._get_risk_indicator(fund['risk_level'])
+            response += f"   {i}. {fund['fcode']}: Sharpe {fund['sharpe_ratio']:.3f}, Getiri %{fund['annual_return']:+.1f} {risk_indicator}\n"
         
         response += f"\n🏢 {company2.upper()} EN İYİLERİ:\n"
         for i, fund in enumerate(results2['top_funds'][:3], 1):
-            response += f"   {i}. {fund['fcode']}: Sharpe {fund['sharpe_ratio']:.3f}, Getiri %{fund['annual_return']:+.1f}\n"
+            risk_indicator = self._get_risk_indicator(fund['risk_level'])
+            response += f"   {i}. {fund['fcode']}: Sharpe {fund['sharpe_ratio']:.3f}, Getiri %{fund['annual_return']:+.1f} {risk_indicator}\n"
         
-        # GÜÇLÜ/ZAYIF YÖNLER
+        # GÜÇLÜ/ZAYIF YÖNLER - RİSK DAHİL
         response += f"\n💪 GÜÇLÜ YÖNLER:\n"
         response += f"🏢 {company1}:\n"
         if results1['stats']['avg_sharpe'] > results2['stats']['avg_sharpe']:
             response += f"   ✅ Daha iyi risk-ayarlı getiri\n"
+        if results1['stats']['safe_fund_ratio'] > results2['stats']['safe_fund_ratio']:
+            response += f"   ✅ Daha güvenli fon portföyü\n"
         if results1['stats']['total_capacity'] > results2['stats']['total_capacity']:
             response += f"   ✅ Daha büyük varlık yönetimi\n"
-        if results1['stats']['total_funds'] > results2['stats']['total_funds']:
-            response += f"   ✅ Daha geniş fon yelpazesi\n"
+        if results1['risk_stats']['extreme_risk'] < results2['risk_stats']['extreme_risk']:
+            response += f"   ✅ Daha az extreme riskli fon\n"
         
         response += f"\n🏢 {company2}:\n"
         if results2['stats']['avg_sharpe'] > results1['stats']['avg_sharpe']:
             response += f"   ✅ Daha iyi risk-ayarlı getiri\n"
+        if results2['stats']['safe_fund_ratio'] > results1['stats']['safe_fund_ratio']:
+            response += f"   ✅ Daha güvenli fon portföyü\n"
         if results2['stats']['total_capacity'] > results1['stats']['total_capacity']:
             response += f"   ✅ Daha büyük varlık yönetimi\n"
-        if results2['stats']['total_funds'] > results1['stats']['total_funds']:
-            response += f"   ✅ Daha geniş fon yelpazesi\n"
+        if results2['risk_stats']['extreme_risk'] < results1['risk_stats']['extreme_risk']:
+            response += f"   ✅ Daha az extreme riskli fon\n"
+        
+        # YATIRIM TAVSİYELERİ
+        response += f"\n💡 YATIRIM TAVSİYELERİ:\n"
+        
+        safer_company = company1 if results1['stats']['safe_fund_ratio'] > results2['stats']['safe_fund_ratio'] else company2
+        better_performance = company1 if results1['stats']['avg_sharpe'] > results2['stats']['avg_sharpe'] else company2
+        
+        response += f"   🛡️ Güvenlik için: {safer_company}\n"
+        response += f"   📈 Performans için: {better_performance}\n"
+        response += f"   ⚠️ Her iki şirkette de risk kontrolü yapın\n"
+        response += f"   🎯 Extreme riskli fonlardan kaçının\n"
         
         return response
 
-    def analyze_company_detailed_data(self, company_name, analysis_days=252):
-        """Şirket için detaylı veri analizi (karşılaştırma için)"""
+    def analyze_company_detailed_data_with_risk(self, company_name, analysis_days=252):
+        """Şirket için detaylı veri analizi (karşılaştırma için) - RİSK DAHİL"""
         try:
             company_funds = self.get_all_company_funds_unlimited(company_name)
             
@@ -515,31 +727,61 @@ class EnhancedPortfolioCompanyAnalyzer:
                 return {'success': False}
             
             performance_results = []
+            risk_stats = {'low_risk': 0, 'medium_risk': 0, 'high_risk': 0, 'extreme_risk': 0}
             
             for fund_info in company_funds:
                 perf = self.calculate_comprehensive_performance(fund_info['fcode'], analysis_days)
                 if perf:
+                    # Risk değerlendirmesi
+                    risk_data = self._get_fund_risk_data(fund_info['fcode'])
+                    
+                    if risk_data:
+                        risk_assessment = RiskAssessment.assess_fund_risk(risk_data)
+                        risk_level = risk_assessment['risk_level']
+                    else:
+                        risk_level = 'UNKNOWN'
+                    
                     fund_result = {
                         'fcode': fund_info['fcode'],
                         'fund_name': fund_info['fund_name'],
                         'capacity': fund_info['capacity'],
                         'investors': fund_info['investors'],
+                        'risk_level': risk_level,
                         **perf
                     }
-                    performance_results.append(fund_result)
+                    
+                    # Sadece EXTREME olmayan fonları dahil et
+                    if risk_level != 'EXTREME':
+                        performance_results.append(fund_result)
+                    
+                    # Risk istatistiklerini güncelle
+                    if risk_level == 'LOW':
+                        risk_stats['low_risk'] += 1
+                    elif risk_level == 'MEDIUM':
+                        risk_stats['medium_risk'] += 1
+                    elif risk_level == 'HIGH':
+                        risk_stats['high_risk'] += 1
+                    elif risk_level == 'EXTREME':
+                        risk_stats['extreme_risk'] += 1
             
             if not performance_results:
                 return {'success': False}
             
             # İstatistikleri hesapla
-            total_funds = len(performance_results)
+            total_funds = len(company_funds)
+            safe_funds = risk_stats['low_risk'] + risk_stats['medium_risk']
             total_capacity = sum(r['capacity'] for r in performance_results)
             total_investors = sum(r['investors'] for r in performance_results)
-            avg_return = sum(r['annual_return'] for r in performance_results) / total_funds
-            avg_sharpe = sum(r['sharpe_ratio'] for r in performance_results) / total_funds
-            avg_volatility = sum(r['volatility'] for r in performance_results) / total_funds
+            avg_return = sum(r['annual_return'] for r in performance_results) / len(performance_results)
+            avg_sharpe = sum(r['sharpe_ratio'] for r in performance_results) / len(performance_results)
+            avg_volatility = sum(r['volatility'] for r in performance_results) / len(performance_results)
             
-            # En iyi fonları bul
+            # Risk skoru hesapla (10 üzerinden)
+            safe_fund_ratio = (safe_funds / total_funds) * 100
+            risk_score = (safe_fund_ratio / 10) - (risk_stats['extreme_risk'] * 0.5)
+            risk_score = max(0, min(10, risk_score))  # 0-10 arası
+            
+            # En iyi fonları bul (EXTREME hariç)
             performance_results.sort(key=lambda x: x['sharpe_ratio'], reverse=True)
             
             return {
@@ -550,8 +792,11 @@ class EnhancedPortfolioCompanyAnalyzer:
                     'total_investors': total_investors,
                     'avg_return': avg_return,
                     'avg_sharpe': avg_sharpe,
-                    'avg_volatility': avg_volatility
+                    'avg_volatility': avg_volatility,
+                    'safe_fund_ratio': safe_fund_ratio,
+                    'risk_score': risk_score
                 },
+                'risk_stats': risk_stats,
                 'top_funds': performance_results[:5],
                 'all_funds': performance_results
             }
@@ -561,9 +806,9 @@ class EnhancedPortfolioCompanyAnalyzer:
             return {'success': False}
 
     def find_best_portfolio_company_unlimited(self):
-        """En başarılı portföy şirketini bul - TÜM ŞİRKETLER"""
-        print(f"\n🏆 EN BAŞARILI PORTFÖY ŞİRKETİ ANALİZİ - TÜM ŞİRKETLER")
-        print("="*65)
+        """En başarılı portföy şirketini bul - TÜM ŞİRKETLER + RİSK KONTROLÜ"""
+        print(f"\n🏆 EN BAŞARILI PORTFÖY ŞİRKETİ ANALİZİ - TÜM ŞİRKETLER (RİSK KONTROLÜ İLE)")
+        print("="*75)
         
         company_results = []
         total_companies = len(self.company_keywords)
@@ -572,28 +817,36 @@ class EnhancedPortfolioCompanyAnalyzer:
             print(f"\n📊 [{i}/{total_companies}] {company_name} analizi...")
             
             try:
-                result = self.analyze_company_detailed_data(company_name, analysis_days=180)  # 6 ay
+                result = self.analyze_company_detailed_data_with_risk(company_name, analysis_days=180)  # 6 ay
                 
                 if result['success']:
                     stats = result['stats']
+                    risk_stats = result['risk_stats']
                     
-                    # BAŞARI SKORU hesaplama (çok boyutlu)
+                    # BAŞARI SKORU hesaplama (çok boyutlu) - RİSK DAHİL
                     success_score = (
-                        stats['avg_sharpe'] * 40 +          # Risk-ayarlı getiri (en önemli)
-                        (stats['avg_return'] / 100) * 30 +   # Mutlak getiri 
-                        (stats['total_funds'] / 10) * 15 +   # Fon çeşitliliği
-                        min(stats['total_capacity'] / 1000000000, 5) * 10 +  # Büyüklük (max 5 puan)
-                        (stats['total_investors'] / 100000) * 5  # Popülerlik
+                        stats['avg_sharpe'] * 30 +          # Risk-ayarlı getiri 
+                        (stats['avg_return'] / 100) * 25 +   # Mutlak getiri 
+                        (stats['safe_fund_ratio'] / 100) * 20 +  # Güvenlik oranı (YENİ)
+                        (stats['total_funds'] / 10) * 10 +   # Fon çeşitliliği
+                        min(stats['total_capacity'] / 1000000000, 5) * 10 +  # Büyüklük
+                        (stats['risk_score'] / 10) * 15      # Risk skoru (YENİ)
                     )
+                    
+                    # Extreme risk cezası
+                    if risk_stats['extreme_risk'] > 0:
+                        success_score -= risk_stats['extreme_risk'] * 2  # Her extreme fon için -2 puan
                     
                     company_results.append({
                         'company': company_name,
                         'success_score': success_score,
+                        'risk_stats': risk_stats,
                         **stats,
                         'best_fund': result['top_funds'][0] if result['top_funds'] else None
                     })
                     
-                    print(f"   ✅ Başarı Skoru: {success_score:.2f}")
+                    print(f"   ✅ Başarı Skoru: {success_score:.2f} (Risk dahil)")
+                    print(f"   🛡️ Güvenli: {risk_stats['low_risk']+risk_stats['medium_risk']}/{stats['total_funds']}")
                 else:
                     print(f"   ❌ Veri yetersiz")
                     
@@ -607,53 +860,64 @@ class EnhancedPortfolioCompanyAnalyzer:
         # Başarı skoruna göre sırala
         company_results.sort(key=lambda x: x['success_score'], reverse=True)
         
-        return self.format_best_company_results(company_results)
+        return self.format_best_company_results_with_risk(company_results)
 
-    def format_best_company_results(self, results):
-        """En başarılı şirket sonuçlarını formatla"""
+    def format_best_company_results_with_risk(self, results):
+        """En başarılı şirket sonuçlarını formatla - RİSK DAHİL"""
         
-        response = f"\n🏆 EN BAŞARILI PORTFÖY YÖNETİM ŞİRKETİ SIRALAMASI\n"
-        response += f"{'='*60}\n\n"
-        response += f"📊 {len(results)} şirket analiz edildi (TÜM FONLARLA)\n\n"
+        response = f"\n🏆 EN BAŞARILI PORTFÖY YÖNETİM ŞİRKETİ SIRALAMASI (RİSK KONTROLÜ İLE)\n"
+        response += f"{'='*70}\n\n"
+        response += f"📊 {len(results)} şirket analiz edildi (TÜM FONLARLA + RİSK DEĞERLENDİRME)\n\n"
         
         # TOP 10 ŞİRKET
-        response += f"🥇 EN BAŞARILI 10 ŞİRKET (Çok Boyutlu Skorlama):\n\n"
+        response += f"🥇 EN BAŞARILI 10 ŞİRKET (Risk-Ayarlı Skorlama):\n\n"
         
         for i, company in enumerate(results[:10], 1):
             # Başarı kategorisi
             score = company['success_score']
-            if score > 15:
+            if score > 20:
                 rating = "🌟 EFSANE"
-            elif score > 10:
+            elif score > 15:
                 rating = "⭐ MÜKEMMEL"
-            elif score > 7:
+            elif score > 10:
                 rating = "🔶 ÇOK İYİ"
-            elif score > 5:
+            elif score > 7:
                 rating = "🔸 İYİ"
-            elif score > 3:
+            elif score > 5:
                 rating = "🟡 ORTA"
             else:
                 rating = "🔻 ZAYIF"
             
+            # Risk skoru
+            risk_stats = company['risk_stats']
+            total_funds = company['total_funds']
+            safe_ratio = ((risk_stats['low_risk'] + risk_stats['medium_risk']) / total_funds) * 100
+            
             response += f"{i:2d}. {company['company']} - {rating}\n"
-            response += f"    🎯 Başarı Skoru: {score:.2f}/25\n"
+            response += f"    🎯 Başarı Skoru: {score:.2f}/30 (Risk dahil)\n"
             response += f"    📊 Fon Sayısı: {company['total_funds']}\n"
             response += f"    📈 Ort. Getiri: %{company['avg_return']:+.2f}\n"
             response += f"    ⚡ Ort. Sharpe: {company['avg_sharpe']:.3f}\n"
+            response += f"    🛡️ Güvenlik Oranı: %{safe_ratio:.1f}\n"
+            response += f"    🟢 Güvenli: {risk_stats['low_risk'] + risk_stats['medium_risk']} fon\n"
+            response += f"    🟠 Riskli: {risk_stats['high_risk']} fon\n"
+            response += f"    🔴 Extreme: {risk_stats['extreme_risk']} fon\n"
             response += f"    💰 Varlık: {company['total_capacity']/1000000000:.1f} milyar TL\n"
             response += f"    👥 Yatırımcı: {company['total_investors']:,} kişi\n"
             
             if company['best_fund']:
                 bf = company['best_fund']
-                response += f"    🏆 En İyi Fon: {bf['fcode']} (Sharpe: {bf['sharpe_ratio']:.3f})\n"
+                risk_indicator = self._get_risk_indicator(bf['risk_level'])
+                response += f"    🏆 En İyi Fon: {bf['fcode']} (Sharpe: {bf['sharpe_ratio']:.3f}) {risk_indicator}\n"
             
             response += f"\n"
         
         # ŞAMPİYONLAR
         winner = results[0]
         response += f"🏆 GENEL ŞAMPİYON: {winner['company']}\n"
-        response += f"   🎯 Toplam Skor: {winner['success_score']:.2f}\n"
+        response += f"   🎯 Toplam Skor: {winner['success_score']:.2f} (Risk-ayarlı)\n"
         response += f"   📊 {winner['total_funds']} fon ile %{winner['avg_return']:+.1f} ortalama getiri\n"
+        response += f"   🛡️ %{winner['safe_fund_ratio']:.1f} güvenlik oranı\n"
         
         # KATEGORİ ŞAMPİYONLARI
         response += f"\n🏅 KATEGORİ ŞAMPİYONLARI:\n"
@@ -665,6 +929,10 @@ class EnhancedPortfolioCompanyAnalyzer:
         # En iyi Sharpe
         best_sharpe = max(results, key=lambda x: x['avg_sharpe'])
         response += f"   ⚡ En İyi Sharpe: {best_sharpe['company']} ({best_sharpe['avg_sharpe']:.3f})\n"
+        
+        # En güvenli
+        safest = max(results, key=lambda x: x['safe_fund_ratio'])
+        response += f"   🛡️ En Güvenli: {safest['company']} (%{safest['safe_fund_ratio']:.1f} güvenlik)\n"
         
         # En büyük varlık
         biggest_aum = max(results, key=lambda x: x['total_capacity'])
@@ -678,27 +946,39 @@ class EnhancedPortfolioCompanyAnalyzer:
         most_popular = max(results, key=lambda x: x['total_investors'])
         response += f"   👥 En Popüler: {most_popular['company']} ({most_popular['total_investors']:,} yatırımcı)\n"
         
-        # SEKTÖR ANALİZİ
-        avg_sector_score = sum(r['success_score'] for r in results) / len(results)
-        avg_sector_return = sum(r['avg_return'] for r in results) / len(results)
-        avg_sector_sharpe = sum(r['avg_sharpe'] for r in results) / len(results)
+        # SEKTÖR RİSK ANALİZİ
+        total_safe = sum(r['risk_stats']['low_risk'] + r['risk_stats']['medium_risk'] for r in results)
+        total_risky = sum(r['risk_stats']['high_risk'] for r in results)
+        total_extreme = sum(r['risk_stats']['extreme_risk'] for r in results)
+        total_all_funds = sum(r['total_funds'] for r in results)
         
-        response += f"\n📊 SEKTÖR GENEL ANALİZİ:\n"
-        response += f"   Ortalama Başarı Skoru: {avg_sector_score:.2f}\n"
-        response += f"   Ortalama Getiri: %{avg_sector_return:+.2f}\n"
-        response += f"   Ortalama Sharpe: {avg_sector_sharpe:.3f}\n"
+        response += f"\n🛡️ SEKTÖR RİSK ANALİZİ:\n"
+        response += f"   🟢 Güvenli Fonlar: {total_safe} (%{total_safe/total_all_funds*100:.1f})\n"
+        response += f"   🟠 Yüksek Risk: {total_risky} (%{total_risky/total_all_funds*100:.1f})\n"
+        response += f"   🔴 Extreme Risk: {total_extreme} (%{total_extreme/total_all_funds*100:.1f})\n"
+        
+        if total_extreme > total_all_funds * 0.1:
+            response += f"   ⚠️ Sektörde %{total_extreme/total_all_funds*100:.1f} extreme riskli fon var - dikkat!\n"
         
         # PERFORMANS DAĞILIMI
-        excellent = len([r for r in results if r['success_score'] > 10])
-        good = len([r for r in results if 7 < r['success_score'] <= 10])
-        average = len([r for r in results if 5 < r['success_score'] <= 7])
-        poor = len([r for r in results if r['success_score'] <= 5])
+        excellent = len([r for r in results if r['success_score'] > 15])
+        good = len([r for r in results if 10 < r['success_score'] <= 15])
+        average = len([r for r in results if 7 < r['success_score'] <= 10])
+        poor = len([r for r in results if r['success_score'] <= 7])
         
-        response += f"\n📈 PERFORMANS DAĞILIMI:\n"
-        response += f"   🌟 Mükemmel (>10): {excellent} şirket\n"
-        response += f"   ⭐ Çok İyi (7-10): {good} şirket\n"
-        response += f"   🔶 İyi (5-7): {average} şirket\n"
-        response += f"   🔻 Gelişmeli (≤5): {poor} şirket\n"
+        response += f"\n📈 PERFORMANS DAĞILIMI (Risk-Ayarlı):\n"
+        response += f"   🌟 Mükemmel (>15): {excellent} şirket\n"
+        response += f"   ⭐ Çok İyi (10-15): {good} şirket\n"
+        response += f"   🔶 İyi (7-10): {average} şirket\n"
+        response += f"   🔻 Gelişmeli (≤7): {poor} şirket\n"
+        
+        # YATIRIM TAVSİYELERİ
+        response += f"\n💡 YATIRIM TAVSİYELERİ:\n"
+        response += f"   🎯 İlk tercih: {results[0]['company']} (En yüksek risk-ayarlı skor)\n"
+        response += f"   🛡️ Güvenlik için: {safest['company']} (En güvenli portföy)\n"
+        response += f"   📈 Performans için: {best_sharpe['company']} (En iyi Sharpe)\n"
+        response += f"   ⚠️ Extreme riskli fonlardan kaçının ({total_extreme} fon tespit edildi)\n"
+        response += f"   🔍 Yatırım öncesi mutlaka risk kontrolü yapın\n"
         
         return response
 

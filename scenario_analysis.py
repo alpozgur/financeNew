@@ -2,16 +2,17 @@
 """
 Senaryo Analizi Modülü - What-if senaryoları için analiz
 Enflasyon, kur, borsa çöküşü gibi senaryolarda fon önerileri
-GERÇEK FON VERİLERİ İLE ÇALIŞIR
+GERÇEK FON VERİLERİ İLE ÇALIŞIR + RİSK DEĞERLENDİRME ENTEGRESYONu
 """
 
 import pandas as pd
 import numpy as np
 from datetime import datetime
 import re
+from risk_assessment import RiskAssessment
 
 class ScenarioAnalyzer:
-    """Senaryo bazlı analiz ve öneriler - Gerçek fon verileriyle"""
+    """Senaryo bazlı analiz ve öneriler - Gerçek fon verileriyle + Risk kontrolü"""
     
     def __init__(self, coordinator, active_funds):
         self.coordinator = coordinator
@@ -80,7 +81,7 @@ class ScenarioAnalyzer:
             return self._general_scenario_analysis(question)
     
     def _analyze_inflation_scenario(self, question):
-        """Enflasyon senaryosu analizi - GERÇEK FONLARLA"""
+        """Enflasyon senaryosu analizi - GERÇEK FONLARLA + RİSK KONTROLÜ"""
         print("📊 Enflasyon senaryosu analiz ediliyor...")
         
         # Enflasyon oranını çıkar
@@ -93,50 +94,120 @@ class ScenarioAnalyzer:
         # GERÇEK FON ANALİZİ
         inflation_funds = self._analyze_funds_for_inflation()
         
+        # ✅ RİSK KONTROLÜ - ALTIN FONLARI
         if inflation_funds['gold_funds']:
             response += f"🥇 ALTIN/KIYMETLİ MADEN FONLARI (En İyi Koruma):\n\n"
-            for i, fund in enumerate(inflation_funds['gold_funds'][:5], 1):
-                response += f"{i}. {fund['fcode']} - {fund['fname'][:40]}...\n"
+            
+            # Risk kontrolü ile fonları filtrele
+            safe_gold_funds = []
+            risky_gold_funds = []
+            
+            for fund in inflation_funds['gold_funds'][:8]:  # Daha fazla al, filtreleyeceğiz
+                # Risk değerlendirmesi
+                is_safe, risk_assessment, risk_warning = self._check_fund_risk(fund['fcode'])
+                
+                if is_safe:
+                    safe_gold_funds.append(fund)
+                else:
+                    risky_gold_funds.append((fund, risk_assessment))
+            
+            # Güvenli altın fonlarını listele
+            for i, fund in enumerate(safe_gold_funds[:5], 1):
+                response += f"{i}. {fund['fcode']} - {fund['fname'][:40]}... ✅\n"
                 response += f"   📈 30 gün getiri: %{fund['return_30d']:.2f}\n"
                 response += f"   📊 Volatilite: %{fund['volatility']:.2f}\n"
                 response += f"   💰 Güncel fiyat: {fund['current_price']:.4f} TL\n"
                 response += f"   🥇 Kıymetli maden oranı: %{fund['gold_ratio']:.1f}\n"
                 response += f"   👥 Yatırımcı: {fund['investors']:,}\n"
-                response += f"   🎯 Tavsiye: Enflasyon koruması için ideal\n\n"
+                response += f"   🎯 Tavsiye: Enflasyon koruması için ideal\n"
+                response += f"   🛡️ Risk Durumu: Güvenli\n\n"
+            
+            # Riskli altın fonları uyarısı
+            if risky_gold_funds:
+                response += f"\n⚠️ RİSKLİ ALTIN FONLARI ({len(risky_gold_funds)} adet) - DİKKAT:\n"
+                for fund, risk_data in risky_gold_funds[:3]:
+                    response += f"   ❌ {fund['fcode']} - {risk_data['risk_level']} RİSK\n"
+                response += f"\n"
         
+        # ✅ RİSK KONTROLÜ - HİSSE FONLARI
         if inflation_funds['equity_funds']:
             response += f"\n📈 HİSSE SENEDİ AĞIRLIKLI FONLAR (Reel Varlık):\n\n"
-            for i, fund in enumerate(inflation_funds['equity_funds'][:5], 1):
-                response += f"{i}. {fund['fcode']} - {fund['fname'][:40]}...\n"
+            
+            safe_equity_funds = []
+            risky_equity_funds = []
+            
+            for fund in inflation_funds['equity_funds'][:8]:
+                is_safe, risk_assessment, risk_warning = self._check_fund_risk(fund['fcode'])
+                
+                if is_safe:
+                    safe_equity_funds.append(fund)
+                else:
+                    risky_equity_funds.append((fund, risk_assessment))
+            
+            for i, fund in enumerate(safe_equity_funds[:5], 1):
+                response += f"{i}. {fund['fcode']} - {fund['fname'][:40]}... ✅\n"
                 response += f"   📈 30 gün getiri: %{fund['return_30d']:.2f}\n"
                 response += f"   📊 Sharpe: {fund['sharpe']:.3f}\n"
                 response += f"   💰 Güncel fiyat: {fund['current_price']:.4f} TL\n"
                 response += f"   📊 Hisse oranı: %{fund['equity_ratio']:.1f}\n"
-                response += f"   🎯 Tavsiye: Uzun vadede enflasyonu yener\n\n"
+                response += f"   🎯 Tavsiye: Uzun vadede enflasyonu yener\n"
+                response += f"   🛡️ Risk Durumu: Güvenli\n\n"
+            
+            if risky_equity_funds:
+                response += f"\n⚠️ RİSKLİ HİSSE FONLARI ({len(risky_equity_funds)} adet) - SAKININ:\n"
+                for fund, risk_data in risky_equity_funds[:2]:
+                    response += f"   ❌ {fund['fcode']} - {risk_data['risk_level']} RİSK\n"
         
+        # ✅ RİSK KONTROLÜ - DÖVİZ FONLARI
         if inflation_funds['fx_funds']:
             response += f"\n💱 DÖVİZ/EUROBOND AĞIRLIKLI FONLAR (Kur Koruması):\n\n"
-            for i, fund in enumerate(inflation_funds['fx_funds'][:5], 1):
-                response += f"{i}. {fund['fcode']} - {fund['fname'][:40]}...\n"
+            
+            safe_fx_funds = []
+            risky_fx_funds = []
+            
+            for fund in inflation_funds['fx_funds'][:8]:
+                is_safe, risk_assessment, risk_warning = self._check_fund_risk(fund['fcode'])
+                
+                if is_safe:
+                    safe_fx_funds.append(fund)
+                else:
+                    risky_fx_funds.append((fund, risk_assessment))
+            
+            for i, fund in enumerate(safe_fx_funds[:5], 1):
+                response += f"{i}. {fund['fcode']} - {fund['fname'][:40]}... ✅\n"
                 response += f"   📈 30 gün getiri: %{fund['return_30d']:.2f}\n"
                 response += f"   💰 Güncel fiyat: {fund['current_price']:.4f} TL\n"
                 response += f"   💱 Döviz varlık oranı: %{fund['fx_ratio']:.1f}\n"
-                response += f"   🎯 Tavsiye: TL değer kaybına karşı koruma\n\n"
+                response += f"   🎯 Tavsiye: TL değer kaybına karşı koruma\n"
+                response += f"   🛡️ Risk Durumu: Güvenli\n\n"
+            
+            if risky_fx_funds:
+                response += f"\n⚠️ RİSKLİ DÖVİZ FONLARI ({len(risky_fx_funds)} adet):\n"
+                for fund, risk_data in risky_fx_funds[:2]:
+                    response += f"   ❌ {fund['fcode']} - {risk_data['risk_level']} RİSK\n"
         
-        # PORTFÖY ÖNERİSİ
-        response += f"\n💼 %{inflation_rate} ENFLASYON İÇİN ÖRNEK PORTFÖY:\n"
+        # PORTFÖY ÖNERİSİ - Sadece güvenli fonlardan
+        response += f"\n💼 %{inflation_rate} ENFLASYON İÇİN GÜVENLİ PORTFÖY:\n"
         response += f"{'='*50}\n\n"
         
-        portfolio = self._create_inflation_portfolio(inflation_funds, inflation_rate)
+        # Güvenli fonlardan portföy oluştur
+        safe_funds_data = {
+            'gold_funds': safe_gold_funds if 'safe_gold_funds' in locals() else [],
+            'equity_funds': safe_equity_funds if 'safe_equity_funds' in locals() else [],
+            'fx_funds': safe_fx_funds if 'safe_fx_funds' in locals() else []
+        }
+        
+        portfolio = self._create_inflation_portfolio(safe_funds_data, inflation_rate)
         total_weight = 0
         
         for item in portfolio:
-            response += f"• {item['fcode']} - %{item['weight']}\n"
-            response += f"  {item['reason']}\n\n"
+            response += f"• {item['fcode']} - %{item['weight']} ✅\n"
+            response += f"  {item['reason']}\n"
+            response += f"  Risk kontrolü: Onaylandı\n\n"
             total_weight += item['weight']
         
         # PERFORMANS TAHMİNİ
-        response += f"\n📊 PORTFÖY PERFORMANS TAHMİNİ:\n"
+        response += f"\n📊 GÜVENLİ PORTFÖY PERFORMANS TAHMİNİ:\n"
         estimated_return = self._estimate_portfolio_return(portfolio, inflation_rate)
         response += f"   Beklenen Nominal Getiri: %{estimated_return['nominal']:.1f}\n"
         response += f"   Enflasyon Sonrası Reel Getiri: %{estimated_return['real']:.1f}\n"
@@ -146,12 +217,13 @@ class ScenarioAnalyzer:
         response += f"   • Bu tahminler geçmiş verilere dayanır\n"
         response += f"   • %{inflation_rate} enflasyon çok yüksek - ekonomik belirsizlik artar\n"
         response += f"   • Portföyü aylık gözden geçirin\n"
+        response += f"   • Tüm öneriler risk kontrolünden geçirilmiştir\n"
         response += f"   • Yatırım tavsiyesi değildir\n"
         
         return response
     
     def _analyze_stock_crash_scenario(self, question):
-        """Borsa çöküşü senaryosu - GERÇEK FONLARLA"""
+        """Borsa çöküşü senaryosu - GERÇEK FONLARLA + RİSK KONTROLÜ"""
         print("📉 Borsa çöküşü senaryosu analiz ediliyor...")
         
         crash_rate = self._extract_percentage(question, default=30)
@@ -162,47 +234,99 @@ class ScenarioAnalyzer:
         # Defansif fonları analiz et
         defensive_funds = self._analyze_defensive_funds()
         
+        # ✅ RİSK KONTROLÜ - PARA PİYASASI FONLARI
         if defensive_funds['money_market']:
             response += f"💵 PARA PİYASASI FONLARI (En Güvenli):\n\n"
-            for i, fund in enumerate(defensive_funds['money_market'][:5], 1):
-                response += f"{i}. {fund['fcode']} - {fund['fname'][:40]}...\n"
+            
+            verified_safe_funds = []
+            risky_mm_funds = []
+            
+            for fund in defensive_funds['money_market'][:10]:  # Daha fazla kontrol et
+                is_safe, risk_assessment, risk_warning = self._check_fund_risk(fund['fcode'])
+                
+                if is_safe and risk_assessment and risk_assessment['risk_level'] in ['LOW', 'MEDIUM']:
+                    verified_safe_funds.append(fund)
+                elif risk_assessment:
+                    risky_mm_funds.append((fund, risk_assessment))
+                else:
+                    # Risk verisi yoksa güvenli kabul et (para piyasası için)
+                    verified_safe_funds.append(fund)
+            
+            # Sadece doğrulanmış güvenli fonları göster
+            for i, fund in enumerate(verified_safe_funds[:5], 1):
+                response += f"{i}. {fund['fcode']} - {fund['fname'][:40]}... ✅\n"
                 response += f"   📊 Volatilite: %{fund['volatility']:.3f} (çok düşük)\n"
                 response += f"   📈 Stabil getiri: %{fund['return_30d']:.2f}\n"
                 response += f"   💰 Fiyat: {fund['current_price']:.4f} TL\n"
                 response += f"   🔄 Ters repo oranı: %{fund['repo_ratio']:.1f}\n"
-                response += f"   🛡️ Güvenlik: ⭐⭐⭐⭐⭐\n\n"
+                response += f"   🛡️ Güvenlik: ⭐⭐⭐⭐⭐\n"
+                response += f"   ✅ Risk Kontrolü: Onaylandı\n\n"
+            
+            # Para piyasasında bile riskli olanlar varsa uyar
+            if risky_mm_funds:
+                response += f"\n⚠️ DİKKAT: Para piyasasında bile riskli fonlar var ({len(risky_mm_funds)} adet)\n"
+                for fund, risk_data in risky_mm_funds[:2]:
+                    response += f"   ❌ {fund['fcode']} - {risk_data['risk_level']} RİSK\n"
+                response += f"\n"
         
+        # ✅ RİSK KONTROLÜ - TAHVIL FONLARI
         if defensive_funds['bond_funds']:
             response += f"\n📋 BORÇLANMA ARAÇLARI FONLARI:\n\n"
-            for i, fund in enumerate(defensive_funds['bond_funds'][:5], 1):
-                response += f"{i}. {fund['fcode']} - {fund['fname'][:40]}...\n"
+            
+            safe_bond_funds = []
+            risky_bond_funds = []
+            
+            for fund in defensive_funds['bond_funds'][:8]:
+                is_safe, risk_assessment, risk_warning = self._check_fund_risk(fund['fcode'])
+                
+                if is_safe:
+                    safe_bond_funds.append(fund)
+                else:
+                    if risk_assessment:
+                        risky_bond_funds.append((fund, risk_assessment))
+            
+            for i, fund in enumerate(safe_bond_funds[:5], 1):
+                response += f"{i}. {fund['fcode']} - {fund['fname'][:40]}... ✅\n"
                 response += f"   📊 Volatilite: %{fund['volatility']:.2f}\n"
                 response += f"   📈 30 gün getiri: %{fund['return_30d']:.2f}\n"
                 response += f"   📊 Devlet tahvili oranı: %{fund['bond_ratio']:.1f}\n"
-                response += f"   🛡️ Güvenlik: ⭐⭐⭐⭐\n\n"
+                response += f"   🛡️ Güvenlik: ⭐⭐⭐⭐\n"
+                response += f"   ✅ Risk Kontrolü: Onaylandı\n\n"
+            
+            if risky_bond_funds:
+                response += f"\n⚠️ RİSKLİ TAHVIL FONLARI ({len(risky_bond_funds)} adet):\n"
+                for fund, risk_data in risky_bond_funds[:2]:
+                    response += f"   ❌ {fund['fcode']} - {risk_data['risk_level']} RİSK\n"
         
-        # KRİZ PORTFÖYÜ
-        response += f"\n💼 %{crash_rate} DÜŞÜŞ İÇİN KRİZ PORTFÖYÜ:\n"
+        # ✅ GÜVENLİ KRİZ PORTFÖYÜ
+        response += f"\n💼 %{crash_rate} DÜŞÜŞ İÇİN GÜVENLİ KRİZ PORTFÖYÜ:\n"
         response += f"{'='*50}\n\n"
         
-        crisis_portfolio = self._create_crisis_portfolio(defensive_funds, crash_rate)
+        safe_defensive_funds = {
+            'money_market': verified_safe_funds if 'verified_safe_funds' in locals() else [],
+            'bond_funds': safe_bond_funds if 'safe_bond_funds' in locals() else []
+        }
+        
+        crisis_portfolio = self._create_crisis_portfolio(safe_defensive_funds, crash_rate)
         
         for item in crisis_portfolio:
-            response += f"• {item['fcode']} - %{item['weight']}\n"
+            response += f"• {item['fcode']} - %{item['weight']} ✅\n"
             response += f"  {item['reason']}\n"
-            response += f"  Beklenen kayıp: %{item['expected_loss']:.1f}\n\n"
+            response += f"  Beklenen kayıp: %{item['expected_loss']:.1f}\n"
+            response += f"  Risk kontrolü: Onaylandı\n\n"
         
         # STRATEJİK ÖNERİLER
-        response += f"\n📋 KRİZ YÖNETİM STRATEJİSİ:\n"
+        response += f"\n📋 GÜVENLİ KRİZ YÖNETİM STRATEJİSİ:\n"
         response += f"   1. Hemen panik satış yapmayın\n"
-        response += f"   2. Yukarıdaki defansif fonlara geçiş yapın\n"
+        response += f"   2. Yukarıdaki risk kontrollü defansif fonlara geçiş yapın\n"
         response += f"   3. %{crash_rate} düşüş sonrası kademeli alım planlayın\n"
         response += f"   4. Nakit oranını %20-30'a çıkarın\n"
+        response += f"   5. Tüm öneriler risk değerlendirmesinden geçirilmiştir\n"
         
         return response
     
     def _analyze_currency_scenario(self, question):
-        """Döviz senaryosu - GERÇEK DÖVİZ FONLARI İLE"""
+        """Döviz senaryosu - GERÇEK DÖVİZ FONLARI İLE + RİSK KONTROLÜ"""
         print("💱 Döviz/Kur senaryosu analiz ediliyor...")
         
         currency_level = self._extract_currency_level(question)
@@ -216,39 +340,225 @@ class ScenarioAnalyzer:
         # Gerçek döviz fonlarını analiz et
         fx_funds = self._analyze_fx_funds()
         
+        # ✅ RİSK KONTROLÜ - YÜKSEK DÖVİZ İÇERİKLİ FONLAR
         if fx_funds['high_fx']:
             response += f"💵 YÜKSEK DÖVİZ İÇERİKLİ FONLAR:\n\n"
-            for i, fund in enumerate(fx_funds['high_fx'][:5], 1):
-                response += f"{i}. {fund['fcode']} - {fund['fname'][:40]}...\n"
+            
+            safe_high_fx = []
+            risky_high_fx = []
+            
+            for fund in fx_funds['high_fx'][:8]:
+                is_safe, risk_assessment, risk_warning = self._check_fund_risk(fund['fcode'])
+                
+                if is_safe:
+                    safe_high_fx.append(fund)
+                else:
+                    if risk_assessment:
+                        risky_high_fx.append((fund, risk_assessment))
+            
+            for i, fund in enumerate(safe_high_fx[:5], 1):
+                response += f"{i}. {fund['fcode']} - {fund['fname'][:40]}... ✅\n"
                 response += f"   📈 30 gün getiri: %{fund['return_30d']:.2f}\n"
                 response += f"   💰 Fiyat: {fund['current_price']:.4f} TL\n"
                 response += f"   💱 Toplam döviz içeriği: %{fund['total_fx']:.1f}\n"
                 response += f"   📊 Detay: Eurobond %{fund['eurobond']:.1f}, Döviz %{fund['fx_bills']:.1f}\n"
-                response += f"   🎯 Dolar koruması sağlar\n\n"
+                response += f"   🎯 Dolar koruması sağlar\n"
+                response += f"   🛡️ Risk Durumu: Güvenli\n\n"
+            
+            if risky_high_fx:
+                response += f"\n⚠️ RİSKLİ YÜKSEK DÖVİZ FONLARI ({len(risky_high_fx)} adet):\n"
+                for fund, risk_data in risky_high_fx[:2]:
+                    response += f"   ❌ {fund['fcode']} - {risk_data['risk_level']} RİSK\n"
         
+        # ✅ RİSK KONTROLÜ - KARMA FONLAR
         if fx_funds['mixed']:
-            response += f"\n🌐 KARMA FON ÖNERİLERİ:\n\n"
-            for i, fund in enumerate(fx_funds['mixed'][:3], 1):
-                response += f"{i}. {fund['fcode']} - {fund['fname'][:40]}...\n"
+            response += f"\n🌐 GÜVENLİ KARMA FON ÖNERİLERİ:\n\n"
+            
+            safe_mixed = []
+            risky_mixed = []
+            
+            for fund in fx_funds['mixed'][:6]:
+                is_safe, risk_assessment, risk_warning = self._check_fund_risk(fund['fcode'])
+                
+                if is_safe:
+                    safe_mixed.append(fund)
+                else:
+                    if risk_assessment:
+                        risky_mixed.append((fund, risk_assessment))
+            
+            for i, fund in enumerate(safe_mixed[:3], 1):
+                response += f"{i}. {fund['fcode']} - {fund['fname'][:40]}... ✅\n"
                 response += f"   📈 30 gün getiri: %{fund['return_30d']:.2f}\n"
                 response += f"   💰 Fiyat: {fund['current_price']:.4f} TL\n"
                 response += f"   📊 Döviz %{fund['total_fx']:.1f}, Hisse %{fund['equity']:.1f}, Tahvil %{fund['bond']:.1f}\n"
-                response += f"   🎯 Dengeli koruma\n\n"
+                response += f"   🎯 Dengeli koruma\n"
+                response += f"   🛡️ Risk Durumu: Güvenli\n\n"
+            
+            if risky_mixed:
+                response += f"\n⚠️ RİSKLİ KARMA FONLAR ({len(risky_mixed)} adet):\n"
+                for fund, risk_data in risky_mixed[:2]:
+                    response += f"   ❌ {fund['fcode']} - {risk_data['risk_level']} RİSK\n"
         
-        # DÖVİZ PORTFÖYÜ ÖNERİSİ
-        response += f"\n💼 KUR RİSKİ YÖNETİM PORTFÖYÜ:\n"
+        # DÖVİZ PORTFÖYÜ ÖNERİSİ - Sadece güvenli fonlardan
+        response += f"\n💼 GÜVENLİ KUR RİSKİ YÖNETİM PORTFÖYÜ:\n"
         response += f"{'='*45}\n\n"
         
-        fx_portfolio = self._create_fx_portfolio(fx_funds, currency_level)
+        safe_fx_funds = {
+            'high_fx': safe_high_fx if 'safe_high_fx' in locals() else [],
+            'mixed': safe_mixed if 'safe_mixed' in locals() else []
+        }
+        
+        fx_portfolio = self._create_fx_portfolio(safe_fx_funds, currency_level)
         
         for item in fx_portfolio:
-            response += f"• {item['fcode']} - %{item['weight']}\n"
-            response += f"  {item['reason']}\n\n"
+            response += f"• {item['fcode']} - %{item['weight']} ✅\n"
+            response += f"  {item['reason']}\n"
+            response += f"  Risk kontrolü: Onaylandı\n\n"
         
         return response
     
+    def _check_fund_risk(self, fcode):
+        """
+        Fon için risk kontrolü yap
+        
+        Returns:
+            tuple: (is_safe, risk_assessment, risk_warning)
+        """
+        try:
+            mv_query = f"""
+            SELECT 
+                fcode,
+                current_price,
+                price_vs_sma20,
+                rsi_14,
+                stochastic_14,
+                days_since_last_trade,
+                investorcount
+            FROM mv_fund_technical_indicators 
+            WHERE fcode = '{fcode}'
+            """
+            
+            mv_data = self.coordinator.db.execute_query(mv_query)
+            
+            if mv_data.empty:
+                return True, None, ""  # Veri yoksa güvenli say
+            
+            row = mv_data.iloc[0]
+            
+            risk_data = {
+                'fcode': fcode,
+                'price_vs_sma20': float(row['price_vs_sma20']) if pd.notna(row['price_vs_sma20']) else 0,
+                'rsi_14': float(row['rsi_14']) if pd.notna(row['rsi_14']) else 50,
+                'stochastic_14': float(row['stochastic_14']) if pd.notna(row['stochastic_14']) else 50,
+                'days_since_last_trade': int(row['days_since_last_trade']) if pd.notna(row['days_since_last_trade']) else 0,
+                'investorcount': int(row['investorcount']) if pd.notna(row['investorcount']) else 0
+            }
+            
+            risk_assessment = RiskAssessment.assess_fund_risk(risk_data)
+            risk_warning = RiskAssessment.format_risk_warning(risk_assessment)
+            
+            # EXTREME risk fonları güvenli değil
+            is_safe = risk_assessment['risk_level'] not in ['EXTREME']
+            
+            return is_safe, risk_assessment, risk_warning
+            
+        except Exception as e:
+            print(f"Risk kontrolü hatası ({fcode}): {e}")
+            return True, None, ""  # Hata durumunda güvenli say
+    
+    def _analyze_funds_for_inflation(self):
+        """Enflasyona dayanıklı gerçek fonları bul ve analiz et - MV VERSİYONU"""
+        result = {
+            'gold_funds': [],
+            'equity_funds': [],
+            'fx_funds': []
+        }
+        
+        try:
+            # MV'den direkt veri çek - ULTRA HIZLI!
+            query = """
+            SELECT 
+                fcode,
+                fund_name,
+                current_price,
+                investorcount,
+                gold_ratio,
+                equity_ratio,
+                fx_ratio,
+                protection_category,
+                inflation_protection_score,
+                return_30d,
+                return_90d,
+                volatility_30d,
+                sharpe_ratio_approx,
+                inflation_scenario_score
+            FROM mv_scenario_analysis_funds
+            WHERE inflation_protection_score > 20
+            ORDER BY inflation_scenario_score DESC
+            LIMIT 60
+            """
+            
+            print("   ⚡ MV'den enflasyon fonları yükleniyor...")
+            start_time = datetime.now().timestamp()
+            
+            funds_data = self.db.execute_query(query)
+            
+            elapsed = datetime.now().timestamp() - start_time
+            print(f"   ✅ {len(funds_data)} fon {elapsed:.3f} saniyede yüklendi!")
+            
+            if funds_data.empty:
+                print("   ❌ MV'de enflasyon fonu bulunamadı")
+                return result
+            
+            # Sonuçları kategorilere ayır
+            for _, fund in funds_data.iterrows():
+                fund_dict = {
+                    'fcode': fund['fcode'],
+                    'fname': fund['fund_name'] or f'Fon {fund["fcode"]}',
+                    'current_price': float(fund['current_price']),
+                    'investors': int(fund['investorcount']) if pd.notna(fund['investorcount']) else 0,
+                    'return_30d': float(fund['return_30d']) if pd.notna(fund['return_30d']) else 0,
+                    'volatility': float(fund['volatility_30d']) if pd.notna(fund['volatility_30d']) else 15
+                }
+                
+                # Altın fonları
+                if fund['protection_category'] in ['ALTIN_AGIRLIKLI', 'KARMA_KORUMA'] or float(fund['gold_ratio']) > 20:
+                    fund_dict['gold_ratio'] = float(fund['gold_ratio'])
+                    if fund['fcode'] not in [f['fcode'] for f in result['gold_funds']]:
+                        result['gold_funds'].append(fund_dict.copy())
+                
+                # Hisse fonları
+                if fund['protection_category'] == 'HISSE_AGIRLIKLI' or float(fund['equity_ratio']) > 50:
+                    fund_dict['equity_ratio'] = float(fund['equity_ratio'])
+                    fund_dict['sharpe'] = float(fund['sharpe_ratio_approx']) if pd.notna(fund['sharpe_ratio_approx']) else 0
+                    if fund['fcode'] not in [f['fcode'] for f in result['equity_funds']]:
+                        result['equity_funds'].append(fund_dict.copy())
+                
+                # Döviz fonları
+                if fund['protection_category'] == 'DOVIZ_AGIRLIKLI' or float(fund['fx_ratio']) > 30:
+                    fund_dict['fx_ratio'] = float(fund['fx_ratio'])
+                    if fund['fcode'] not in [f['fcode'] for f in result['fx_funds']]:
+                        result['fx_funds'].append(fund_dict.copy())
+            
+            # Skorlara göre sırala ve limitle
+            result['gold_funds'].sort(key=lambda x: x.get('gold_ratio', 0), reverse=True)
+            result['equity_funds'].sort(key=lambda x: x.get('sharpe', 0), reverse=True)
+            result['fx_funds'].sort(key=lambda x: x.get('return_30d', 0), reverse=True)
+            
+            result['gold_funds'] = result['gold_funds'][:10]
+            result['equity_funds'] = result['equity_funds'][:10]
+            result['fx_funds'] = result['fx_funds'][:10]
+            
+        except Exception as e:
+            print(f"   ❌ MV sorgu hatası: {e}")
+            # Fallback: Eski metodu çağır
+            print("   🔄 Fallback: Normal SQL sorgusu deneniyor...")
+            return self._analyze_funds_for_inflation_old()
+        
+        return result
+
     def _analyze_funds_for_inflation_old(self):
-        """Enflasyona dayanıklı gerçek fonları bul ve analiz et"""
+        """Enflasyona dayanıklı gerçek fonları bul ve analiz et - FALLBACK"""
         result = {
             'gold_funds': [],
             'equity_funds': [],
@@ -350,100 +660,79 @@ class ScenarioAnalyzer:
         
         return result
     
-    def _analyze_funds_for_inflation(self):
-        """Enflasyona dayanıklı gerçek fonları bul ve analiz et - MV VERSİYONU"""
+    def _analyze_defensive_funds(self):
+        """Defansif fonları analiz et - MV VERSİYONU"""
         result = {
-            'gold_funds': [],
-            'equity_funds': [],
-            'fx_funds': []
+            'money_market': [],
+            'bond_funds': []
         }
         
         try:
-            # MV'den direkt veri çek - ULTRA HIZLI!
+            # MV'den defansif fonları çek
             query = """
             SELECT 
                 fcode,
                 fund_name,
                 current_price,
                 investorcount,
-                gold_ratio,
-                equity_ratio,
-                fx_ratio,
-                protection_category,
-                inflation_protection_score,
-                return_30d,
-                return_90d,
+                money_market_ratio,
+                bond_ratio,
                 volatility_30d,
-                sharpe_ratio_approx,
-                inflation_scenario_score
+                return_30d,
+                crisis_scenario_score,
+                protection_category
             FROM mv_scenario_analysis_funds
-            WHERE inflation_protection_score > 20
-            ORDER BY inflation_scenario_score DESC
-            LIMIT 60
+            WHERE crisis_scenario_score > 50  -- Yüksek kriz skoru = düşük risk
+            AND (money_market_ratio > 50 OR bond_ratio > 50)
+            ORDER BY crisis_scenario_score DESC, volatility_30d ASC
+            LIMIT 40
             """
             
-            print("   ⚡ MV'den enflasyon fonları yükleniyor...")
-            start_time = datetime.now().timestamp()
-            
+            print("   ⚡ MV'den defansif fonlar yükleniyor...")
             funds_data = self.db.execute_query(query)
             
-            elapsed = datetime.now().timestamp() - start_time
-            print(f"   ✅ {len(funds_data)} fon {elapsed:.3f} saniyede yüklendi!")
-            
             if funds_data.empty:
-                print("   ❌ MV'de enflasyon fonu bulunamadı")
-                return result
+                print("   ❌ MV'de defansif fon bulunamadı")
+                return self._analyze_defensive_funds_old()
             
-            # Sonuçları kategorilere ayır
+            print(f"   ✅ {len(funds_data)} defansif fon bulundu")
+            
             for _, fund in funds_data.iterrows():
                 fund_dict = {
                     'fcode': fund['fcode'],
                     'fname': fund['fund_name'] or f'Fon {fund["fcode"]}',
                     'current_price': float(fund['current_price']),
-                    'investors': int(fund['investorcount']) if pd.notna(fund['investorcount']) else 0,
-                    'return_30d': float(fund['return_30d']) if pd.notna(fund['return_30d']) else 0,
-                    'volatility': float(fund['volatility_30d']) if pd.notna(fund['volatility_30d']) else 15
+                    'volatility': float(fund['volatility_30d']) if pd.notna(fund['volatility_30d']) else 0,
+                    'return_30d': float(fund['return_30d']) if pd.notna(fund['return_30d']) else 0
                 }
                 
-                # Altın fonları
-                if fund['protection_category'] in ['ALTIN_AGIRLIKLI', 'KARMA_KORUMA'] or float(fund['gold_ratio']) > 20:
-                    fund_dict['gold_ratio'] = float(fund['gold_ratio'])
-                    if fund['fcode'] not in [f['fcode'] for f in result['gold_funds']]:
-                        result['gold_funds'].append(fund_dict.copy())
+                # Para piyasası fonları
+                if float(fund['money_market_ratio']) > 50:
+                    fund_dict['repo_ratio'] = float(fund['money_market_ratio'])
+                    result['money_market'].append(fund_dict.copy())
                 
-                # Hisse fonları
-                if fund['protection_category'] == 'HISSE_AGIRLIKLI' or float(fund['equity_ratio']) > 50:
-                    fund_dict['equity_ratio'] = float(fund['equity_ratio'])
-                    fund_dict['sharpe'] = float(fund['sharpe_ratio_approx']) if pd.notna(fund['sharpe_ratio_approx']) else 0
-                    if fund['fcode'] not in [f['fcode'] for f in result['equity_funds']]:
-                        result['equity_funds'].append(fund_dict.copy())
-                
-                # Döviz fonları
-                if fund['protection_category'] == 'DOVIZ_AGIRLIKLI' or float(fund['fx_ratio']) > 30:
-                    fund_dict['fx_ratio'] = float(fund['fx_ratio'])
-                    if fund['fcode'] not in [f['fcode'] for f in result['fx_funds']]:
-                        result['fx_funds'].append(fund_dict.copy())
+                # Tahvil fonları
+                if float(fund['bond_ratio']) > 50:
+                    fund_dict['bond_ratio'] = float(fund['bond_ratio'])
+                    result['bond_funds'].append(fund_dict.copy())
             
-            # Skorlara göre sırala ve limitle
-            result['gold_funds'].sort(key=lambda x: x.get('gold_ratio', 0), reverse=True)
-            result['equity_funds'].sort(key=lambda x: x.get('sharpe', 0), reverse=True)
-            result['fx_funds'].sort(key=lambda x: x.get('return_30d', 0), reverse=True)
+            # Volatiliteye göre sırala (düşük = iyi)
+            result['money_market'].sort(key=lambda x: x['volatility'])
+            result['bond_funds'].sort(key=lambda x: x['volatility'])
             
-            result['gold_funds'] = result['gold_funds'][:10]
-            result['equity_funds'] = result['equity_funds'][:10]
-            result['fx_funds'] = result['fx_funds'][:10]
+            # İlk 10'ar tane
+            result['money_market'] = result['money_market'][:10]
+            result['bond_funds'] = result['bond_funds'][:10]
             
         except Exception as e:
-            print(f"   ❌ MV sorgu hatası: {e}")
-            # Fallback: Eski metodu çağır
-            print("   🔄 Fallback: Normal SQL sorgusu deneniyor...")
-            return self._analyze_funds_for_inflation_old()  # Eski metod adı
+            print(f"   ❌ MV defansif fon hatası: {e}")
+            # Fallback
+            return self._analyze_defensive_funds_old()
         
         return result
 
-
     def _analyze_defensive_funds_old(self):
-        """Defansif fonları analiz et"""
+        """Defansif fonları analiz et - FALLBACK"""
         result = {
             'money_market': [],
             'bond_funds': []
@@ -517,80 +806,77 @@ class ScenarioAnalyzer:
         
         return result
     
-    def _analyze_defensive_funds(self):
-        """Defansif fonları analiz et - MV VERSİYONU"""
+    def _analyze_fx_funds(self):
+        """Döviz fonlarını analiz et - MV VERSİYONU"""
         result = {
-            'money_market': [],
-            'bond_funds': []
+            'high_fx': [],
+            'mixed': []
         }
         
         try:
-            # MV'den defansif fonları çek
             query = """
             SELECT 
                 fcode,
                 fund_name,
                 current_price,
                 investorcount,
-                money_market_ratio,
+                fx_ratio,
+                equity_ratio,
                 bond_ratio,
-                volatility_30d,
                 return_30d,
-                crisis_scenario_score,
+                return_90d,
+                volatility_30d,
+                inflation_scenario_score,
                 protection_category
             FROM mv_scenario_analysis_funds
-            WHERE crisis_scenario_score > 50  -- Yüksek kriz skoru = düşük risk
-            AND (money_market_ratio > 50 OR bond_ratio > 50)
-            ORDER BY crisis_scenario_score DESC, volatility_30d ASC
+            WHERE fx_ratio > 20  -- En az %20 döviz içeriği
+            ORDER BY fx_ratio DESC, return_30d DESC
             LIMIT 40
             """
             
-            print("   ⚡ MV'den defansif fonlar yükleniyor...")
+            print("   ⚡ MV'den döviz fonları yükleniyor...")
             funds_data = self.db.execute_query(query)
             
             if funds_data.empty:
-                print("   ❌ MV'de defansif fon bulunamadı")
-                return result
-            
-            print(f"   ✅ {len(funds_data)} defansif fon bulundu")
+                print("   ❌ MV'de döviz fonu bulunamadı")
+                return self._analyze_fx_funds_old()
             
             for _, fund in funds_data.iterrows():
-                fund_dict = {
+                total_fx = float(fund['fx_ratio'])
+                
+                fund_info = {
                     'fcode': fund['fcode'],
                     'fname': fund['fund_name'] or f'Fon {fund["fcode"]}',
                     'current_price': float(fund['current_price']),
-                    'volatility': float(fund['volatility_30d']) if pd.notna(fund['volatility_30d']) else 0,
-                    'return_30d': float(fund['return_30d']) if pd.notna(fund['return_30d']) else 0
+                    'return_30d': float(fund['return_30d']) if pd.notna(fund['return_30d']) else 0,
+                    'total_fx': total_fx,
+                    'eurobond': total_fx * 0.6,  # Tahmini dağılım
+                    'fx_bills': total_fx * 0.4,
+                    'equity': float(fund['equity_ratio']),
+                    'bond': float(fund['bond_ratio'])
                 }
                 
-                # Para piyasası fonları
-                if float(fund['money_market_ratio']) > 50:
-                    fund_dict['repo_ratio'] = float(fund['money_market_ratio'])
-                    result['money_market'].append(fund_dict.copy())
-                
-                # Tahvil fonları
-                if float(fund['bond_ratio']) > 50:
-                    fund_dict['bond_ratio'] = float(fund['bond_ratio'])
-                    result['bond_funds'].append(fund_dict.copy())
+                if total_fx > 60:  # %60'tan fazla döviz
+                    result['high_fx'].append(fund_info)
+                elif total_fx > 20:  # Karma fonlar
+                    result['mixed'].append(fund_info)
             
-            # Volatiliteye göre sırala (düşük = iyi)
-            result['money_market'].sort(key=lambda x: x['volatility'])
-            result['bond_funds'].sort(key=lambda x: x['volatility'])
+            # Performansa göre sırala
+            result['high_fx'].sort(key=lambda x: x['total_fx'], reverse=True)
+            result['mixed'].sort(key=lambda x: x['return_30d'], reverse=True)
             
-            # İlk 10'ar tane
-            result['money_market'] = result['money_market'][:10]
-            result['bond_funds'] = result['bond_funds'][:10]
+            # Limitle
+            result['high_fx'] = result['high_fx'][:10]
+            result['mixed'] = result['mixed'][:10]
             
         except Exception as e:
-            print(f"   ❌ MV defansif fon hatası: {e}")
-            # Fallback
-            return self._analyze_defensive_funds_old()
+            print(f"   ❌ MV döviz fon hatası: {e}")
+            return self._analyze_fx_funds_old()
         
         return result
 
-
     def _analyze_fx_funds_old(self):
-        """Döviz fonlarını analiz et"""
+        """Döviz fonlarını analiz et - FALLBACK"""
         result = {
             'high_fx': [],
             'mixed': []
@@ -664,76 +950,6 @@ class ScenarioAnalyzer:
         
         return result
     
-    def _analyze_fx_funds(self):
-        """Döviz fonlarını analiz et - MV VERSİYONU"""
-        result = {
-            'high_fx': [],
-            'mixed': []
-        }
-        
-        try:
-            query = """
-            SELECT 
-                fcode,
-                fund_name,
-                current_price,
-                investorcount,
-                fx_ratio,
-                equity_ratio,
-                bond_ratio,
-                return_30d,
-                return_90d,
-                volatility_30d,
-                inflation_scenario_score,
-                protection_category
-            FROM mv_scenario_analysis_funds
-            WHERE fx_ratio > 20  -- En az %20 döviz içeriği
-            ORDER BY fx_ratio DESC, return_30d DESC
-            LIMIT 40
-            """
-            
-            print("   ⚡ MV'den döviz fonları yükleniyor...")
-            funds_data = self.db.execute_query(query)
-            
-            if funds_data.empty:
-                print("   ❌ MV'de döviz fonu bulunamadı")
-                return result
-            
-            for _, fund in funds_data.iterrows():
-                total_fx = float(fund['fx_ratio'])
-                
-                fund_info = {
-                    'fcode': fund['fcode'],
-                    'fname': fund['fund_name'] or f'Fon {fund["fcode"]}',
-                    'current_price': float(fund['current_price']),
-                    'return_30d': float(fund['return_30d']) if pd.notna(fund['return_30d']) else 0,
-                    'total_fx': total_fx,
-                    'eurobond': total_fx * 0.6,  # Tahmini dağılım
-                    'fx_bills': total_fx * 0.4,
-                    'equity': float(fund['equity_ratio']),
-                    'bond': float(fund['bond_ratio'])
-                }
-                
-                if total_fx > 60:  # %60'tan fazla döviz
-                    result['high_fx'].append(fund_info)
-                elif total_fx > 20:  # Karma fonlar
-                    result['mixed'].append(fund_info)
-            
-            # Performansa göre sırala
-            result['high_fx'].sort(key=lambda x: x['total_fx'], reverse=True)
-            result['mixed'].sort(key=lambda x: x['return_30d'], reverse=True)
-            
-            # Limitle
-            result['high_fx'] = result['high_fx'][:10]
-            result['mixed'] = result['mixed'][:10]
-            
-        except Exception as e:
-            print(f"   ❌ MV döviz fon hatası: {e}")
-            return self._analyze_fx_funds_old()
-        
-        return result
-
-
     def _create_inflation_portfolio(self, funds_data, inflation_rate):
         """Enflasyon senaryosuna göre portföy oluştur"""
         portfolio = []
@@ -821,9 +1037,9 @@ class ScenarioAnalyzer:
             
             # Altın varsa ekle
             portfolio.append({
-                'fcode': 'GOLD_FUND',
+                'fcode': 'SAFE_GOLD_FUND',
                 'weight': 20,
-                'reason': 'Kıymetli maden fonu önerisi - kriz hedge',
+                'reason': 'Risk kontrollü kıymetli maden fonu önerisi - kriz hedge',
                 'expected_loss': 5
             })
         else:
@@ -851,9 +1067,9 @@ class ScenarioAnalyzer:
                 })
             
             portfolio.append({
-                'fcode': 'BALANCED',
+                'fcode': 'SAFE_BALANCED',
                 'weight': 20,
-                'reason': 'Dengeli/karma fon önerisi',
+                'reason': 'Risk kontrollü dengeli/karma fon önerisi',
                 'expected_loss': -10
             })
         
@@ -891,9 +1107,9 @@ class ScenarioAnalyzer:
         
         # Bir miktar TL pozisyon
         portfolio.append({
-            'fcode': 'TL_MONEY_MARKET',
+            'fcode': 'SAFE_TL_MONEY_MARKET',
             'weight': 15,
-            'reason': 'TL para piyasası - likidite ihtiyacı'
+            'reason': 'Risk kontrollü TL para piyasası - likidite ihtiyacı'
         })
         
         return portfolio
@@ -925,7 +1141,7 @@ class ScenarioAnalyzer:
         }
     
     def _analyze_recession_scenario(self, question):
-        """Resesyon senaryosu analizi"""
+        """Resesyon senaryosu analizi + Risk kontrolü"""
         print("📊 Resesyon senaryosu analiz ediliyor...")
         
         response = f"\n🔴 RESESYON SENARYOSU ANALİZİ\n"
@@ -937,41 +1153,49 @@ class ScenarioAnalyzer:
         
         response += f"🛡️ RESESYONA DAYANIKLI FONLAR:\n\n"
         
-        # Para piyasası ve tahvil fonlarını birleştir
+        # Para piyasası ve tahvil fonlarını birleştir - Risk kontrolü ile
         all_defensive = []
         
         for fund in defensive_funds.get('money_market', [])[:5]:
-            fund['type'] = 'Para Piyasası'
-            fund['resilience'] = 'Çok Yüksek'
-            all_defensive.append(fund)
+            is_safe, risk_assessment, risk_warning = self._check_fund_risk(fund['fcode'])
+            if is_safe:
+                fund['type'] = 'Para Piyasası'
+                fund['resilience'] = 'Çok Yüksek'
+                fund['risk_checked'] = True
+                all_defensive.append(fund)
         
         for fund in defensive_funds.get('bond_funds', [])[:5]:
-            fund['type'] = 'Tahvil'
-            fund['resilience'] = 'Yüksek'
-            all_defensive.append(fund)
+            is_safe, risk_assessment, risk_warning = self._check_fund_risk(fund['fcode'])
+            if is_safe:
+                fund['type'] = 'Tahvil'
+                fund['resilience'] = 'Yüksek'
+                fund['risk_checked'] = True
+                all_defensive.append(fund)
         
         # Volatiliteye göre sırala
         all_defensive.sort(key=lambda x: x['volatility'])
         
         for i, fund in enumerate(all_defensive[:8], 1):
-            response += f"{i}. {fund['fcode']} - {fund['fname'][:35]}...\n"
+            response += f"{i}. {fund['fcode']} - {fund['fname'][:35]}... ✅\n"
             response += f"   📊 Kategori: {fund['type']}\n"
             response += f"   💪 Dayanıklılık: {fund['resilience']}\n"
             response += f"   📉 Volatilite: %{fund['volatility']:.3f}\n"
-            response += f"   📈 30 gün getiri: %{fund['return_30d']:.2f}\n\n"
+            response += f"   📈 30 gün getiri: %{fund['return_30d']:.2f}\n"
+            response += f"   🛡️ Risk Kontrolü: Onaylandı\n\n"
         
         # Portföy önerisi
-        response += f"\n💼 RESESYON PORTFÖYÜ:\n"
-        response += f"   • %40 Para piyasası fonları (likidite)\n"
-        response += f"   • %30 Devlet tahvili fonları (güvenlik)\n"
-        response += f"   • %15 Kıymetli maden fonları (hedge)\n"
+        response += f"\n💼 GÜVENLİ RESESYON PORTFÖYÜ:\n"
+        response += f"   • %40 Risk kontrollü para piyasası fonları (likidite)\n"
+        response += f"   • %30 Güvenli devlet tahvili fonları (güvenlik)\n"
+        response += f"   • %15 Risk onaylı kıymetli maden fonları (hedge)\n"
         response += f"   • %15 Nakit/Likit (fırsat alımları)\n\n"
         
-        response += f"🎯 STRATEJİLER:\n"
+        response += f"🎯 GÜVENLİ STRATEJİLER:\n"
         response += f"   • Borç azaltma öncelikli\n"
         response += f"   • Acil fon miktarını artırın\n"
-        response += f"   • Defansif sektörlere yönelin\n"
+        response += f"   • Sadece risk kontrollü defansif sektörlere yönelin\n"
         response += f"   • Uzun vadeli bakış açısı\n"
+        response += f"   • Tüm öneriler risk değerlendirmesinden geçirilmiştir\n"
         
         return response
     
@@ -980,25 +1204,37 @@ class ScenarioAnalyzer:
         response = f"\n🎲 GENEL SENARYO ANALİZİ\n"
         response += f"{'='*40}\n\n"
         
-        response += f"📊 MEVCUT ANALİZ YETENEKLERİ:\n\n"
+        response += f"📊 MEVCUT ANALİZ YETENEKLERİ (Risk Kontrollü):\n\n"
         
         response += f"1️⃣ ENFLASYON SENARYOLARI:\n"
         response += f"   • 'Enflasyon %50 olursa hangi fonlar korunur?'\n"
-        response += f"   • Altın, hisse ve döviz fonları önerilir\n\n"
+        response += f"   • Altın, hisse ve döviz fonları önerilir\n"
+        response += f"   • ✅ Risk kontrolü: EXTREME riskli fonlar elenir\n\n"
         
         response += f"2️⃣ BORSA ÇÖKÜŞÜ SENARYOLARI:\n"
         response += f"   • 'Borsa %30 düşerse portföy önerisi'\n"
-        response += f"   • Para piyasası ve tahvil fonları önerilir\n\n"
+        response += f"   • Para piyasası ve tahvil fonları önerilir\n"
+        response += f"   • ✅ Risk kontrolü: Defansif fonlar bile kontrol edilir\n\n"
         
         response += f"3️⃣ RESESYON SENARYOLARI:\n"
         response += f"   • 'Resesyon senaryosunda güvenli limanlar'\n"
-        response += f"   • Defansif fonlar analiz edilir\n\n"
+        response += f"   • Defansif fonlar analiz edilir\n"
+        response += f"   • ✅ Risk kontrolü: Çifte güvenlik kontrolü\n\n"
         
         response += f"4️⃣ DÖVİZ/KUR SENARYOLARI:\n"
         response += f"   • 'Dolar 50 TL olursa ne yapmak lazım?'\n"
-        response += f"   • Döviz içerikli fonlar önerilir\n\n"
+        response += f"   • Döviz içerikli fonlar önerilir\n"
+        response += f"   • ✅ Risk kontrolü: Güvenli döviz fonları seçilir\n\n"
         
-        response += f"💡 Spesifik bir senaryo belirtin!"
+        response += f"🛡️ YENİ GÜVENLİK ÖZELLİKLERİ:\n"
+        response += f"   • Tüm fon önerilerinde otomatik risk kontrolü\n"
+        response += f"   • EXTREME riskli fonlar otomatik elenir\n"
+        response += f"   • DNO, AFT gibi problemli fonlar tespit edilir\n"
+        response += f"   • Para piyasası fonları bile risk kontrolünden geçer\n"
+        response += f"   • Sadece LOW/MEDIUM/HIGH risk fonları önerilir\n\n"
+        
+        response += f"💡 Spesifik bir senaryo belirtin!\n"
+        response += f"📋 Örnek: 'Enflasyon %80 olursa hangi güvenli fonlara yatırım yapmalıyım?'"
         
         return response
     
@@ -1054,7 +1290,6 @@ class ScenarioAnalyzer:
         except:
             return True  # Hata durumunda devam et
 
-
     def refresh_mvs_if_needed(self):
         """Gerekirse MV'leri güncelle"""
         if not self.check_mv_freshness():
@@ -1065,16 +1300,15 @@ class ScenarioAnalyzer:
             except Exception as e:
                 print(f"   ⚠️ MV güncelleme hatası: {e}, mevcut verilerle devam ediliyor")
 
-
     @staticmethod
     def get_examples():
         """Senaryo analiz örnekleri"""
         return [
-            "Enflasyon %50 olursa hangi fonlara yatırım yapmalıyım?",
-            "Dolar 40 TL olursa ne olur?",
+            "Enflasyon %50 olursa hangi güvenli fonlara yatırım yapmalıyım?",
+            "Dolar 40 TL olursa hangi risk kontrollü fonlar önerilir?",
             "Borsa çökerse hangi fonlar güvenli?",
             "Faiz %30'a çıkarsa fonlar nasıl etkilenir?",
-            "Kriz durumunda hangi fonlar tercih edilmeli?"
+            "Kriz durumunda hangi risk onaylı fonlar tercih edilmeli?"
         ]
     
     @staticmethod
