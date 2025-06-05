@@ -120,6 +120,13 @@ class AISmartQuestionRouter:
                 'methods': {
                     'analyze_thematic_question': 'Tematik fon analizi'
                 }
+            },
+            'predictive_analyzer': {
+                'description': 'Gelecek tahminleri, prediktif senaryo analizleri',
+                'keywords': ['tahmin', 'sonra', 'gelecek', 'olacak', 'beklenti', 'öngörü', 'projeksiyon'],
+                'methods': {
+                    'analyze_predictive_scenario': 'Gelecek senaryolarını tahmin eder'
+                }
             }
         }
         
@@ -421,7 +428,19 @@ class AISmartQuestionRouter:
     def _check_priority_patterns(self, question_lower: str, context: Dict) -> Optional[AIRouteMatch]:
         """Öncelikli pattern kontrolü - AI'dan önce çalışır"""
         
-        # 1. Beta/Alpha/Sharpe patterns
+    # EN BAŞA EKLE - YÜKSEK ÖNCELİK
+    # 0. Prediktif tahmin patterns - EN YÜKSEK ÖNCELİK
+        if any(word in question_lower for word in ['sonra', 'tahmin', 'gelecek', 'olacak', 'beklenti']):
+            if any(word in question_lower for word in ['enflasyon', 'dolar', 'faiz', 'borsa', 'fon']):
+                return AIRouteMatch(
+                    handler='predictive_analyzer',
+                    method='analyze_predictive_scenario',
+                    score=1.0,
+                    context=context,
+                    reasoning="Predictive scenario pattern match",
+                    confidence=1.0
+                )
+                    # 1. Beta/Alpha/Sharpe patterns
         if any(word in question_lower for word in ['beta katsayısı', 'beta değeri', 'beta 1']):
             return AIRouteMatch(
                 handler='advanced_metrics_analyzer',

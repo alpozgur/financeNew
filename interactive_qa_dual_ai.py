@@ -32,6 +32,7 @@ from smart_question_router import SmartQuestionRouter
 from response_merger import ResponseMerger
 from ai_provider import AIProvider
 from ai_smart_question_router import AISmartQuestionRouter
+from predictive_scenario_analyzer import PredictiveScenarioAnalyzer
 @dataclass
 class RouteMatch:
     """Route eşleşme sonucu"""
@@ -62,7 +63,6 @@ class DualAITefasQA:
             'openai': self.ai_provider.get_status()['openai_status'],
             'ollama': self.ai_provider.get_status()['ollama_status']
         }
-        
         # Modüllere ai_status yerine ai_provider geçebiliriz ama şimdilik uyumluluk için böyle
         self.advanced_metrics_analyzer = AdvancedMetricsAnalyzer(self.coordinator, self.active_funds, self.ai_status)
         self.technical_analyzer = TechnicalAnalysis(
@@ -89,10 +89,15 @@ class DualAITefasQA:
             ai_provider=self.ai_provider,
             use_sbert=True  # SBERT'i etkinleştir
         )
-        
+        from ai_personalized_advisor import AIPersonalizedAdvisor
+        self.ai_advisor = AIPersonalizedAdvisor(self.coordinator, self.ai_provider)        
         # Feature flags
         self.use_hybrid_routing = True  # Yeni routing sistemini kullan
         self.enable_multi_handler = True
+        self.predictive_analyzer = PredictiveScenarioAnalyzer(
+            self.coordinator,
+            self.scenario_analyzer
+        )        
 
                 # Makroekonomik analyzer'ı oluştur - HATA KONTROLÜ İLE
         try:
@@ -194,7 +199,10 @@ class DualAITefasQA:
             except Exception as e:
                 print(f"AI routing hatası, fallback kullanılıyor: {e}")
         
-        # Fallback: Legacy routing
+        if any(word in question_lower for word in ['kişisel plan', 'bana özel', 'profilime göre', 
+                                                    'yaşındayım', 'gelirim', 'kişiye özel']):
+            return self.ai_advisor.analyze_from_question(question)
+       # Fallback: Legacy routing
         numbers_in_question = re.findall(r'(\d+)', question)
         requested_count = int(numbers_in_question[0]) if numbers else 1
         return self._legacy_routing(question, question_lower, requested_count)
@@ -282,7 +290,8 @@ class DualAITefasQA:
             'macroeconomic_analyzer': self.macro_analyzer,
             'advanced_metrics_analyzer': self.advanced_metrics_analyzer,
             'thematic_analyzer': self.thematic_analyzer,
-            'fundamental_analyzer': self.fundamental_analyzer
+            'fundamental_analyzer': self.fundamental_analyzer,
+            'predictive_analyzer': self.predictive_analyzer
         }
         return handler_map.get(handler_name)
     
@@ -319,17 +328,22 @@ class DualAITefasQA:
     def _legacy_routing(self, question, question_lower, requested_count):
         """Mevcut if-else routing mantığınız - TAM OLARAK AYNI"""
         
-        # 🤖 AI PATTERN RECOGNITION - EN ÖNCE KONTROL ET!
-        if any(word in question_lower for word in ['ai teknik', 'ai pattern', 'ai sinyal', 
-                                                'yapay zeka teknik', 'pattern analiz',
-                                                'ai analiz']):
+        # 🔮 PREDİKTİF SENARYO SORULARI - EN BAŞA TAŞI
+        if any(word in question_lower for word in ['sonra', 'tahmin', 'gelecek', 'olacak', 'beklenti', 'vadede']):
+            if any(word in question_lower for word in ['enflasyon', 'dolar', 'faiz', 'borsa', 'ay', 'gün', 'hafta']):
+                print("🔮 Legacy routing: Prediktif senaryo tespit edildi")
+                return self.predictive_analyzer.analyze_predictive_scenario(question)
+        
+        # 🤖 AI PATTERN RECOGNITION
+        if any(word in question_lower for word in ['ai teknik', 'ai pattern', 'ai sinyal']):
             return self.technical_analyzer.handle_ai_pattern_analysis(question)
-        # 🎲 SENARYO ANALİZİ SORULARI - YENİ
-        if self.scenario_analyzer.is_scenario_question(question):
-            return self.scenario_analyzer.analyze_scenario_question(question)
             
-        if CurrencyInflationAnalyzer.is_currency_inflation_question(question):
-            return self.currency_analyzer.analyze_currency_inflation_question(question)
+        # 🎲 SENARYO ANALİZİ SORULARI
+        if self.scenario_analyzer.is_scenario_question(question):
+            # "sonra" içeriyorsa predictive'e yönlendir
+            if any(word in question_lower for word in ['sonra', 'tahmin', 'gelecek']):
+                return self.predictive_analyzer.analyze_predictive_scenario(question)
+            return self.scenario_analyzer.analyze_scenario_question(question)
             
         # Makroekonomik sorular - HATA AYIKLAMA İÇİN TRY-EXCEPT EKLE
         try:

@@ -118,6 +118,28 @@ class SmartQuestionRouter:
                 'handler': 'time_based_analyzer',
                 'method': 'analyze_time_based',
                 'priority': 6
+            },
+            'personal_advisor': {
+                'patterns': [
+                    r'\d+\s*yaş',  # "35 yaşındayım"
+                    r'kişisel\s*plan',  # "kişisel plan"
+                    r'bana\s*özel',  # "bana özel"
+                    r'emeklilik.*?plan',  # "emeklilik planı"
+                ],
+                'handler': 'personal_finance_analyzer',
+                'method': 'handle_ai_personalized_planning',
+                'priority': 10
+            },
+            'predictive_scenario': {
+                'patterns': [
+                    r'tahmin|gelecek\s*\d+\s*(ay|gün)',
+                    r'\d+\s*(ay|gün)\s*sonra',
+                    r'yıl\s*sonu.*?fon',
+                    r'beklenti|öngörü|projeksiyon'
+                ],
+                'handler': 'predictive_analyzer',
+                'method': 'analyze_predictive_scenario',
+                'priority': 9
             }
         }
         
@@ -202,6 +224,10 @@ class SmartQuestionRouter:
             'advanced_metrics_analyzer': {
                 'default_method': 'handle_general_metrics',
                 'execution_order': 65
+            },
+            'predictive_analyzer': {
+                'default_method': 'analyze_predictive_scenario',
+                'execution_order': 25
             }
         }
 

@@ -156,17 +156,17 @@ class CurrencyInflationAnalyzer:
         
         try:
             # MV güncellik kontrolü
-            freshness_check = """
-            SELECT 
-                EXTRACT(EPOCH FROM (NOW() - last_refresh))/3600 as hours_since_refresh
-            FROM pg_matviews
-            WHERE matviewname = 'mv_scenario_analysis_funds'
-            """
+            # freshness_check = """
+            # SELECT 
+            #     EXTRACT(EPOCH FROM (NOW() - last_refresh))/3600 as hours_since_refresh
+            # FROM pg_matviews
+            # WHERE matviewname = 'mv_scenario_analysis_funds'
+            # """
             
-            freshness = self.db.execute_query(freshness_check)
-            if not freshness.empty and freshness.iloc[0]['hours_since_refresh'] > 24:
-                print("   ⚠️ MV 24 saatten eski, güncelleniyor...")
-                self.db.execute_query("REFRESH MATERIALIZED VIEW CONCURRENTLY mv_scenario_analysis_funds")
+            # freshness = self.db.execute_query(freshness_check)
+            # if not freshness.empty and freshness.iloc[0]['hours_since_refresh'] > 24:
+            #     print("   ⚠️ MV 24 saatten eski, güncelleniyor...")
+            #     self.db.execute_query("REFRESH MATERIALIZED VIEW CONCURRENTLY mv_scenario_analysis_funds")
             
             # Kategorilere göre grupla ve en iyileri al
             query = """

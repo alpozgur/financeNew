@@ -5,6 +5,7 @@ Beta, Alpha, Tracking Error, Information Ratio hesaplamaları
 Risk değerlendirmesi ile güvenli metrik analizleri
 """
 
+import re
 import pandas as pd
 import numpy as np
 from typing import Dict, List, Tuple, Optional

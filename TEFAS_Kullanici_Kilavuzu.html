@@ -3,420 +3,732 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TEFAS Fon Analiz Sistemi - Kullanıcı Kılavuzu</title>
+    <title>TEFAS Analiz Sistemi - Kullanım Kılavuzu</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             line-height: 1.6;
             color: #333;
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
+            background-color: #f5f7fa;
         }
         
         .container {
-            background-color: white;
-            padding: 40px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-            border-radius: 10px;
-        }
-        
-        h1 {
-            color: #1a237e;
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 2.5em;
-        }
-        
-        h2 {
-            color: #1976d2;
-            margin-top: 40px;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e0e0e0;
-        }
-        
-        h3 {
-            color: #424242;
-            margin-top: 25px;
-            margin-bottom: 15px;
-        }
-        
-        h4 {
-            color: #616161;
-            margin-top: 20px;
-            margin-bottom: 10px;
-        }
-        
-        .toc {
-            background-color: #f8f9fa;
+            max-width: 1200px;
+            margin: 0 auto;
             padding: 20px;
-            border-radius: 8px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 0;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        header h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        header p {
+            font-size: 1.3em;
+            opacity: 0.9;
+        }
+        
+        .system-info {
+            background: white;
+            padding: 40px;
+            margin: 40px 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .system-info h2 {
+            color: #667eea;
+            margin-bottom: 25px;
+            font-size: 2.2em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
             margin: 30px 0;
         }
         
-        .toc h2 {
-            margin-top: 0;
-            color: #1976d2;
+        .feature-card {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         
-        .toc ul {
-            list-style-type: none;
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+        
+        .feature-card h3 {
+            color: #764ba2;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+        
+        .feature-card ul {
+            list-style: none;
             padding-left: 0;
         }
         
-        .toc li {
-            margin: 10px 0;
+        .feature-card li {
+            padding: 3px 0;
+            padding-left: 20px;
+            position: relative;
         }
         
-        .toc a {
-            text-decoration: none;
-            color: #1976d2;
-            font-weight: 500;
-        }
-        
-        .toc a:hover {
-            text-decoration: underline;
-        }
-        
-        .code-block {
-            background-color: #f5f5f5;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
-            padding: 15px;
-            margin: 10px 0;
-            font-family: 'Courier New', monospace;
-            overflow-x: auto;
-        }
-        
-        .feature-box {
-            background-color: #e3f2fd;
-            border-left: 4px solid #1976d2;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-        
-        .warning-box {
-            background-color: #fff3e0;
-            border-left: 4px solid #ff9800;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-        
-        .success-box {
-            background-color: #e8f5e9;
-            border-left: 4px solid #4caf50;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-        
-        ul {
-            margin: 15px 0;
-            padding-left: 30px;
-        }
-        
-        li {
-            margin: 8px 0;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-        }
-        
-        th, td {
-            border: 1px solid #e0e0e0;
-            padding: 12px;
-            text-align: left;
-        }
-        
-        th {
-            background-color: #f5f5f5;
+        .feature-card li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #667eea;
             font-weight: bold;
         }
         
-        .print-button {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background-color: #1976d2;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        .section {
+            background: white;
+            margin: 30px 0;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         
-        .print-button:hover {
-            background-color: #1565c0;
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 25px;
+            font-size: 2em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section h2 .emoji {
+            font-size: 1.2em;
+        }
+        
+        .subsection {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .subsection h3 {
+            color: #764ba2;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+        
+        .query-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .query-list li {
+            padding: 8px 15px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .query-list li:hover {
+            background: #667eea;
+            color: white;
+            transform: translateX(5px);
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            background: #667eea;
+            color: white;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+        
+        .new-badge {
+            background: #e74c3c;
+        }
+        
+        .note {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+            color: #856404;
+        }
+        
+        .note strong {
+            color: #744210;
+        }
+        
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .tech-badge {
+            padding: 8px 15px;
+            background: #e3f2fd;
+            color: #1976d2;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 40px 0;
+            color: #666;
+            background: white;
+            margin-top: 60px;
+        }
+        
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2em;
+            }
+            
+            .section {
+                padding: 20px;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
         }
         
         @media print {
             body {
-                background-color: white;
+                background: white;
             }
-            .container {
+            
+            .section {
                 box-shadow: none;
-                padding: 20px;
+                border: 1px solid #ddd;
             }
-            .print-button {
-                display: none;
+            
+            .query-list li:hover {
+                transform: none;
+                background: white;
+                color: inherit;
             }
         }
     </style>
 </head>
 <body>
+    <header>
+        <h1>TEFAS Analiz Sistemi</h1>
+        <p>Yapay Zeka Destekli Kapsamlı Yatırım Fonu Analiz Platformu</p>
+    </header>
+    
     <div class="container">
-        <h1>TEFAS FON ANALİZ SİSTEMİ<br>KULLANICI KILAVUZU</h1>
-        
-        <div style="text-align: center; margin: 30px 0;">
-            <p><strong>Versiyon:</strong> 2.0</p>
-            <p><strong>Tarih:</strong> 04.06.2025</p>
+        <!-- Sistem Tanıtımı -->
+        <div class="system-info">
+            <h2>🚀 Sistem Hakkında</h2>
+            <p style="font-size: 1.1em; margin-bottom: 20px;">
+                TEFAS Analiz Sistemi, Türkiye Elektronik Fon Alım Satım Platformu'ndaki 1700+ yatırım fonunu 
+                gerçek zamanlı olarak analiz eden, yapay zeka destekli kapsamlı bir finansal analiz platformudur.
+            </p>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3>🎯 Temel Özellikler</h3>
+                    <ul>
+                        <li>1700+ fon üzerinde detaylı analiz</li>
+                        <li>Gerçek zamanlı performans takibi</li>
+                        <li>AI destekli pattern tanıma</li>
+                        <li>Kişiselleştirilmiş yatırım önerileri</li>
+                        <li>Risk değerlendirmesi ve yönetimi</li>
+                        <li>Çoklu AI model desteği (OpenAI/Ollama)</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>🧠 Yapay Zeka Yetenekleri</h3>
+                    <ul>
+                        <li>AI Pattern Recognition ile teknik analiz</li>
+                        <li>Kişiye özel AI danışmanlık</li>
+                        <li>Akıllı soru yönlendirme (AI Router)</li>
+                        <li>Multi-handler kompleks analizler</li>
+                        <li>Risk assessment entegrasyonu</li>
+                        <li>Dual AI mode karşılaştırması</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>📊 Analiz Modülleri</h3>
+                    <ul>
+                        <li>Performans analizi (getiri, risk, Sharpe)</li>
+                        <li>Teknik analiz (MACD, RSI, Bollinger)</li>
+                        <li>Temel analiz (büyüklük, yatırımcı sayısı)</li>
+                        <li>Tematik/Sektörel analiz</li>
+                        <li>Makroekonomik etki analizi</li>
+                        <li>Senaryo bazlı simülasyonlar</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="tech-stack">
+                <span class="tech-badge">Python</span>
+                <span class="tech-badge">PostgreSQL</span>
+                <span class="tech-badge">OpenAI GPT</span>
+                <span class="tech-badge">Ollama</span>
+                <span class="tech-badge">Pandas</span>
+                <span class="tech-badge">NumPy</span>
+                <span class="tech-badge">Machine Learning</span>
+                <span class="tech-badge">Real-time Data Processing</span>
+            </div>
         </div>
         
-        <div class="toc">
-            <h2>İÇİNDEKİLER</h2>
-            <ul>
-                <li><a href="#section1">1. Sistem Hakkında</a></li>
-                <li><a href="#section2">2. Temel Özellikler</a></li>
-                <li><a href="#section3">3. Soru Kategorileri ve Örnekler</a></li>
-                <li><a href="#section4">4. Detaylı Kullanım Örnekleri</a></li>
-                <li><a href="#section5">5. İpuçları ve Püf Noktaları</a></li>
-                <li><a href="#section6">6. Önemli Uyarılar</a></li>
+        <!-- Performans Analizi -->
+        <div class="section">
+            <h2><span class="emoji">📊</span> Performans Analizi</h2>
+            
+            <div class="subsection">
+                <h3>Kazandıran/Kaybettiren Fonlar</h3>
+                <ul class="query-list">
+                    <li>En çok kazandıran fonlar hangileri?</li>
+                    <li>En çok kaybettiren fonları göster</li>
+                    <li>Son 30 günde en iyi performans gösteren fonlar</li>
+                    <li>Son 3 ayda en çok kazandıran fonlar</li>
+                    <li>Son 6 ayda en iyi getiri sağlayan fonlar</li>
+                    <li>Son 1 yılda en kötü performans gösteren fonlar</li>
+                </ul>
+            </div>
+            
+            <div class="subsection">
+                <h3>Risk ve Güvenlik Analizi</h3>
+                <ul class="query-list">
+                    <li>En güvenli fonlar hangileri?</li>
+                    <li>En az riskli fonlar listesi</li>
+                    <li>En riskli fonları göster</li>
+                    <li>Volatilitesi %10 altında olan fonlar</li>
+                    <li>Düşük volatilite ve yüksek sharpe oranlı fonlar</li>
+                </ul>
+            </div>
+            
+            <div class="subsection">
+                <h3>Fon Analizi ve Karşılaştırma</h3>
+                <ul class="query-list">
+                    <li>[FON_KODU] fonunu analiz et (örn: AKB, TYH, IPB)</li>
+                    <li>[FON1] ve [FON2] fonlarını karşılaştır</li>
+                    <li>Sharpe oranı en yüksek fonlar</li>
+                    <li>Risk ayarlı getirisi en iyi fonlar</li>
+                </ul>
+            </div>
+            
+            <div class="subsection">
+                <h3>Yatırım Önerileri</h3>
+                <ul class="query-list">
+                    <li>2025 yılı için fon önerileri</li>
+                    <li>[TUTAR] TL ile hangi fonlara yatırım yapmalıyım?</li>
+                    <li>Yıl sonu için en iyi fonlar</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Teknik Analiz -->
+        <div class="section">
+            <h2><span class="emoji">📈</span> Teknik Analiz</h2>
+            
+            <div class="subsection">
+                <h3>Klasik Teknik Göstergeler</h3>
+                <ul class="query-list">
+                    <li>MACD sinyali pozitif/negatif olan fonlar</li>
+                    <li>RSI 30 altında olan fonlar (aşırı satım)</li>
+                    <li>RSI 70 üstünde olan fonlar (aşırı alım)</li>
+                    <li>Bollinger alt/üst bandında olan fonlar</li>
+                    <li>Golden cross veren fonlar</li>
+                    <li>Death cross oluşan fonlar</li>
+                    <li>Teknik alım/satım sinyali veren fonlar</li>
+                    <li>50 günlük ortalamanın üstündeki fonlar</li>
+                </ul>
+            </div>
+            
+            <div class="subsection">
+                <h3>AI Pattern Recognition <span class="badge new-badge">YENİ</span></h3>
+                <ul class="query-list">
+                    <li>[FON_KODU] AI pattern analizi</li>
+                    <li>AI teknik sinyal taraması</li>
+                    <li>Yapay zeka ile formasyon tespiti</li>
+                    <li>AI destekli chart pattern analizi</li>
+                    <li>Hangi fonlarda teknik pattern var?</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Döviz ve Enflasyon -->
+        <div class="section">
+            <h2><span class="emoji">💱</span> Döviz ve Enflasyon</h2>
+            
+            <div class="subsection">
+                <h3>Döviz Fonları</h3>
+                <ul class="query-list">
+                    <li>Dolar fonlarının performansı</li>
+                    <li>Euro fonları analizi</li>
+                    <li>En iyi döviz fonları</li>
+                    <li>Döviz sepeti fonları</li>
+                    <li>USD/TL etkisi en az olan fonlar</li>
+                </ul>
+            </div>
+            
+            <div class="subsection">
+                <h3>Enflasyon Koruması</h3>
+                <ul class="query-list">
+                    <li>Enflasyon korumalı fonlar</li>
+                    <li>TÜFE'ye endeksli fonlar</li>
+                    <li>Enflasyona karşı koruma sağlayan fonlar</li>
+                </ul>
+            </div>
+            
+            <div class="subsection">
+                <h3>Kıymetli Madenler</h3>
+                <ul class="query-list">
+                    <li>Altın fonları analizi</li>
+                    <li>Kıymetli maden fonları performansı</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Senaryo Analizleri -->
+        <div class="section">
+            <h2><span class="emoji">🎲</span> Senaryo Analizleri</h2>
+            
+            <div class="subsection">
+                <h3>Ekonomik Senaryolar</h3>
+                <ul class="query-list">
+                    <li>Enflasyon %[ORAN] olursa hangi fonlar kazandırır?</li>
+                    <li>Faiz %[ORAN]'a çıkarsa fonlar nasıl etkilenir?</li>
+                    <li>Dolar [DEĞER] TL olursa ne yapmalıyım?</li>
+                    <li>Borsa %[ORAN] düşerse hangi fonlar güvenli?</li>
+                    <li>Kriz durumunda portföy önerisi</li>
+                    <li>TCMB/FED kararlarının etkisi</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Kişisel Finans -->
+        <div class="section">
+            <h2><span class="emoji">👤</span> Kişisel Finans Planlaması</h2>
+            
+            <div class="subsection">
+                <h3>Emeklilik Planlaması</h3>
+                <ul class="query-list">
+                    <li>Emekliliğe [YIL] yıl kala nasıl yatırım yapmalıyım?</li>
+                    <li>[YAŞ] yaşındayım, emeklilik planı öner</li>
+                    <li>Emeklilik için güvenli fonlar</li>
+                </ul>
+            </div>
+            
+            <div class="subsection">
+                <h3>AI Kişiselleştirilmiş Danışmanlık <span class="badge new-badge">YENİ</span></h3>
+                <ul class="query-list">
+                    <li>[YAŞ] yaşındayım, aylık [TUTAR] TL biriktirebiliyorum, kişisel plan yap</li>
+                    <li>Risk almak istemiyorum, bana özel portföy oluştur</li>
+                    <li>Agresif yatırımcıyım, profilime göre öneri</li>
+                    <li>Kişiye özel risk profili analizi</li>
+                </ul>
+            </div>
+            
+            <div class="subsection">
+                <h3>Özel Hedefler</h3>
+                <ul class="query-list">
+                    <li>Çocuğum için eğitim fonu önerisi</li>
+                    <li>Ev almak için [YIL] yıllık birikim planı</li>
+                    <li>Üniversite için birikim stratejisi</li>
+                    <li>Düğün/tatil için kısa vadeli birikim</li>
+                    <li>Acil durum fonu oluşturma</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Matematiksel Hesaplamalar -->
+        <div class="section">
+            <h2><span class="emoji">🧮</span> Matematiksel Hesaplamalar</h2>
+            
+            <div class="subsection">
+                <h3>Portföy Dağıtımı</h3>
+                <ul class="query-list">
+                    <li>[TUTAR] TL'yi [SAYI] fona nasıl dağıtmalıyım?</li>
+                    <li>Güvenli fonlara optimal dağılım</li>
+                </ul>
+            </div>
+            
+            <div class="subsection">
+                <h3>Birikim Hesaplamaları</h3>
+                <ul class="query-list">
+                    <li>Aylık [TUTAR] TL ile [YIL] yılda ne birikir?</li>
+                    <li>[HEDEF_TUTAR] için kaç yıl yatırım yapmalıyım?</li>
+                    <li>%[GETİRİ] ile [YIL] yılda ne kadar birikir?</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Portföy Yönetim Şirketleri -->
+        <div class="section">
+            <h2><span class="emoji">🏢</span> Portföy Yönetim Şirketleri</h2>
+            
+            <div class="subsection">
+                <h3>Şirket Analizleri</h3>
+                <ul class="query-list">
+                    <li>İş Portföy analizi</li>
+                    <li>Ak Portföy fonları değerlendirmesi</li>
+                    <li>Garanti Portföy performansı</li>
+                    <li>QNB Portföy detaylı inceleme</li>
+                    <li>Fiba Portföy analizi</li>
+                    <li>Ata Portföy değerlendirmesi</li>
+                </ul>
+            </div>
+            
+            <div class="subsection">
+                <h3>Şirket Karşılaştırmaları</h3>
+                <ul class="query-list">
+                    <li>[ŞİRKET1] vs [ŞİRKET2] karşılaştırması</li>
+                    <li>En başarılı portföy yönetim şirketi</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Zaman Bazlı Analizler -->
+        <div class="section">
+            <h2><span class="emoji">⏰</span> Zaman Bazlı Analizler</h2>
+            
+            <div class="subsection">
+                <h3>Günlük/Anlık</h3>
+                <ul class="query-list">
+                    <li>Bugün en çok kazanan/kaybeden fonlar</li>
+                    <li>Bugünkü piyasa durumu</li>
+                </ul>
+            </div>
+            
+            <div class="subsection">
+                <h3>Dönemsel</h3>
+                <ul class="query-list">
+                    <li>Bu hafta en iyi performans gösteren fonlar</li>
+                    <li>Bu ay en çok kazandıran fonlar</li>
+                    <li>Son [GÜN] günün liderleri</li>
+                    <li>Yıl başından beri (YTD) performans</li>
+                    <li>Haftalık trend analizi</li>
+                    <li>Aylık performans liderleri</li>
+                    <li>Son [YIL] yılın en istikrarlı fonları</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- İleri Metrikler -->
+        <div class="section">
+            <h2><span class="emoji">📊</span> İleri Metrikler</h2>
+            
+            <div class="subsection">
+                <h3>Risk Metrikleri</h3>
+                <ul class="query-list">
+                    <li>Beta katsayısı [DEĞER]'den düşük fonlar</li>
+                    <li>Alpha değeri pozitif olan fonlar</li>
+                    <li>Sharpe oranı [DEĞER]'den yüksek fonlar</li>
+                </ul>
+            </div>
+            
+            <div class="subsection">
+                <h3>Performans Metrikleri</h3>
+                <ul class="query-list">
+                    <li>Information ratio en yüksek aktif fonlar</li>
+                    <li>Tracking error en düşük index fonlar</li>
+                    <li>Calmar ratio analizi</li>
+                    <li>Sortino ratio sıralaması</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Tematik/Sektörel Analizler -->
+        <div class="section">
+            <h2><span class="emoji">🎯</span> Tematik/Sektörel Analizler</h2>
+            
+            <div class="subsection">
+                <h3>Sektör Fonları</h3>
+                <ul class="query-list">
+                    <li>Teknoloji sektörü fonları</li>
+                    <li>Sağlık temalı fonlar</li>
+                    <li>Enerji fonları analizi</li>
+                    <li>Bankacılık sektörü fonları</li>
+                    <li>Gayrimenkul (REIT) fonları</li>
+                    <li>Tarım ve gıda fonları</li>
+                    <li>Turizm sektörü fonları</li>
+                </ul>
+            </div>
+            
+            <div class="subsection">
+                <h3>Özel Temalar</h3>
+                <ul class="query-list">
+                    <li>Sürdürülebilirlik (ESG) fonları</li>
+                    <li>Fintech ve blockchain fonları</li>
+                    <li>İhracatçı şirketler fonları</li>
+                    <li>Katılım fonları</li>
+                    <li>Dijital dönüşüm fonları</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Temel Analiz -->
+        <div class="section">
+            <h2><span class="emoji">🔍</span> Temel Analiz</h2>
+            
+            <div class="subsection">
+                <h3>Büyüklük ve Kapasite</h3>
+                <ul class="query-list">
+                    <li>En büyük [SAYI] fon</li>
+                    <li>Varlık büyüklüğü [TUTAR] üstü fonlar</li>
+                    <li>Kapasitesi en fazla olan fonlar</li>
+                </ul>
+            </div>
+            
+            <div class="subsection">
+                <h3>Yatırımcı İstatistikleri</h3>
+                <ul class="query-list">
+                    <li>En çok yatırımcısı olan fonlar</li>
+                    <li>En popüler fonlar</li>
+                    <li>[SAYI] üstü yatırımcısı olan fonlar</li>
+                </ul>
+            </div>
+            
+            <div class="subsection">
+                <h3>Fon Yaşı ve Geçmişi</h3>
+                <ul class="query-list">
+                    <li>En eski/köklü fonlar</li>
+                    <li>Yeni kurulan fonlar</li>
+                    <li>Son [DÖNEM] açılan fonlar</li>
+                </ul>
+            </div>
+            
+            <div class="subsection">
+                <h3>Fon Detayları</h3>
+                <ul class="query-list">
+                    <li>[FON_KODU] fonunun yatırım dağılımı</li>
+                    <li>[FON_KODU] fonunun kategorisi</li>
+                    <li>Fon türü ve kategori analizleri</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Makroekonomik Analizler -->
+        <div class="section">
+            <h2><span class="emoji">💹</span> Makroekonomik Analizler</h2>
+            
+            <ul class="query-list">
+                <li>TCMB faiz kararlarının fon etkisi</li>
+                <li>FED politikalarının yansıması</li>
+                <li>Enflasyon verisinin fon performansına etkisi</li>
+                <li>Jeopolitik risklerin değerlendirmesi</li>
+                <li>Seçim döneminde güvenli fonlar</li>
+                <li>Kur dalgalanmalarının etkisi</li>
             </ul>
         </div>
         
-        <h2 id="section1">1. Sistem Hakkında</h2>
-        <p>TEFAS Fon Analiz Sistemi, Türkiye Elektronik Fon Alım Satım Platformu'ndaki (TEFAS) yatırım fonlarını analiz eden, yapay zeka destekli kapsamlı bir finansal analiz platformudur.</p>
+        <!-- Sistem ve AI Özellikleri -->
+        <div class="section">
+            <h2><span class="emoji">🤖</span> Sistem ve AI Özellikleri</h2>
+            
+            <div class="subsection">
+                <h3>Test ve Durum</h3>
+                <ul class="query-list">
+                    <li>AI test</li>
+                    <li>Sistem durumu kontrolü</li>
+                    <li>Hangi özellikler mevcut?</li>
+                    <li>OpenAI vs Ollama karşılaştırması</li>
+                </ul>
+            </div>
+            
+            <div class="subsection">
+                <h3>Özel AI Analizleri</h3>
+                <ul class="query-list">
+                    <li>Dual mode analiz karşılaştırması</li>
+                    <li>Multi-handler destekli kompleks analizler</li>
+                    <li>Risk assessment entegre analizler</li>
+                </ul>
+            </div>
+        </div>
         
-        <div class="feature-box">
-            <h3>Ana Özellikler:</h3>
-            <ul>
-                <li>1700+ TEFAS fonunun gerçek zamanlı analizi</li>
-                <li>Dual AI desteği (OpenAI + Ollama)</li>
-                <li>Teknik, fundamental ve makroekonomik analizler</li>
-                <li>Kişiselleştirilmiş yatırım önerileri</li>
-                <li>Senaryo bazlı risk analizi</li>
+        <!-- Kombine ve Özel Sorgular -->
+        <div class="section">
+            <h2><span class="emoji">💡</span> Kombine ve Özel Sorgular</h2>
+            
+            <div class="subsection">
+                <h3>Çoklu Kriter Sorguları</h3>
+                <ul class="query-list">
+                    <li>Hem güvenli hem yüksek getirili fonlar</li>
+                    <li>Beta < [DEĞER] ve Sharpe > [DEĞER] olan fonlar</li>
+                    <li>RSI < 30 ve MACD pozitif fonlar</li>
+                    <li>Düşük risk ve yüksek alpha kombinasyonu</li>
+                </ul>
+            </div>
+            
+            <div class="subsection">
+                <h3>Özel Durumlar</h3>
+                <ul class="query-list">
+                    <li>Emekliliğe [YIL] yıl var, teknoloji fonlarına yatırım yapmalı mıyım?</li>
+                    <li>Güvenli dolar fonları hangileri?</li>
+                    <li>Altın mı döviz fonları mı?</li>
+                    <li>Kriz döneminde hangi sektör fonları güvenli?</li>
+                    <li>EXTREME risk içermeyen en kazandıran fonlar</li>
+                </ul>
+            </div>
+            
+            <div class="subsection">
+                <h3>Karma Analizler</h3>
+                <ul class="query-list">
+                    <li>[TUTAR] TL'yi teknoloji ve sağlık fonlarına nasıl böleyim?</li>
+                    <li>Dolar fonlarının teknik ve temel analizi</li>
+                    <li>Bugün hem teknik hem temel olarak güçlü fonlar</li>
+                    <li>Enflasyon korumalı ve döviz içeren fonlar</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Kullanım Notları -->
+        <div class="note">
+            <strong>Kullanım Notları:</strong>
+            <ul style="margin-top: 10px; padding-left: 20px;">
+                <li><strong>[FON_KODU]</strong>: 3 harfli fon kodları (AKB, TYH, IPB vb.)</li>
+                <li><strong>[TUTAR]</strong>: Yatırım tutarı (50000, 100000 vb.)</li>
+                <li><strong>[YIL], [YAŞ], [GÜN], [ORAN], [DEĞER]</strong>: Sayısal değerler</li>
+                <li><strong>[ŞİRKET1], [ŞİRKET2]</strong>: Portföy yönetim şirket isimleri</li>
+                <li><span class="badge new-badge">YENİ</span>: Son güncelleme ile eklenen özellikler</li>
             </ul>
         </div>
-        
-        <h2 id="section2">2. Temel Özellikler</h2>
-        
-        <h3>2.1. Performans Analizi</h3>
-        <ul>
-            <li>Fon getiri hesaplamaları</li>
-            <li>Risk metrikleri (Sharpe, Sortino, Calmar)</li>
-            <li>Volatilite ve maksimum düşüş analizleri</li>
-        </ul>
-        
-        <h3>2.2. Teknik Analiz</h3>
-        <ul>
-            <li>MACD, RSI, Bollinger Bantları</li>
-            <li>Hareketli ortalamalar (SMA, EMA)</li>
-            <li>Alım/satım sinyalleri</li>
-        </ul>
-        
-        <h3>2.3. Portföy Yönetimi</h3>
-        <ul>
-            <li>Optimal portföy dağılımı</li>
-            <li>Risk-getiri optimizasyonu</li>
-            <li>Şirket bazlı analizler</li>
-        </ul>
-        
-        <h3>2.4. Makroekonomik Analiz</h3>
-        <ul>
-            <li>Faiz değişimi etkileri</li>
-            <li>Enflasyon senaryoları</li>
-            <li>Döviz kuru analizleri</li>
-        </ul>
-        
-        <h3>2.5. Kişisel Finans Planlama</h3>
-        <ul>
-            <li>Emeklilik planlaması</li>
-            <li>Eğitim birikimleri</li>
-            <li>Ev alma stratejileri</li>
-        </ul>
-        
-        <h2 id="section3">3. Soru Kategorileri ve Örnekler</h2>
-        
-        <h3>3.1. Fon Analizi ve Öneriler</h3>
-        
-        <h4>Genel Öneri Soruları:</h4>
-        <div class="code-block">
-            "2025 yılı için hangi fonları önerirsin?"<br>
-            "100000 TL ile hangi fonlara yatırım yapmalıyım?"<br>
-            "En iyi performans gösteren 10 fon hangileri?"
-        </div>
-        
-        <h4>Spesifik Fon Analizi:</h4>
-        <div class="code-block">
-            "AKB fonunu analiz et"<br>
-            "TI2 fonunun son 1 yıl performansı nasıl?"<br>
-            "GAF fonu hakkında detaylı bilgi ver"
-        </div>
-        
-        <h3>3.2. Teknik Analiz Soruları</h3>
-        
-        <h4>Teknik İndikatörler:</h4>
-        <div class="code-block">
-            "MACD sinyali pozitif olan fonlar"<br>
-            "RSI 30 altında olan fonları göster"<br>
-            "Bollinger alt bandına yakın fonlar"<br>
-            "Golden cross veren fonları listele"
-        </div>
-        
-        <h3>3.3. Risk ve Güvenlik Analizi</h3>
-        
-        <h4>Risk Soruları:</h4>
-        <div class="code-block">
-            "En güvenli 10 fon hangileri?"<br>
-            "En riskli fonları göster"<br>
-            "Volatilitesi %10 altında olan fonlar"<br>
-            "Beta katsayısı 1'den düşük fonlar"
-        </div>
-        
-        <h3>3.4. Karşılaştırmalar</h3>
-        
-        <h4>Fon Karşılaştırması:</h4>
-        <div class="code-block">
-            "AKB ve YAS fonlarını karşılaştır"<br>
-            "TI2 vs GAF analizi yap"
-        </div>
-        
-        <h4>Şirket Karşılaştırması:</h4>
-        <div class="code-block">
-            "İş Portföy vs Ak Portföy karşılaştırması"<br>
-            "En başarılı portföy yönetim şirketi hangisi?"
-        </div>
-        
-        <h3>3.5. Döviz ve Enflasyon</h3>
-        
-        <h4>Döviz Fonları:</h4>
-        <div class="code-block">
-            "Dolar bazlı fonlar hangileri?"<br>
-            "Euro fonları performansı"<br>
-            "Döviz korumalı fonlar"
-        </div>
-        
-        <h4>Enflasyon Koruması:</h4>
-        <div class="code-block">
-            "Enflasyon korumalı fonlar"<br>
-            "Altın fonları analizi"<br>
-            "TÜFE'ye endeksli fonlar"
-        </div>
-        
-        <h2 id="section4">4. Detaylı Kullanım Örnekleri</h2>
-        
-        <h3>Örnek 1: Yeni Başlayan Yatırımcı</h3>
-        <div class="code-block">
-            Soru: "Yatırıma yeni başlıyorum, 50000 TL var, ne önerirsin?"
-        </div>
-        
-        <div class="success-box">
-            <strong>Sistem şunları yapacak:</strong>
-            <ul>
-                <li>Risk profilinizi değerlendirir</li>
-                <li>Güvenli ve dengeli fonları önerir</li>
-                <li>Çeşitlendirme için 3-5 fon seçer</li>
-                <li>Her fonun risk/getiri analizini yapar</li>
-                <li>Aylık takip stratejisi sunar</li>
-            </ul>
-        </div>
-        
-        <h3>Örnek 2: Emeklilik Planlama</h3>
-        <div class="code-block">
-            Soru: "15 yıl sonra emeklilik için aylık 3000 TL ayırabilirim"
-        </div>
-        
-        <div class="success-box">
-            <strong>Sistem şunları yapacak:</strong>
-            <ul>
-                <li>Yaş bazlı risk profili belirler</li>
-                <li>Uzun vadeli büyüme fonları önerir</li>
-                <li>Monte Carlo simülasyonu ile tahmin yapar</li>
-                <li>Enflasyon etkisini hesaplar</li>
-                <li>Yıllık revizyon stratejisi sunar</li>
-            </ul>
-        </div>
-        
-        <h2 id="section5">5. İpuçları ve Püf Noktaları</h2>
-        
-        <h3>1. Net Sorular Sorun</h3>
-        <table>
-            <tr>
-                <th>✅ Doğru</th>
-                <th>❌ Yanlış</th>
-            </tr>
-            <tr>
-                <td>"Volatilitesi %15 altında olan fonlar"</td>
-                <td>"İyi fonlar hangileri?"</td>
-            </tr>
-        </table>
-        
-        <h3>2. Tutarları Belirtin</h3>
-        <table>
-            <tr>
-                <th>✅ Doğru</th>
-                <th>❌ Yanlış</th>
-            </tr>
-            <tr>
-                <td>"100000 TL ile portföy önerisi"</td>
-                <td>"Yatırım yapmak istiyorum"</td>
-            </tr>
-        </table>
-        
-        <h3>3. Süreleri Ekleyin</h3>
-        <table>
-            <tr>
-                <th>✅ Doğru</th>
-                <th>❌ Yanlış</th>
-            </tr>
-            <tr>
-                <td>"5 yıl için uzun vadeli fonlar"</td>
-                <td>"Uzun vadeli fonlar"</td>
-            </tr>
-        </table>
-        
-        <h2 id="section6">6. Önemli Uyarılar</h2>
-        
-        <div class="warning-box">
-            <h3>⚠️ Dikkat Edilmesi Gerekenler:</h3>
-            <ol>
-                <li><strong>Yatırım Tavsiyesi Değildir:</strong> Sistem bilgilendirme amaçlıdır, kesin yatırım tavsiyesi değildir.</li>
-                <li><strong>Geçmiş Performans:</strong> Geçmiş getiriler gelecek performansı garanti etmez.</li>
-                <li><strong>Risk Yönetimi:</strong> Her yatırımın riski vardır, çeşitlendirme yapın.</li>
-                <li><strong>Güncel Veri:</strong> Veriler anlık olmayabilir, önemli kararlar öncesi doğrulayın.</li>
-                <li><strong>Profesyonel Danışmanlık:</strong> Büyük yatırımlar için profesyonel danışman görüşü alın.</li>
-            </ol>
-        </div>
-        
-        <div class="feature-box">
-            <h3>📞 Destek</h3>
-            <p>Sorularınız için:</p>
-            <ul>
-                <li>Sisteme "yardım" yazarak genel bilgi alabilirsiniz</li>
-                <li>Spesifik özellikler için örnek sorular sorabilirsiniz</li>
-                <li>Hata durumlarında soruyu farklı şekilde ifade edin</li>
-            </ul>
-        </div>
-        
-        <hr style="margin: 50px 0;">
-        
-        <p style="text-align: center; color: #666; font-style: italic;">
-            Bu kılavuz TEFAS Fon Analiz Sistemi'nin temel kullanımını kapsar.<br>
-            Sistem sürekli geliştirilmektedir ve yeni özellikler eklenebilir.
-        </p>
     </div>
     
-    <button class="print-button" onclick="window.print()">
-        📄 PDF Olarak Kaydet
-    </button>
+    <footer>
+        <p>&copy; 2025 TEFAS Analiz Sistemi. Yapay Zeka Destekli Yatırım Analiz Platformu.</p>
+        <p style="font-size: 0.9em; margin-top: 10px; opacity: 0.7;">
+            Bu sistem yatırım tavsiyesi vermez. Tüm yatırım kararları kişisel sorumluluk gerektirir.
+        </p>
+    </footer>
 </body>
 </html>

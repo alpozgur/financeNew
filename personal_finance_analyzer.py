@@ -16,7 +16,21 @@ class PersonalFinanceAnalyzer:
         self.coordinator = coordinator
         self.active_funds = active_funds
         self.db = coordinator.db
+        if hasattr(coordinator, 'ai_provider'):
+            from ai_personalized_advisor import AIPersonalizedAdvisor
+            self.ai_advisor = AIPersonalizedAdvisor(coordinator, coordinator.ai_provider)
+
+    def handle_ai_personalized_planning(self, question: str) -> str:
+        """AI destekli kişiselleştirilmiş planlama"""
         
+        # AI Advisor varsa kullan
+        if hasattr(self.coordinator, 'ai_provider'):
+            from ai_personalized_advisor import AIPersonalizedAdvisor
+            advisor = AIPersonalizedAdvisor(self.coordinator, self.coordinator.ai_provider)
+            return advisor.analyze_from_question(question)
+        else:
+            return "AI servisi şu anda kullanılamıyor. Genel tavsiyeler için 'emeklilik planı' yazabilirsiniz."
+    
     def is_personal_finance_question(self, question):
         """Kişisel finans sorusu mu kontrol et"""
         question_lower = question.lower()
