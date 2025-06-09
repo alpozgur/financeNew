@@ -4,38 +4,53 @@ from typing import List, Dict, Any
 class ResponseMerger:
     """Birden fazla handler yanıtını birleştiren sınıf"""
     
+# response_merger.py - YENİ ÖZELLİKLER EKLE
+
     def merge_responses(self, responses: List[Dict[str, Any]], question: str) -> str:
-        """Birden fazla handler yanıtını birleştir"""
+        """Gelişmiş response birleştirme"""
         
         if not responses:
             return "❌ Hiçbir handler yanıt üretemedi."
         
         if len(responses) == 1:
-            # Tek yanıt varsa direkt döndür
             return responses[0]['response']
         
-        # Birden fazla yanıt varsa birleştir
+        # Multi-handler response
         merged = f"\n🔄 ÇOKLU ANALİZ SONUÇLARI ({len(responses)} kaynak)\n"
         merged += f"{'='*60}\n\n"
         
-        # Yanıtları skorlarına göre sırala
-        responses.sort(key=lambda x: x['score'], reverse=True)
+        # AI reasoning varsa göster
+        if any('reasoning' in r for r in responses):
+            merged += f"🤖 AI ANALİZ SEBEPLERİ:\n"
+            for r in responses:
+                if 'reasoning' in r:
+                    merged += f"• {r['handler']}: {r['reasoning']}\n"
+            merged += f"\n"
         
+        # Yanıtları birleştir
         for i, resp in enumerate(responses, 1):
             handler_name = resp['handler']
+            method_name = resp.get('method', '')
             handler_display = self._get_handler_display_name(handler_name)
             
-            merged += f"📊 {i}. {handler_display} (Skor: {resp['score']})\n"
+            merged += f"📊 {i}. {handler_display}"
+            if method_name:
+                merged += f" ({method_name})"
+            merged += f"\n"
             merged += f"{'-'*50}\n"
             merged += resp['response']
             
             if i < len(responses):
                 merged += f"\n\n{'='*60}\n\n"
         
-        # Özet ekle
+        # Özet
         if len(responses) > 2:
             merged += f"\n\n💡 ÖZET: {len(responses)} farklı perspektiften analiz yapıldı.\n"
-            merged += f"En yüksek skorlu analiz: {self._get_handler_display_name(responses[0]['handler'])}\n"
+            
+            # En yüksek güvenli analiz
+            if any('score' in r for r in responses):
+                best = max(responses, key=lambda x: x.get('score', 0))
+                merged += f"En güvenilir analiz: {self._get_handler_display_name(best['handler'])}\n"
         
         return merged
     

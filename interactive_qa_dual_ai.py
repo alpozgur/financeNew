@@ -13,6 +13,7 @@ import numpy as np
 from config.config import Config
 from analysis.coordinator import AnalysisCoordinator
 from analysis.hybrid_fund_selector import HybridFundSelector, HighPerformanceFundAnalyzer
+from ai_smart_question_router import AISmartQuestionRouter, AIRouteMatch
 # from analysis.performance import batch_analyze_funds_by_details
 # Mevcut import'ların altına ekleyin:
 from advanced_metrics_analyzer import AdvancedMetricsAnalyzer
@@ -28,10 +29,8 @@ from scenario_analysis import ScenarioAnalyzer
 from personal_finance_analyzer import PersonalFinanceAnalyzer
 from mathematical_calculations import MathematicalCalculator
 from macroeconomic_analyzer import MacroeconomicAnalyzer
-from smart_question_router import SmartQuestionRouter
 from response_merger import ResponseMerger
 from ai_provider import AIProvider
-from ai_smart_question_router import AISmartQuestionRouter
 from predictive_scenario_analyzer import PredictiveScenarioAnalyzer
 @dataclass
 class RouteMatch:
@@ -79,20 +78,13 @@ class DualAITefasQA:
         self.time_analyzer = TimeBasedAnalyzer(self.coordinator, self.active_funds)
         self.scenario_analyzer = ScenarioAnalyzer(self.coordinator, self.active_funds)
         self.math_calculator = MathematicalCalculator(self.coordinator, self.active_funds)
-        self.router = SmartQuestionRouter()
         self.response_merger = ResponseMerger()
         self.enable_multi_handler = True  # Feature flag
-        self.ai_router = AISmartQuestionRouter(self.ai_provider)
-        self.use_ai_routing = True
-        from initialize_hybrid_router import initialize_hybrid_router
-        self.hybrid_router, self.handler_registry = initialize_hybrid_router(
-            ai_provider=self.ai_provider,
-            use_sbert=True  # SBERT'i etkinleştir
-        )
         from ai_personalized_advisor import AIPersonalizedAdvisor
+        self.ai_router = AISmartQuestionRouter(self.ai_provider)
+        self.routing_enabled = True  # Routing'i tamamen kapatmak için
         self.ai_advisor = AIPersonalizedAdvisor(self.coordinator, self.ai_provider)        
         # Feature flags
-        self.use_hybrid_routing = True  # Yeni routing sistemini kullan
         self.enable_multi_handler = True
         self.predictive_analyzer = PredictiveScenarioAnalyzer(
             self.coordinator,
@@ -107,17 +99,6 @@ class DualAITefasQA:
         except Exception as e:
             print(f"❌ Makroekonomik analyzer yüklenemedi: {e}")
             self.macro_analyzer = None
-        try:
-            from smart_routing_orchestrator import SmartRoutingOrchestrator
-            self.smart_orchestrator = SmartRoutingOrchestrator(
-                self.coordinator.db,
-                self.ai_provider
-            )
-            self.use_smart_orchestrator = True
-            print("✅ Akıllı routing orchestrator yüklendi")
-        except Exception as e:
-            print(f"⚠️ Akıllı orchestrator yüklenemedi: {e}")
-            self.use_smart_orchestrator = False
         # AI durumunu kontrol et
         
     def _load_active_funds(self, max_funds=None, mode="comprehensive"):
@@ -183,129 +164,163 @@ class DualAITefasQA:
     
 
     def answer_question(self, question):
-        """Multi-handler desteği ile soru cevaplama - YENİ VERSİYON"""
+        """AI-powered multi-handler routing ile soru cevaplama"""
+        question_lower = normalize_turkish_text(question)
         
-        # Yeni orchestrator kullan
-        if hasattr(self, 'smart_orchestrator'):
-            routes = self.smart_orchestrator.route_question(question)
+        # Routing aktif mi?
+        if not self.routing_enabled:
+            # Direkt legacy routing kullan
+            numbers = re.findall(r'(\d+)', question)
+            requested_count = int(numbers[0]) if numbers else 1
+            return self._legacy_routing(question, question_lower, requested_count)
+        
+        try:
+            # AI routing kullan
+            routes = self.ai_router.route_question_multi(question, max_handlers=5)
             
             if routes:
-                # Route'ları AIRouteMatch formatına çevir
-                route_matches = []
-                for route in routes:
-                    match = RouteMatch(
-                        handler=route['handler'],
-                        method=route['method'],
-                        score=route['confidence'],
-                        context=route.get('context', {}),
-                        matched_pattern=route.get('reason', ''),
-                        route_name=route.get('reason', '')
-                    )
-                    route_matches.append(match)
+                print(f"🎯 AI Routing: {len(routes)} handler bulundu")
+                for i, route in enumerate(routes, 1):
+                    print(f"  {i}. {route.handler}.{route.method} (güven: {route.confidence:.2f})")
+                    print(f"     Sebep: {route.reasoning}")
                 
-                # Multi-handler execution
-                responses = self._execute_multi_handlers(route_matches, question, question.lower())
-                
-                if responses:
-                    return self.response_merger.merge_responses(responses, question)
+                # Multi-handler mı?
+                if len(routes) > 1 and any(r.is_multi_handler for r in routes):
+                    # Multi-handler execution
+                    responses = self._execute_multi_handlers_ai(routes, question)
+                    if responses:
+                        return self.response_merger.merge_responses(responses, question)
                 else:
-                    return "❌ Sorunuz işlenemedi. Lütfen daha açık bir şekilde sorun."
+                    # Single handler execution
+                    response = self._execute_single_handler_ai(routes[0], question)
+                    if response:
+                        return response
+            
+        except Exception as e:
+            print(f"❌ AI routing hatası: {e}")
+            import traceback
+            traceback.print_exc()
         
-        # Fallback: Eski sistem
-        return self._legacy_routing(question, question.lower(), 1)
+        # Fallback: Legacy routing
+        print("⚠️ Fallback: Legacy routing kullanılıyor")
+        numbers = re.findall(r'(\d+)', question)
+        requested_count = int(numbers[0]) if numbers else 1
+        return self._legacy_routing(question, question_lower, requested_count)
 
-    def _execute_multi_handlers(self, routes: List[RouteMatch], question: str, question_lower: str) -> List[Dict]:
-        """Birden fazla handler'ı çalıştır - RİSK KONTROLÜ İLE"""
+    # 4. YENİ METODLAR EKLE
+    def _execute_single_handler_ai(self, route: AIRouteMatch, question: str) -> Optional[str]:
+        """Tek handler execution - AI routing için"""
+        handler = self._get_handler_instance(route.handler)
+        if not handler:
+            print(f"❌ Handler bulunamadı: {route.handler}")
+            return None
+        
+        try:
+            method = getattr(handler, route.method, None)
+            if not method:
+                print(f"❌ Method bulunamadı: {route.handler}.{route.method}")
+                return None
+            
+            # Parametreleri hazırla
+            params = self._prepare_method_params_ai(method, route.context, question)
+            
+            print(f"✅ Executing: {route.handler}.{route.method}")
+            print(f"   Parameters: {list(params.keys())}")
+            
+            # Execute
+            result = method(**params)
+            return result
+            
+        except Exception as e:
+            print(f"❌ Handler execution hatası: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
+
+    def _execute_multi_handlers_ai(self, routes: List[AIRouteMatch], question: str) -> List[Dict]:
+        """Multi handler execution - AI routing için"""
         responses = []
         executed_handlers = set()
-
-        print(f"[EXEC] Total routes: {len(routes)}")
         
-        # Risk kontrolü gerekli mi?
-        has_risk_context = any(route.context.get('risk_assessments') for route in routes)
-        has_extreme_risk = any(route.context.get('has_extreme_risk') for route in routes)
-        
-        # EXTREME risk varsa özel uyarı
-        if has_extreme_risk:
-            extreme_funds = []
-            for route in routes:
-                extreme_funds.extend(route.context.get('extreme_risk_funds', []))
-            
-            if extreme_funds:
-                risk_warning = f"\n⛔ EXTREME RİSK UYARISI\n"
-                risk_warning += f"{'='*50}\n"
-                risk_warning += f"Şu fonlar EXTREME risk seviyesinde:\n"
-                for fund in set(extreme_funds):
-                    risk_warning += f"  ❌ {fund}\n"
-                risk_warning += f"\nBu fonlar için detaylı araştırma yapmanız önerilir.\n"
-                
-                # Risk uyarısını ilk response olarak ekle
-                responses.append({
-                    'handler': 'risk_warning',
-                    'response': risk_warning,
-                    'score': 1.0,
-                    'context': {'risk_type': 'extreme'}
-                })
+        # Execution order'a göre sırala
+        routes.sort(key=lambda x: x.execution_order)
         
         for route in routes:
-            handler_name = route.handler
-            
-            if handler_name in executed_handlers:
+            # Aynı handler'ı tekrar çalıştırma (multi-handler değilse)
+            if route.handler in executed_handlers and not route.is_multi_handler:
                 continue
-                
-            handler = self._get_handler_instance(handler_name)
+            
+            handler = self._get_handler_instance(route.handler)
             if not handler:
-                print(f"[EXEC] Handler bulunamadı: {handler_name}")
                 continue
             
             try:
                 method = getattr(handler, route.method, None)
                 if not method:
-                    print(f"[EXEC] Method bulunamadı: {handler_name}.{route.method}")
                     continue
                 
-                # Method signature analizi
-                import inspect
-                sig = inspect.signature(method)
-                
                 # Parametreleri hazırla
-                params = {}
+                params = self._prepare_method_params_ai(method, route.context, question)
                 
-                # Question parametresi
-                if 'question' in sig.parameters:
-                    params['question'] = question
+                print(f"✅ Multi-executing: {route.handler}.{route.method}")
                 
-                # Risk context'i handler'a geç
-                if 'risk_context' in sig.parameters and has_risk_context:
-                    params['risk_context'] = route.context.get('risk_assessments', {})
-                
-                # Diğer context parametreleri
-                for param_name in sig.parameters:
-                    if param_name in route.context:
-                        params[param_name] = route.context[param_name]
-                
-                print(f"[EXEC] Calling {handler_name}.{route.method} with params: {list(params.keys())}")
-                
-                # Handler'ı çalıştır
                 result = method(**params)
                 
                 if result:
                     responses.append({
-                        'handler': handler_name,
+                        'handler': route.handler,
+                        'method': route.method,
                         'response': result,
-                        'score': route.score,
+                        'score': route.confidence,
                         'context': route.context,
-                        'has_risk_check': has_risk_context
+                        'reasoning': route.reasoning
                     })
-                    executed_handlers.add(handler_name)
+                    executed_handlers.add(route.handler)
                     
             except Exception as e:
-                print(f"[EXEC] Handler execution error ({handler_name}): {e}")
-                import traceback
-                traceback.print_exc()
+                print(f"❌ Multi-handler execution hatası ({route.handler}): {e}")
                 continue
         
         return responses
+
+    def _prepare_method_params_ai(self, method, context: Dict, question: str) -> Dict:
+        """AI context'ten method parametrelerini hazırla"""
+        import inspect
+        
+        sig = inspect.signature(method)
+        params = {}
+        
+        for param_name, param in sig.parameters.items():
+            if param_name == 'self':
+                continue
+            
+            # Question her zaman var
+            if param_name == 'question':
+                params['question'] = question
+            
+            # Context'ten al
+            elif param_name in context:
+                params[param_name] = context[param_name]
+            
+            # Özel mapping'ler
+            elif param_name == 'count' and 'requested_count' in context:
+                params['count'] = context['requested_count']
+            
+            elif param_name == 'requested_count' and 'count' in context:
+                params['requested_count'] = context['count']
+            
+            # Default değer varsa kullan
+            elif param.default != inspect.Parameter.empty:
+                params[param_name] = param.default
+            
+            # Özel durumlar
+            elif param_name == 'days' and param.default == inspect.Parameter.empty:
+                params['days'] = context.get('days', 30)
+            
+            elif param_name == 'count' and param.default == inspect.Parameter.empty:
+                params['count'] = context.get('requested_count', 10)
+        
+        return params
 
     def _get_handler_instance(self, handler_name: str):
         """Handler instance'ını döndür"""
@@ -326,26 +341,6 @@ class DualAITefasQA:
         }
         return handler_map.get(handler_name)
     
-    def _prepare_handler_params(self, route: RouteMatch, question: str, question_lower: str) -> Dict:
-        """Handler için parametreleri hazırla"""
-        params = {'question': question}
-        
-        # Context'ten parametreleri al
-        if 'requested_count' in route.context:
-            params['count'] = route.context['requested_count']
-            params['requested_count'] = route.context['requested_count']
-        
-        if 'days' in route.context:
-            params['days'] = route.context['days']
-        
-        if 'currency' in route.context:
-            params['currency'] = route.context['currency']
-        
-        # Method signature'a göre filtrele
-        # (Gerçek implementasyonda method signature kontrolü yapılmalı)
-        
-        return params
-
     def _legacy_single_handler(self, question: str, question_lower: str) -> str:
         """Eski tek handler sistemi (fallback)"""
         # Mevcut _legacy_routing metodunuzu buraya taşıyın

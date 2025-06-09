@@ -156,70 +156,55 @@ class PerformanceAnalyzerMain:
 # performance_analysis.py - handle_analysis_question_dual DÜZELTME
 
     def handle_analysis_question_dual(self, question):
-        """Tek fon analizi - Risk kontrolü ile - DÜZELTME"""
+        """Tek fon analizi - Risk kontrolü ile - VERİTABANI UYUMLU"""
         words = question.upper().split()
         fund_code = None
 
-        # Risk değişkenlerini BAŞTAN tanımla
-        is_safe = True
-        risk_assessment = None
-        risk_warning = ""
-
-        # Fon kodu bulma
+        # Önce 3 harfli kodları kontrol et
         for word in words:
             if len(word) == 3 and word.isalpha():
-                if word.upper() in [x.upper() for x in self.active_funds]:
-                    fund_code = word.upper()
-                    break
+                fund_code = word
+                break
         
         if fund_code:
-            # ✅ RİSK KONTROLÜ
+            # TÜM FONLARDA ARA
+            all_funds_query = f"""
+            SELECT DISTINCT fcode 
+            FROM tefasfunds 
+            WHERE fcode = '{fund_code}'
+            LIMIT 1
+            """
+            
             try:
-                is_safe, risk_assessment, risk_warning = self._check_fund_risk(fund_code)
+                result = self.coordinator.db.execute_query(all_funds_query)
+                if result.empty:
+                    return f"❌ {fund_code} fonu veritabanında bulunamadı."
             except Exception as e:
-                print(f"Risk kontrolü hatası: {e}")
-                # Hata durumunda default değerler
-                is_safe = True
-                risk_assessment = None
-                risk_warning = ""
+                return f"❌ Veritabanı hatası: {str(e)[:100]}"
+        
+        if not fund_code:
+            return f"❌ Geçerli bir fon kodu bulunamadı. Örnek: 'AKB fonunu analiz et'"
+
+        try:
+            print(f"🔍 {fund_code} fonu analizi...")
+
+            # ✅ RİSK KONTROLÜ
+            is_safe, risk_assessment, risk_warning = self._check_fund_risk(fund_code)
             
             # Extreme risk durumunda özel yanıt
-            if not is_safe and risk_assessment and risk_assessment.get('risk_level') == 'EXTREME':
+            if not is_safe and risk_assessment and risk_assessment['risk_level'] == 'EXTREME':
                 response = f"\n⛔ {fund_code} FONU RİSK UYARISI\n"
                 response += f"{'='*40}\n"
                 response += risk_warning
                 response += f"\n\n📊 Temel veriler için veritabanı sonuçlarına bakın.\n"
                 response += f"❌ Bu fon için AI analizi önerilmiyor.\n"
                 return response
-        
-        # Eğer aktif fonlar içinde bulamazsan, tüm fonlarda ara
-        if not fund_code:
-            all_funds = [x.upper() for x in self.coordinator.db.get_all_fund_codes()]
-            for word in words:
-                if len(word) == 3 and word.isalpha():
-                    if word.upper() in all_funds:
-                        fund_code = word.upper()
-                        # Yeni fon için de risk kontrolü yap
-                        try:
-                            is_safe, risk_assessment, risk_warning = self._check_fund_risk(fund_code)
-                        except Exception as e:
-                            print(f"Risk kontrolü hatası (tüm fonlar): {e}")
-                            is_safe = True
-                            risk_assessment = None
-                            risk_warning = ""
-                        break
-        
-        if not fund_code:
-            return f"❌ Geçerli bir fon kodu bulunamadı. Örnek: 'AKB fonunu analiz et'\nMevcut fonlar: {', '.join(self.active_funds[:10])}..."
-
-        try:
-            print(f"🔍 {fund_code} fonu dual AI analizi...")
 
             # Veritabanı analizi
             data = self.coordinator.db.get_fund_price_history(fund_code, 100)
 
             if data.empty:
-                return f"❌ {fund_code} için veri bulunamadı"
+                return f"❌ {fund_code} için fiyat verisi bulunamadı."
 
             prices = data.set_index('pdate')['price'].sort_index()
             returns = prices.pct_change().dropna()
@@ -231,19 +216,55 @@ class PerformanceAnalyzerMain:
             sharpe = (annual_return - 15) / volatility if volatility > 0 else 0
             win_rate = (returns > 0).sum() / len(returns) * 100
 
-            # --- FON DETAYLARI ---
-            details = self.coordinator.db.get_fund_details(fund_code) if hasattr(self.coordinator.db, 'get_fund_details') else {}
-            name = details.get('fund_name', '')
-            category = details.get('fund_category', '')
-            fund_type = details.get('fund_type', '')
-            description = details.get('description', '')
-            details_text = f"{fund_code}: {name} - {category} - {fund_type}. {description}".strip()
+            # FON DETAYLARI - get_fund_details kullan
+            details = self.coordinator.db.get_fund_details(fund_code)
+            
+            # Fon ismi ve bilgileri
+            if not details:
+                # Detay yoksa temel bilgileri al
+                name_query = f"""
+                SELECT DISTINCT fcode, ftitle, investorcount
+                FROM tefasfunds
+                WHERE fcode = '{fund_code}'
+                ORDER BY pdate DESC
+                LIMIT 1
+                """
+                name_result = self.coordinator.db.execute_query(name_query)
+                if not name_result.empty:
+                    name = name_result.iloc[0]['ftitle']
+                    investor_count = name_result.iloc[0]['investorcount']
+                else:
+                    name = f"{fund_code} Yatırım Fonu"
+                    investor_count = 0
+            else:
+                # get_fund_details'ten gelen bilgiler
+                name = f"{fund_code} Yatırım Fonu"
+                investor_count = 0
+                
+                # Yatırım dağılımı bilgilerini al
+                allocation_info = []
+                if 'stock' in details and details['stock'] and float(details['stock']) > 0:
+                    allocation_info.append(f"Hisse: %{float(details['stock']):.1f}")
+                if 'governmentbond' in details and details['governmentbond'] and float(details['governmentbond']) > 0:
+                    allocation_info.append(f"Devlet Tahvili: %{float(details['governmentbond']):.1f}")
+                if 'eurobonds' in details and details['eurobonds'] and float(details['eurobonds']) > 0:
+                    allocation_info.append(f"Eurobond: %{float(details['eurobonds']):.1f}")
+                if 'reverserepo' in details and details['reverserepo'] and float(details['reverserepo']) > 0:
+                    allocation_info.append(f"Ters Repo: %{float(details['reverserepo']):.1f}")
 
             # Sonuçları formatla
-            response = f"\n📊 {fund_code} FONU DUAL AI ANALİZ RAPORU\n"
+            response = f"\n📊 {fund_code} FONU DETAYLI ANALİZ RAPORU\n"
             response += f"{'='*45}\n\n"
+            
+            if name:
+                response += f"📝 FON: {name}\n"
+                if 'investor_count' in locals() and investor_count:
+                    response += f"👥 Yatırımcı Sayısı: {investor_count:,}\n"
+                if 'allocation_info' in locals() and allocation_info:
+                    response += f"📊 Yatırım Dağılımı: {', '.join(allocation_info)}\n"
+                response += f"\n"
 
-            response += f"💰 TEMEL VERİLER:\n"
+            response += f"💰 PERFORMANS VERİLERİ:\n"
             response += f"   Güncel Fiyat: {prices.iloc[-1]:.4f} TL\n"
             response += f"   Son {len(prices)} Gün Getiri: %{total_return:.2f}\n"
             response += f"   Yıllık Getiri (Tahmini): %{annual_return:.1f}\n"
@@ -251,59 +272,95 @@ class PerformanceAnalyzerMain:
             response += f"   Sharpe Oranı: {sharpe:.3f}\n"
             response += f"   Kazanma Oranı: %{win_rate:.1f}\n\n"
 
-            # ✅ RİSK DURUMU RAPORU - risk_assessment kontrolü
+            # ✅ RİSK DURUMU
             if risk_assessment:
                 response += f"🛡️ RİSK DEĞERLENDİRMESİ:\n"
-                response += f"   Risk Seviyesi: {risk_assessment.get('risk_level', 'Bilinmiyor')}\n"
-                response += f"   Genel Değerlendirme: {'✅ Güvenli' if is_safe else '⚠️ Riskli'}\n"
-                if risk_assessment.get('risk_factors'):
-                    response += f"   Risk Faktörleri: {len(risk_assessment['risk_factors'])} adet\n"
-                response += f"\n"
+                response += f"   Risk Seviyesi: {risk_assessment['risk_level']}\n"
+                response += f"   Değerlendirme: {'✅ Güvenli' if is_safe else '⚠️ Riskli'}\n\n"
 
-            # AI Analizleri
-            ai_prompt = f"""
-            {details_text}
+            # Performans değerlendirmesi
+            response += f"📈 DEĞERLENDİRME:\n"
+            
+            # Getiri değerlendirmesi
+            if total_return > 20:
+                response += f"   🟢 Mükemmel Performans (Son dönem %{total_return:.1f})\n"
+            elif total_return > 10:
+                response += f"   🟡 İyi Performans (Son dönem %{total_return:.1f})\n"
+            elif total_return > 0:
+                response += f"   🟠 Orta Performans (Son dönem %{total_return:.1f})\n"
+            else:
+                response += f"   🔴 Zayıf Performans (Son dönem %{total_return:.1f})\n"
+            
+            # Risk değerlendirmesi
+            if volatility < 10:
+                response += f"   🟢 Düşük Risk (Volatilite %{volatility:.1f})\n"
+            elif volatility < 20:
+                response += f"   🟡 Orta Risk (Volatilite %{volatility:.1f})\n"
+            else:
+                response += f"   🔴 Yüksek Risk (Volatilite %{volatility:.1f})\n"
+            
+            # Sharpe değerlendirmesi
+            if sharpe > 1:
+                response += f"   🟢 Mükemmel Risk-Getiri Oranı ({sharpe:.2f})\n"
+            elif sharpe > 0.5:
+                response += f"   🟡 İyi Risk-Getiri Oranı ({sharpe:.2f})\n"
+            elif sharpe > 0:
+                response += f"   🟠 Düşük Risk-Getiri Oranı ({sharpe:.2f})\n"
+            else:
+                response += f"   🔴 Negatif Risk-Getiri Oranı ({sharpe:.2f})\n"
 
-            Analiz verileri:
-            Güncel Fiyat: {prices.iloc[-1]:.4f} TL
-            Yıllık Getiri: %{annual_return:.1f}
-            Volatilite: %{volatility:.1f}
-            Sharpe Oranı: {sharpe:.3f}
-            Kazanma Oranı: %{win_rate:.1f}
-            Veri Periyodu: {len(prices)} gün
-            Risk Seviyesi: {risk_assessment.get('risk_level', 'Bilinmiyor') if risk_assessment else 'Bilinmiyor'}
+            # AI Analizi (varsa)
+            if hasattr(self.coordinator, 'ai_provider') and self.coordinator.ai_provider and self.coordinator.ai_provider.is_available():
+                ai_prompt = f"""
+                {fund_code} fonu analizi:
+                - Güncel Fiyat: {prices.iloc[-1]:.4f} TL
+                - Yıllık Getiri: %{annual_return:.1f}
+                - Volatilite: %{volatility:.1f}
+                - Sharpe Oranı: {sharpe:.3f}
+                - Risk Seviyesi: {risk_assessment['risk_level'] if risk_assessment else 'Bilinmiyor'}
 
-            Yukarıdaki fon bilgileriyle, bu fonun risk ve getiri profilini, avantaj/dezavantajlarını ve hangi yatırımcıya uygun olabileceğini 150 kelimeyi aşmadan açıklayıp özetle.
-            """
+                Bu fonun yatırım için uygunluğunu 100 kelime ile değerlendir.
+                """
 
-            response += f"🤖 AI DEĞERLENDİRMESİ:\n"
-            response += f"{'='*30}\n"
+                response += f"\n🤖 AI YORUMU:\n"
+                response += f"{'='*30}\n"
 
-            if hasattr(self.coordinator, 'ai_provider') and self.coordinator.ai_provider.is_available():
                 try:
                     ai_analysis = self.coordinator.ai_provider.query(
                         ai_prompt,
-                        "Sen TEFAS fonu uzmanısın."
+                        "Sen TEFAS fon analisti bir yapay zekasın."
                     )
                     response += ai_analysis
-                except Exception as e:
-                    response += f"❌ AI analizi alınamadı: {str(e)[:50]}\n"
+                except:
+                    response += "AI analizi şu anda kullanılamıyor.\n"
             else:
-                response += "⚠️ AI sistemi şu anda kullanılamıyor.\n"
+                # AI yoksa basit tavsiyeler
+                response += f"\n💡 YATIRIM TAVSİYESİ:\n"
+                
+                if sharpe > 0.5 and volatility < 20:
+                    response += f"   ✅ Dengeli risk-getiri profili\n"
+                    response += f"   ✅ Uzun vadeli yatırıma uygun\n"
+                elif sharpe > 0 and volatility < 30:
+                    response += f"   ⚠️ Orta riskli yatırım\n"
+                    response += f"   ⚠️ Risk toleransınızı değerlendirin\n"
+                else:
+                    response += f"   ❌ Yüksek riskli yatırım\n"
+                    response += f"   ❌ Sadece risk seven yatırımcılar için\n"
 
-            # ✅ Risk uyarısını en sona ekle
-            if risk_warning and risk_assessment and risk_assessment.get('risk_level') in ['HIGH', 'MEDIUM']:
+            # Risk uyarısı
+            if risk_warning and risk_assessment and risk_assessment['risk_level'] in ['HIGH', 'MEDIUM']:
                 response += f"\n{risk_warning}"
 
-            response += f"\n✅ Analiz tamamlandı: {datetime.now().strftime('%H:%M:%S')}\n"
+            response += f"\n⏰ Analiz zamanı: {datetime.now().strftime('%H:%M:%S')}\n"
+            response += f"📋 Not: Yatırım tavsiyesi değildir.\n"
 
             return response
 
         except Exception as e:
             import traceback
-            print(f"Analiz hatası detayı:")
             traceback.print_exc()
-            return f"❌ Analiz hatası: {e}"    
+            return f"❌ {fund_code} analizi hatası: {str(e)[:200]}"
+
     def handle_2025_recommendation_dual(self, question):
         """2025 fon önerisi - Risk kontrolü ile"""
         print("🎯 2025 Fund Recommendation Analysis - Dual AI...")

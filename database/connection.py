@@ -32,15 +32,38 @@ class DatabaseManager:
             self.logger.error(f"Database connection error: {e}")
             raise
 
-    def execute_query(self, query: str, params: Optional[Dict] = None) -> pd.DataFrame:
+        # with self.engine.connect()
+
+
+    def execute_query(self, query: str, params=None) -> pd.DataFrame:
+        """SQL sorgusunu çalıştır - PARAMETRE DESTEĞİ"""
         try:
             with self.engine.connect() as conn:
-                result = pd.read_sql(text(query), conn, params=params or {})
-            return result
+                if params:
+                    # Parametreli sorgu
+                    return pd.read_sql_query(query, conn, params=params)
+                else:
+                    # Parametresiz sorgu
+                    return pd.read_sql_query(query, conn)
         except Exception as e:
-            self.logger.error(f"Query execution error: {e}")
-            raise
-
+            # Hata durumunda loglama
+            print(f"Query execution error: {e}")
+            
+            # Eğer parametre hatası ise, string formatting dene
+            if params and "List argument must consist only of tuples or dictionaries" in str(e):
+                # Yeniden bağlan ve dene
+                with self.engine.connect() as conn:
+                    if isinstance(params, (list, tuple)) and len(params) == 1:
+                        formatted_query = query.replace('%s', f"'{params[0]}'")
+                        return pd.read_sql_query(formatted_query, conn)
+                    elif isinstance(params, (list, tuple)):
+                        # Birden fazla parametre
+                        formatted_query = query
+                        for param in params:
+                            formatted_query = formatted_query.replace('%s', f"'{param}'", 1)
+                        return pd.read_sql_query(formatted_query, conn)
+            
+            raise e
     # --- TEFASFUNDS ---
 
     def get_fund_data(self, 

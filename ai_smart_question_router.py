@@ -1,12 +1,12 @@
-# ai_smart_question_router.py
+# ai_smart_question_router.py - GÜNCELLENECEK
 """
-AI-Powered Smart Question Router
-NLP destekli akıllı soru yönlendirme sistemi
+AI-Powered Smart Question Router - PRODUCTION VERSION
+AI + Pattern Matching + Multi-Handler Support
 """
 
 import json
 import re
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional, Tuple, Any
 from dataclasses import dataclass
 import logging
 
@@ -16,248 +16,260 @@ class AIRouteMatch:
     handler: str
     method: str
     score: float
-    context: Dict[str, any]
-    reasoning: str  # AI'nın neden bu handler'ı seçtiğini açıklama
-    confidence: float  # AI'nın güven skoru
+    context: Dict[str, Any]
+    reasoning: str
+    confidence: float
+    is_multi_handler: bool = False
+    execution_order: int = 50
 
 class AISmartQuestionRouter:
-    """NLP destekli akıllı soru yönlendirici"""
+    """Production-ready AI + Pattern hybrid router"""
     
     def __init__(self, ai_provider):
         self.ai_provider = ai_provider
         self.logger = logging.getLogger(__name__)
         
-        # Modül tanımlamaları - AI'ya context sağlamak için
-        self.module_descriptions = {
-            'performance_analyzer': {
-                'description': 'Fon performansı, getiri, kayıp, risk analizleri',
-                'keywords': ['getiri', 'kazanç', 'performans', 'en iyi', 'en kötü', 'güvenli', 'riskli'],
-                'methods': {
-                    'handle_top_gainers': 'En çok kazandıran fonları bulur',
-                    'handle_safest_funds_sql_fast': 'En güvenli fonları listeler',
-                    'handle_worst_funds_list': 'En çok kaybettiren fonları bulur',
-                    'handle_2025_recommendation_dual': '2025 yılı için fon önerileri',
-                    'handle_analysis_question_dual': 'Tek fon detaylı analizi'
-                }
-            },
-            'technical_analyzer': {
-                'description': 'Teknik analiz, MACD, RSI, Bollinger, hareketli ortalamalar',
-                'keywords': ['macd', 'rsi', 'bollinger', 'teknik', 'sinyal', 'alım', 'satım'],
-                'methods': {
-                    'handle_macd_signals_sql': 'MACD sinyallerini analiz eder',
-                    'handle_rsi_signals_sql': 'RSI aşırı alım/satım sinyalleri',
-                    'handle_bollinger_signals_sql': 'Bollinger band sinyalleri'
-                }
-            },
-            'currency_inflation_analyzer': {
-                'description': 'Döviz, enflasyon, dolar, euro fonları analizi',
-                'keywords': ['dolar', 'euro', 'döviz', 'enflasyon', 'kur', 'usd', 'eur'],
-                'methods': {
-                    'analyze_currency_funds': 'Döviz fonlarını analiz eder',
-                    'analyze_inflation_funds_mv': 'Enflasyon korumalı fonları bulur'
-                }
-            },
-            'scenario_analyzer': {
-                'description': 'What-if senaryoları, kriz, enflasyon durumları',
-                'keywords': ['eğer', 'olursa', 'senaryo', 'kriz', 'durumunda'],
-                'methods': {
-                    'analyze_inflation_scenario': 'Enflasyon senaryosu analizi',
-                    'analyze_stock_crash_scenario': 'Borsa çöküşü senaryosu'
-                }
-            },
-            'personal_finance_analyzer': {
-                'description': 'Emeklilik, eğitim, ev alma, kişisel finans planlaması',
-                'keywords': ['emeklilik', 'emekliliğe', 'retirement', 'birikim', 'yaş', 'kala', 'yıl kala'],
-                'methods': {
-                    'handle_retirement_planning': 'Emeklilik planlaması',
-                    'handle_education_planning': 'Eğitim birikimleri',
-                    'handle_house_planning': 'Ev alma planlaması'
-                }
-            },
-            'mathematical_calculator': {
-                'description': 'Matematiksel hesaplamalar, compound faiz, portföy dağılımı',
-                'keywords': ['hesapla', 'ne kadar', 'birikim', 'faiz', 'yıllık'],
-                'methods': {
-                    'handle_monthly_investment_calculation': 'Aylık yatırım hesaplaması',
-                    'handle_portfolio_distribution': 'Portföy dağıtımı'
-                }
-            },
-            'portfolio_company_analyzer': {
-                'description': 'Portföy yönetim şirketleri analizi',
-                'keywords': ['portföy', 'iş portföy', 'ak portföy', 'garanti portföy'],
-                'methods': {
-                    'analyze_company_comprehensive': 'Şirket detaylı analizi',
-                    'compare_companies_unlimited': 'Şirket karşılaştırması'
-                }
-            },
-            'time_based_analyzer': {
-                'description': 'Zaman bazlı analizler, haftalık, aylık trendler',
-                'keywords': ['bugün', 'bu hafta', 'bu ay', 'yıl başından', 'ytd'],
-                'methods': {
-                    'analyze_today_performance': 'Bugünkü performans',
-                    'analyze_weekly_trends': 'Haftalık trend analizi'
-                }
-            },
-            'macroeconomic_analyzer': {
-                'description': 'Makroekonomik etkiler, faiz, TCMB, jeopolitik',
-                'keywords': ['faiz', 'tcmb', 'fed', 'enflasyon', 'makro'],
-                'methods': {
-                    'analyze_interest_rate_impact': 'Faiz etkisi analizi',
-                    'analyze_tcmb_decisions': 'TCMB karar etkileri'
-                }
-            },
-            'advanced_metrics_analyzer': {
-                'description': 'Beta, Alpha, Sharpe, Information Ratio gibi ileri metrikler',
-                'keywords': ['beta', 'alpha', 'sharpe', 'information ratio', 'tracking error'],
-                'methods': {
-                    'handle_beta_analysis': 'Beta katsayısı analizi',
-                    'handle_alpha_analysis': 'Alpha değeri analizi'
-                }
-            },
-            'thematic_analyzer': {
-                'description': 'Sektörel ve tematik fon analizleri',
-                'keywords': ['teknoloji', 'sağlık', 'enerji', 'sektör', 'tema'],
-                'methods': {
-                    'analyze_thematic_question': 'Tematik fon analizi'
-                }
-            },
-            'predictive_analyzer': {
-                'description': 'Gelecek tahminleri, prediktif senaryo analizleri',
-                'keywords': ['tahmin', 'sonra', 'gelecek', 'olacak', 'beklenti', 'öngörü', 'projeksiyon'],
-                'methods': {
-                    'analyze_predictive_scenario': 'Gelecek senaryolarını tahmin eder'
-                }
-            }
-        }
+        # Fallback pattern'ler - AI başarısız olursa kullanılacak
+        self.fallback_patterns = self._load_fallback_patterns()
         
-        # Fallback için legacy router (opsiyonel)
-        self.legacy_patterns = self._load_legacy_patterns()
+        # Handler bilgileri - AI'ya context sağlamak için
+        self.handler_descriptions = self._load_handler_descriptions()
         
-    def route_question(self, question: str) -> AIRouteMatch:
-        """Tek bir en uygun handler döndürür"""
-        routes = self.route_question_multi(question)
+        # Multi-handler kuralları
+        self.multi_handler_rules = self._load_multi_handler_rules()
+        
+        # Cache for AI responses
+        self.route_cache = {}
+        
+    def route_question(self, question: str) -> Optional[AIRouteMatch]:
+        """Tek handler döndür"""
+        routes = self.route_question_multi(question, max_handlers=1)
         return routes[0] if routes else None
     
-    def route_question_multi(self, question: str, max_handlers: int = 3) -> List[AIRouteMatch]:
-        """AI destekli çoklu handler yönlendirmesi"""
+    def route_question_multi(self, question: str, max_handlers: int = 5) -> List[AIRouteMatch]:
+        """AI destekli çoklu handler routing"""
         
-        # Önce AI'dan routing önerisi al
+        # 1. Cache kontrolü
+        cache_key = question.lower().strip()
+        if cache_key in self.route_cache:
+            self.logger.info(f"Cache hit for: {question[:50]}...")
+            return self.route_cache[cache_key]
+        
+        # 2. AI routing denemesi
         ai_routes = self._get_ai_routing(question)
         
         if ai_routes:
-            # AI önerilerini AIRouteMatch formatına çevir
-            return self._convert_ai_routes_to_matches(ai_routes, question)
-        else:
-            # Fallback: Legacy pattern matching
-            self.logger.warning("AI routing başarısız, legacy routing kullanılıyor")
-            return self._legacy_route(question)
+            # AI başarılı - sonuçları işle
+            routes = self._process_ai_routes(ai_routes, question)
+            
+            # Cache'e kaydet
+            if routes:
+                self.route_cache[cache_key] = routes[:max_handlers]
+                
+            return routes[:max_handlers]
+        
+        # 3. Fallback: Pattern matching
+        self.logger.warning("AI routing failed, using pattern matching")
+        return self._pattern_based_routing(question, max_handlers)
     
     def _get_ai_routing(self, question: str) -> Optional[Dict]:
         """AI'dan routing önerisi al"""
         
-        # Modül bilgilerini formatla
-        modules_info = json.dumps(self.module_descriptions, indent=2, ensure_ascii=False)
+        # Handler bilgilerini JSON formatında hazırla
+        handlers_info = json.dumps(self.handler_descriptions, indent=2, ensure_ascii=False)
         
         prompt = f"""
         Kullanıcı sorusu: "{question}"
 
-        Mevcut modüller ve yetenekleri:
-        {modules_info}
+        Mevcut handler'lar ve yetenekleri:
+        {handlers_info}
 
-        KURALLAR:
-        1. Birden fazla modül gerekiyorsa hepsini döndür
-        2. requested_count sadece "kaç tane", "5 fon", "10 fon" gibi durumlar için
-        3. Beta/threshold değerleri için "threshold" veya "value" kullan
-        4. Multi-handler örnek: Dolar fonları hem currency_inflation_analyzer hem performance_analyzer kullanabilir
+        GÖREV:
+        1. Soruyu analiz et ve en uygun handler(ları) belirle
+        2. Her handler için spesifik method ve context bilgisi ver
+        3. Multi-handler gerekiyorsa hepsini listele
+        4. Güven skorunu belirt (0-1 arası)
 
-        Örnek multi-handler response:
+        ÖZEL KURALLAR:
+        - Eğer soruda 3 harfli büyük FON KODU varsa (örn: AKB, TYH) ve "analiz et", "incele", "nasıl" gibi kelimeler varsa:
+        → handler: "performance_analyzer"
+        → method: "handle_analysis_question_dual"
+        → context: {{"fund_code": "FON_KODU"}}
+
+        - "AI pattern" veya "pattern analizi" varsa:
+        → handler: "technical_analyzer"
+        → method: "handle_ai_pattern_analysis"
+        
+        - Birden fazla perspektif gerekiyorsa multi-handler kullan
+        - Context'te sayılar, tarihler, para birimleri vb. çıkar
+        - Method adları GERÇEK olmalı (handler_descriptions'tan)
+
+        ÖRNEK FORMAT:
         {{
             "routes": [
                 {{
-                    "handler": "currency_inflation_analyzer",
-                    "method": "analyze_currency_funds",
-                    "confidence": 0.90,
-                    "reasoning": "Dolar fonlarını filtrelemek için"
-                }},
-                {{
                     "handler": "performance_analyzer",
                     "method": "handle_analysis_question_dual",
-                    "confidence": 0.85,
-                    "reasoning": "Performans analizi için"
+                    "confidence": 0.95,
+                    "reasoning": "AKB fonunun detaylı analizi isteniyor",
+                    "context": {{
+                        "fund_code": "AKB"
+                    }}
                 }}
             ],
-            "requires_multi_handler": true
+            "requires_multi_handler": false,
+            "detected_intent": "fund_analysis"
         }}
-        """        
+        """
+
         try:
             response = self.ai_provider.query(
                 prompt,
-                "Sen bir NLP routing uzmanısın. Soruları analiz edip doğru modüllere yönlendiriyorsun."
+                "Sen akıllı bir soru yönlendirme uzmanısın. Soruları doğru handler'lara yönlendiriyorsun."
             )
             
-            # JSON parse et
             return self._parse_ai_response(response)
             
         except Exception as e:
-            self.logger.error(f"AI routing hatası: {e}")
+            self.logger.error(f"AI routing error: {e}")
             return None
     
-    def _extract_context(self, question: str) -> Dict:
+    def _parse_ai_response(self, response: str) -> Optional[Dict]:
+        """AI yanıtını parse et"""
+        try:
+            # JSON bloğunu bul
+            json_match = re.search(r'\{[\s\S]*\}', response)
+            if json_match:
+                parsed = json.loads(json_match.group())
+                
+                # Validation
+                if 'routes' in parsed and isinstance(parsed['routes'], list):
+                    for route in parsed['routes']:
+                        # Eksik alanları doldur
+                        route.setdefault('context', {})
+                        route.setdefault('confidence', 0.8)
+                        route.setdefault('reasoning', 'AI recommendation')
+                
+                return parsed
+            
+        except json.JSONDecodeError as e:
+            self.logger.error(f"JSON parse error: {e}")
+        except Exception as e:
+            self.logger.error(f"Parse error: {e}")
+        
+        return None
+    
+    def _process_ai_routes(self, ai_routes: Dict, question: str) -> List[AIRouteMatch]:
+        """AI route'larını işle ve AIRouteMatch objesine dönüştür"""
+        routes = []
+        question_lower = question.lower()
+        
+        # Manuel context extraction - AI'nın kaçırdıklarını yakala
+        manual_context = self._extract_context_from_question(question)
+        
+        # Multi-handler kontrolü
+        is_multi = ai_routes.get('requires_multi_handler', False)
+        if not is_multi:
+            # Multi-handler trigger'ları kontrol et
+            is_multi = self._check_multi_handler_triggers(question_lower)
+        
+        for route_data in ai_routes.get('routes', []):
+            handler = route_data['handler']
+            method = route_data['method']
+            
+            # Handler validation
+            if handler not in self.handler_descriptions:
+                self.logger.warning(f"Unknown handler: {handler}")
+                continue
+            
+            # Method validation
+            valid_methods = self.handler_descriptions[handler].get('methods', {})
+            if method not in valid_methods:
+                # En yakın method'u bul
+                method = self._find_closest_method(method, valid_methods)
+            
+            # Context merge
+            ai_context = route_data.get('context', {})
+            final_context = {**manual_context, **ai_context}  # AI öncelikli
+            
+            # Execution order
+            exec_order = self.handler_descriptions[handler].get('execution_order', 50)
+            
+            route = AIRouteMatch(
+                handler=handler,
+                method=method,
+                score=route_data['confidence'],
+                context=final_context,
+                reasoning=route_data.get('reasoning', ''),
+                confidence=route_data['confidence'],
+                is_multi_handler=is_multi,
+                execution_order=exec_order
+            )
+            
+            routes.append(route)
+        
+        # Execution order'a göre sırala
+        routes.sort(key=lambda x: (x.execution_order, -x.confidence))
+        
+        return routes
+    
+    def _pattern_based_routing(self, question: str, max_handlers: int) -> List[AIRouteMatch]:
+        """Fallback: Pattern matching ile routing"""
+        routes = []
+        question_lower = question.lower()
+        
+        for pattern_group in self.fallback_patterns:
+            for pattern in pattern_group['patterns']:
+                if re.search(pattern, question_lower):
+                    context = self._extract_context_from_question(question)
+                    
+                    route = AIRouteMatch(
+                        handler=pattern_group['handler'],
+                        method=pattern_group['method'],
+                        score=pattern_group.get('priority', 0.5),
+                        context=context,
+                        reasoning=f"Pattern match: {pattern}",
+                        confidence=0.6,  # Pattern matching daha düşük güven
+                        is_multi_handler=self._check_multi_handler_triggers(question_lower)
+                    )
+                    
+                    routes.append(route)
+                    break  # Her grup için tek match
+        
+        # Skora göre sırala
+        routes.sort(key=lambda x: x.score, reverse=True)
+        
+        return routes[:max_handlers]
+    
+    def _extract_context_from_question(self, question: str) -> Dict[str, Any]:
         """Sorudan context bilgilerini çıkar"""
         context = {}
-        
-        # Sayılar
-        numbers = re.findall(r'(\d+)', question)
-        
-        # "X fon", "X tane" pattern'i - SADECE bu durumda requested_count
-        count_pattern = re.search(r'(\d+)\s*(fon|tane|adet)', question.lower())
-        if count_pattern:
-            context['requested_count'] = int(count_pattern.group(1))
-        
-        # Beta, alpha gibi threshold değerleri
-        threshold_patterns = [
-            (r'beta.*?(\d+\.?\d*)', 'beta_threshold'),
-            (r'alpha.*?(\d+\.?\d*)', 'alpha_threshold'),
-            (r'sharpe.*?(\d+\.?\d*)', 'sharpe_threshold'),
-            (r'%\s*(\d+)', 'percentage'),  # %50 gibi
-            (r'(\d+).*?den\s*(düşük|az|küçük)', 'max_threshold'),
-            (r'(\d+).*?den\s*(yüksek|fazla|büyük)', 'min_threshold')
-        ]
-        
-        for pattern, context_key in threshold_patterns:
-            match = re.search(pattern, question.lower())
-            if match:
-                # Eğer "den düşük/yüksek" pattern'i ise
-                if context_key in ['max_threshold', 'min_threshold']:
-                    context[context_key] = float(match.group(1))
-                else:
-                    context[context_key] = float(match.group(1))
-        
-        # Para birimleri
-        currency_patterns = {
-            'dolar': 'usd',
-            'usd': 'usd',
-            'euro': 'eur',
-            'eur': 'eur',
-            'sterlin': 'gbp',
-            'pound': 'gbp'
-        }
-        
         question_lower = question.lower()
-        for currency_word, currency_code in currency_patterns.items():
-            if currency_word in question_lower:
-                context['currency'] = currency_code
-                break
         
-        # Zaman aralıkları
+        # 1. Sayılar ve count
+        numbers = re.findall(r'\d+', question)
+        if numbers:
+            # "X fon" pattern
+            count_match = re.search(r'(\d+)\s*fon', question_lower)
+            if count_match:
+                context['requested_count'] = int(count_match.group(1))
+            else:
+                # En büyük sayıyı al
+                context['requested_count'] = max(int(n) for n in numbers)
+        
+        # 2. Fon kodu
+        fund_codes = re.findall(r'\b[A-Z]{3}\b', question)
+        if fund_codes:
+            context['fund_code'] = fund_codes[0]
+        
+        # 3. Zaman periyodu
         time_patterns = [
-            (r'bugün', {'period': 'today', 'days': 1}),
-            (r'bu hafta', {'period': 'week', 'days': 7}),
-            (r'bu ay', {'period': 'month', 'days': 30}),
-            (r'bu yıl', {'period': 'year', 'days': 365}),
             (r'son\s*(\d+)\s*gün', lambda m: {'days': int(m.group(1))}),
             (r'son\s*(\d+)\s*ay', lambda m: {'days': int(m.group(1)) * 30}),
-            (r'son\s*(\d+)\s*yıl', lambda m: {'days': int(m.group(1)) * 365})
+            (r'son\s*(\d+)\s*yıl', lambda m: {'days': int(m.group(1)) * 365}),
+            (r'bugün', {'period': 'today', 'days': 1}),
+            (r'bu\s*hafta', {'period': 'week', 'days': 7}),
+            (r'bu\s*ay', {'period': 'month', 'days': 30})
         ]
         
         for pattern, value in time_patterns:
@@ -269,415 +281,303 @@ class AISmartQuestionRouter:
                     context.update(value)
                 break
         
-        # YENİ: Sharpe için min_threshold da ekle
-        if 'sharpe_threshold' in context and 'yüksek' in question_lower:
-            context['min_threshold'] = context['sharpe_threshold']
+        # 4. Para miktarı
+        amount_patterns = [
+            (r'(\d+)\s*(?:bin|k)\s*(?:tl|lira)?', 1000),
+            (r'(\d+)\s*milyon\s*(?:tl|lira)?', 1000000),
+            (r'(\d+)\s*(?:tl|lira)', 1)
+        ]
         
-        # Emeklilik pattern'i - DÜZELTME
-        if 'emeklilik' in question_lower or 'emekliliğe' in question_lower:
-            # "10 yıl kala", "10 yıl var", "10 yılım var" gibi pattern'ler
-            years_patterns = [
-                r'(\d+)\s*yıl.*?kala',
-                r'(\d+)\s*yıl.*?var',
-                r'(\d+)\s*yılım',
-                r'(\d+)\s*sene',
-                r'emekliliğe\s*(\d+)\s*yıl'  # Yeni pattern
-            ]
-            
-            for pattern in years_patterns:
-                match = re.search(pattern, question_lower)
-                if match:
-                    context['years_to_goal'] = int(match.group(1))
-                    context['goal_type'] = 'retirement'  # Yeni context
-                    break
+        for pattern, multiplier in amount_patterns:
+            match = re.search(pattern, question_lower)
+            if match:
+                context['amount'] = int(match.group(1)) * multiplier
+                break
+        
+        # 5. Yüzde
+        percent_match = re.search(r'%\s*(\d+)', question_lower)
+        if percent_match:
+            context['percentage'] = int(percent_match.group(1))
+        
+        # 6. Para birimi
+        currencies = {
+            'dolar': 'USD', 'usd': 'USD',
+            'euro': 'EUR', 'eur': 'EUR',
+            'sterlin': 'GBP'
+        }
+        
+        for currency, code in currencies.items():
+            if currency in question_lower:
+                context['currency'] = code
+                break
+        
+        # 7. Emeklilik
+        if 'emeklilik' in question_lower:
+            years_match = re.search(r'(\d+)\s*yıl', question_lower)
+            if years_match:
+                context['years_to_goal'] = int(years_match.group(1))
+                context['goal_type'] = 'retirement'
+        
+        # 8. Risk toleransı
+        if any(word in question_lower for word in ['güvenli', 'düşük risk', 'az risk']):
+            context['risk_tolerance'] = 'low'
+        elif any(word in question_lower for word in ['yüksek risk', 'agresif']):
+            context['risk_tolerance'] = 'high'
+        
+        # 9. Metrik threshold'ları
+        # Beta
+        beta_match = re.search(r'beta.*?(\d+\.?\d*)', question_lower)
+        if beta_match:
+            context['beta_threshold'] = float(beta_match.group(1))
+            if 'düşük' in question_lower or 'altında' in question_lower:
+                context['comparison'] = 'less_than'
+            elif 'yüksek' in question_lower or 'üstünde' in question_lower:
+                context['comparison'] = 'greater_than'
+        
+        # Sharpe
+        sharpe_match = re.search(r'sharpe.*?(\d+\.?\d*)', question_lower)
+        if sharpe_match:
+            context['sharpe_threshold'] = float(sharpe_match.group(1))
+        
+        # 10. Şirket adı
+        companies = {
+            'iş portföy': 'İş Portföy',
+            'ak portföy': 'Ak Portföy',
+            'garanti portföy': 'Garanti Portföy',
+            'qnb portföy': 'QNB Portföy'
+        }
+        
+        for pattern, name in companies.items():
+            if pattern in question_lower:
+                context['company_name'] = name
+                break
         
         return context
     
-    def _parse_ai_response(self, response: str) -> Optional[Dict]:
-        """AI yanıtını parse et"""
-        try:
-            # JSON bloğunu bul
-            json_match = re.search(r'\{[\s\S]*\}', response)
-            if json_match:
-                parsed = json.loads(json_match.group())
-                
-                # Context None kontrolü
-                if 'routes' in parsed:
-                    for route in parsed['routes']:
-                        if 'context' not in route:
-                            route['context'] = {}
-                        elif route['context'] is None:
-                            route['context'] = {}
-                
-                return parsed
-            else:
-                # Basit text parsing
-                return self._parse_text_response(response)
-        except Exception as e:
-            self.logger.error(f"AI response parsing hatası: {e}")
-            return None
-    
-    def _convert_ai_routes_to_matches_old(self, ai_routes: Dict, question: str) -> List[AIRouteMatch]:
-        """AI route önerilerini AIRouteMatch objesine çevir - POST-PROCESSING EKLENDİ"""
-        matches = []
-        question_lower = question.lower()
-        
-        # Manuel context extraction
-        extracted_context = self._extract_context(question)
-        if extracted_context is None:
-            extracted_context = {}
-        
-        for route in ai_routes.get('routes', []):
-            handler = route['handler']
-            method = route['method']
-            
-            # ÖZEL KURAL: "olursa" içeren enflasyon soruları
-            if 'olursa' in question_lower and 'enflasyon' in question_lower:
-                if handler == 'currency_inflation_analyzer':
-                    # Scenario analyzer'a yönlendir
-                    handler = 'scenario_analyzer'
-                    method = 'analyze_inflation_scenario'
-                    route['reasoning'] = "Enflasyon senaryosu tespit edildi"
-            
-            # Context birleştirme
-            ai_context = route.get('context')
-            if ai_context is None:
-                ai_context = {}
-            
-            if not isinstance(ai_context, dict):
-                ai_context = {}
-            if not isinstance(extracted_context, dict):
-                extracted_context = {}
-            
-            final_context = {**ai_context, **extracted_context}
-            
-            # Gereksiz requested_count temizleme
-            if 'requested_count' in final_context:
-                if not re.search(r'\d+\s*(fon|tane|adet)', question.lower()):
-                    final_context.pop('requested_count', None)
-            
-            match = AIRouteMatch(
-                handler=handler,
-                method=method,
-                score=route['confidence'],
-                context=final_context,
-                reasoning=route.get('reasoning', ''),
-                confidence=route['confidence']
-            )
-            matches.append(match)
-        
-        matches.sort(key=lambda x: x.confidence, reverse=True)
-        return matches
-    
-
-    def _convert_ai_routes_to_matches(self, ai_routes: Dict, question: str) -> List[AIRouteMatch]:
-        """AI route önerilerini AIRouteMatch objesine çevir - ÖNCE PATTERN MATCHING"""
-        matches = []
-        question_lower = question.lower()
-        
-        # Manuel context extraction
-        extracted_context = self._extract_context(question)
-        if extracted_context is None:
-            extracted_context = {}
-        
-        # ÖNCELİKLİ PATTERN MATCHING - AI'dan önce kontrol
-        priority_match = self._check_priority_patterns(question_lower, extracted_context)
-        if priority_match:
-            return [priority_match]
-        
-        # AI routes'u işle (normal flow)
-        for route in ai_routes.get('routes', []):
-            handler = route['handler']
-            method = route['method']
-            
-            # Mevcut olursa kuralı
-            if 'olursa' in question_lower and 'enflasyon' in question_lower:
-                if handler == 'currency_inflation_analyzer':
-                    handler = 'scenario_analyzer'
-                    method = 'analyze_inflation_scenario'
-                    route['reasoning'] = "Enflasyon senaryosu tespit edildi"
-            
-            # Context birleştirme
-            ai_context = route.get('context')
-            if ai_context is None:
-                ai_context = {}
-            
-            if not isinstance(ai_context, dict):
-                ai_context = {}
-            
-            final_context = {**ai_context, **extracted_context}
-            
-            # Gereksiz requested_count temizleme
-            if 'requested_count' in final_context:
-                if not re.search(r'\d+\s*(fon|tane|adet)', question.lower()):
-                    final_context.pop('requested_count', None)
-            
-            match = AIRouteMatch(
-                handler=handler,
-                method=method,
-                score=route['confidence'],
-                context=final_context,
-                reasoning=route.get('reasoning', ''),
-                confidence=route['confidence']
-            )
-            matches.append(match)
-        
-        matches.sort(key=lambda x: x.confidence, reverse=True)
-        return matches
-
-    def _check_priority_patterns(self, question_lower: str, context: Dict) -> Optional[AIRouteMatch]:
-        """Öncelikli pattern kontrolü - AI'dan önce çalışır"""
-        
-    # EN BAŞA EKLE - YÜKSEK ÖNCELİK
-    # 0. Prediktif tahmin patterns - EN YÜKSEK ÖNCELİK
-        if any(word in question_lower for word in ['sonra', 'tahmin', 'gelecek', 'olacak', 'beklenti']):
-            if any(word in question_lower for word in ['enflasyon', 'dolar', 'faiz', 'borsa', 'fon']):
-                return AIRouteMatch(
-                    handler='predictive_analyzer',
-                    method='analyze_predictive_scenario',
-                    score=1.0,
-                    context=context,
-                    reasoning="Predictive scenario pattern match",
-                    confidence=1.0
-                )
-                    # 1. Beta/Alpha/Sharpe patterns
-        if any(word in question_lower for word in ['beta katsayısı', 'beta değeri', 'beta 1']):
-            return AIRouteMatch(
-                handler='advanced_metrics_analyzer',
-                method='handle_beta_analysis',
-                score=1.0,
-                context=context,
-                reasoning="Beta pattern match",
-                confidence=1.0
-            )
-        
-        if 'sharpe oranı' in question_lower:
-            return AIRouteMatch(
-                handler='advanced_metrics_analyzer',
-                method='handle_sharpe_ratio_analysis',
-                score=1.0,
-                context=context,
-                reasoning="Sharpe pattern match",
-                confidence=1.0
-            )
-        
-        # 2. Technical indicators
-        if any(word in question_lower for word in ['macd sinyali', 'macd pozitif']):
-            return AIRouteMatch(
-                handler='technical_analyzer',
-                method='handle_macd_signals_sql',
-                score=1.0,
-                context=context,
-                reasoning="MACD pattern match",
-                confidence=1.0
-            )
-        
-        if 'rsi' in question_lower and any(word in question_lower for word in ['altında', 'üstünde']):
-            return AIRouteMatch(
-                handler='technical_analyzer',
-                method='handle_rsi_signals_sql',
-                score=1.0,
-                context=context,
-                reasoning="RSI pattern match",
-                confidence=1.0
-            )
-        
-        # 3. Currency patterns
-        if 'dolar' in question_lower or 'euro' in question_lower:
-            if 'performans' in question_lower or 'getiri' in question_lower:
-                return AIRouteMatch(
-                    handler='currency_inflation_analyzer',
-                    method='analyze_currency_funds',
-                    score=1.0,
-                    context=context,
-                    reasoning="Currency performance pattern match",
-                    confidence=1.0
-                )
-
-        # YENİ: AI Pattern Recognition öncelik kontrolü
-        if any(word in question_lower for word in ['ai teknik', 'ai pattern', 'yapay zeka teknik', 
-                                                    'ai sinyal', 'pattern analiz']):
-            return AIRouteMatch(
-                handler='technical_analyzer',
-                method='handle_ai_pattern_analysis',
-                score=1.0,
-                context=context,
-                reasoning="AI technical pattern match",
-                confidence=1.0
-            )
-
-
-        # 4. Portfolio company patterns
-        # 4. Portfolio company patterns - DÜZELTME
-        company_patterns = [
-            ('iş portföy', 'İş Portföy'),
-            ('is portfoy', 'İş Portföy'),  # Türkçe karakter sorunu için
-            ('ak portföy', 'Ak Portföy'),
-            ('garanti portföy', 'Garanti Portföy'),
-            ('qnb portföy', 'QNB Portföy')
+    def _check_multi_handler_triggers(self, question_lower: str) -> bool:
+        """Multi-handler gerekiyor mu kontrol et"""
+        triggers = [
+            'detaylı', 'kapsamlı', 'tüm yönleri', 'her açıdan',
+            'karşılaştırmalı', 'derinlemesine', 'analiz raporu'
         ]
         
-        for pattern, company_name in company_patterns:
-            if pattern in question_lower:
-                return AIRouteMatch(
-                    handler='portfolio_company_analyzer',
-                    method='analyze_company_comprehensive',
-                    score=1.0,
-                    context={'company_name': company_name},
-                    reasoning=f"{company_name} pattern match",
-                    confidence=1.0
-                )
-        
-        # 5. Time-based patterns
-        if 'bugün' in question_lower and any(word in question_lower for word in ['kazanan', 'kaybeden', 'performans']):
-            return AIRouteMatch(
-                handler='time_based_analyzer',
-                method='analyze_today_performance',
-                score=1.0,
-                context=context,
-                reasoning="Today pattern match",
-                confidence=1.0
-            )
-        
-        # 6. Mathematical patterns - GENİŞLETİLMİŞ
-        if any(word in question_lower for word in ['dağıt', 'böl', 'nasıl dağıtmalı', 'tl\'yi', 'tl yi']):
-            if any(word in question_lower for word in ['fon', 'portföy']):
-                return AIRouteMatch(
-                    handler='mathematical_calculator',
-                    method='handle_portfolio_distribution',
-                    score=1.0,
-                    context=context,
-                    reasoning="Distribution pattern match",
-                    confidence=1.0
-                )
-        
-        # 7. Fundamental patterns
-        if 'en büyük' in question_lower and 'fon' in question_lower:
-            return AIRouteMatch(
-                handler='fundamental_analyzer',
-                method='handle_largest_funds_questions',
-                score=1.0,
-                context=context,
-                reasoning="Largest funds pattern match",
-                confidence=1.0
-            )
-        
-        # No priority pattern found
-        return None
-
-    def _legacy_route(self, question: str) -> List[AIRouteMatch]:
-        """Fallback: Eski pattern matching sistemi"""
-        question_lower = question.lower()
-        matches = []
-        
-        # Özel durumlar için öncelikli kontrol
-        if 'emeklilik' in question_lower or 'emekliliğe' in question_lower:
-            context = self._extract_context(question)
-            matches.append(AIRouteMatch(
-                handler='personal_finance_analyzer',
-                method='handle_retirement_planning',
-                score=0.9,
-                context=context,
-                reasoning="Emeklilik keyword match",
-                confidence=0.9
-            ))
-        # YENİ: Sektör/tema kontrolü
-        elif any(sector in question_lower for sector in ['teknoloji', 'sağlık', 'enerji', 'sektör']):
-            matches.append(AIRouteMatch(
-                handler='thematic_analyzer',
-                method='analyze_thematic_question',
-                score=0.9,
-                context={},
-                reasoning="Sektör/tema keyword match",
-                confidence=0.9
-            ))
-
-        # YENİ: Faiz kontrolü
-        elif 'faiz' in question_lower and any(word in question_lower for word in ['artış', 'etkile', 'nasıl']):
-            matches.append(AIRouteMatch(
-                handler='macroeconomic_analyzer',
-                method='analyze_interest_rate_impact',
-                score=0.9,
-                context={},
-                reasoning="Faiz etkisi keyword match",
-                confidence=0.9
-            ))
-        
-        # YENİ: Portföy dağıtımı kontrolü
-        elif any(word in question_lower for word in ['dağıt', 'böl']) and 'fon' in question_lower:
-            matches.append(AIRouteMatch(
-                handler='mathematical_calculator',
-                method='handle_portfolio_distribution',
-                score=0.9,
-                context=self._extract_context(question),
-                reasoning="Portfolio distribution keyword match",
-                confidence=0.9
-            ))
-        
-        # Basit keyword matching (geri kalan kod aynı)
-        else:
-            for module, info in self.module_descriptions.items():
-                keywords = info.get('keywords', [])
-                
-                # Keyword match score
-                match_score = sum(1 for kw in keywords if kw in question_lower) / len(keywords) if keywords else 0
-                
-                if match_score > 0:
-                    # En uygun metodu tahmin et
-                    method = self._guess_method(question_lower, info.get('methods', {}))
-                    
-                    if method:
-                        matches.append(AIRouteMatch(
-                            handler=module,
-                            method=method,
-                            score=match_score,
-                            context={},
-                            reasoning="Legacy keyword matching",
-                            confidence=match_score
-                        ))
-        
-        return sorted(matches, key=lambda x: x.score, reverse=True)[:3]
-
+        return any(trigger in question_lower for trigger in triggers)
     
-    def _guess_method(self, question_lower: str, methods: Dict[str, str]) -> Optional[str]:
-        """Metodları keyword'lere göre tahmin et"""
-        # Basit heuristic
-        for method_name, description in methods.items():
-            desc_lower = description.lower()
-            
-            # Method ismi veya açıklamasında geçen kelimeler
-            if any(word in question_lower for word in desc_lower.split()):
-                return method_name
+    def _find_closest_method(self, suggested: str, valid_methods: Dict) -> str:
+        """En yakın valid method'u bul"""
+        suggested_lower = suggested.lower()
         
-        # Default: ilk metod
-        return list(methods.keys())[0] if methods else None
+        # Exact match
+        if suggested in valid_methods:
+            return suggested
+        
+        # Partial match
+        for method in valid_methods:
+            if suggested_lower in method.lower() or method.lower() in suggested_lower:
+                return method
+        
+        # Default
+        return list(valid_methods.keys())[0] if valid_methods else 'analyze'
     
-    def _load_legacy_patterns(self) -> Dict:
-        """Legacy pattern'leri yükle (opsiyonel)"""
-        # Mevcut smart_question_router.py'den pattern'leri import edebilirsiniz
-        return {}
+    def _load_handler_descriptions(self) -> Dict:
+        """Handler tanımlamalarını yükle - DÜZELTME"""
+        return {
+            'performance_analyzer': {
+                'description': 'Fon performansı, getiri, kayıp, risk analizleri ve TEK FON ANALİZİ',
+                'keywords': ['performans', 'getiri', 'kazanç', 'kayıp', 'analiz et', 'incele', 'değerlendir'],
+                'methods': {
+                    'handle_top_gainers': 'En çok kazandıran fonları bulur',
+                    'handle_safest_funds_sql_fast': 'En güvenli fonları listeler',
+                    'handle_worst_funds_list': 'En çok kaybettiren fonları bulur',
+                    'handle_riskiest_funds_list': 'En riskli fonları bulur',
+                    'handle_2025_recommendation_dual': '2025 yılı için fon önerileri',
+                    'handle_analysis_question_dual': 'TEK FON DETAYLI ANALİZİ - ÖNEMLİ',
+                    'handle_comparison_question': 'İki fon karşılaştırması'
+                },
+                'execution_order': 10
+            },
+            'technical_analyzer': {
+                'description': 'Teknik analiz, MACD, RSI, Bollinger, AI pattern analizi',
+                'keywords': ['macd', 'rsi', 'bollinger', 'teknik', 'ai pattern', 'pattern'],
+                'methods': {
+                    'handle_macd_signals_sql': 'MACD sinyallerini analiz eder',
+                    'handle_rsi_signals_sql': 'RSI aşırı alım/satım sinyalleri',
+                    'handle_bollinger_signals_sql': 'Bollinger band sinyalleri',
+                    'handle_moving_average_signals_sql': 'Hareketli ortalama sinyalleri',
+                    'handle_ai_pattern_analysis': 'AI PATTERN ANALİZİ - FON KODU İLE'
+                },
+                'execution_order': 20
+            },
+            'currency_inflation_analyzer': {
+                'description': 'Döviz, enflasyon, dolar, euro fonları analizi',
+                'methods': {
+                    'analyze_currency_funds': 'Döviz fonlarını analiz eder',
+                    'analyze_inflation_funds_mv': 'Enflasyon korumalı fonları bulur',
+                    'analyze_currency_inflation_question': 'Genel döviz/enflasyon analizi'
+                },
+                'execution_order': 30
+            },
+            'scenario_analyzer': {
+                'description': 'What-if senaryoları, kriz, enflasyon durumları',
+                'methods': {
+                    'analyze_scenario_question': 'Senaryo bazlı analiz',
+                    'analyze_inflation_scenario': 'Enflasyon senaryosu',
+                    'analyze_stock_crash_scenario': 'Borsa çöküşü senaryosu'
+                },
+                'execution_order': 40
+            },
+            'personal_finance_analyzer': {
+                'description': 'Emeklilik, eğitim, ev alma, kişisel finans planlaması',
+                'methods': {
+                    'handle_retirement_planning': 'Emeklilik planlaması',
+                    'handle_ai_personalized_planning': 'Kişiselleştirilmiş plan',
+                    'analyze_personal_finance_question': 'Genel kişisel finans'
+                },
+                'execution_order': 50
+            },
+            'mathematical_calculator': {
+                'description': 'Matematiksel hesaplamalar, compound faiz, portföy dağılımı',
+                'methods': {
+                    'handle_monthly_investment_calculation': 'Aylık yatırım hesaplaması',
+                    'handle_portfolio_distribution': 'Portföy dağıtımı',
+                    'analyze_mathematical_question': 'Genel matematik hesaplama'
+                },
+                'execution_order': 60
+            },
+            'portfolio_company_analyzer': {
+                'description': 'Portföy yönetim şirketleri analizi',
+                'methods': {
+                    'analyze_company_comprehensive': 'Şirket detaylı analizi',
+                    'compare_companies_unlimited': 'Şirket karşılaştırması',
+                    'find_best_portfolio_company_unlimited': 'En iyi şirket'
+                },
+                'execution_order': 70
+            },
+            'time_based_analyzer': {
+                'description': 'Zaman bazlı analizler, haftalık, aylık trendler',
+                'methods': {
+                    'analyze_today_performance': 'Bugünkü performans',
+                    'analyze_time_based_question': 'Genel zaman bazlı analiz'
+                },
+                'execution_order': 80
+            },
+            'macroeconomic_analyzer': {
+                'description': 'Makroekonomik etkiler, faiz, TCMB, jeopolitik',
+                'methods': {
+                    'analyze_macroeconomic_impact': 'Makro etki analizi',
+                    'analyze_interest_rate_impact': 'Faiz etkisi'
+                },
+                'execution_order': 90
+            },
+            'advanced_metrics_analyzer': {
+                'description': 'Beta, Alpha, Sharpe, Information Ratio gibi ileri metrikler',
+                'methods': {
+                    'handle_beta_analysis': 'Beta katsayısı analizi',
+                    'handle_alpha_analysis': 'Alpha değeri analizi',
+                    'handle_sharpe_ratio_analysis': 'Sharpe oranı analizi'
+                },
+                'execution_order': 100
+            },
+            'thematic_analyzer': {
+                'description': 'Sektörel ve tematik fon analizleri',
+                'methods': {
+                    'analyze_thematic_question': 'Tematik fon analizi'
+                },
+                'execution_order': 110
+            },
+            'fundamental_analyzer': {
+                'description': 'Fon büyüklüğü, yatırımcı sayısı, temel analizler',
+                'methods': {
+                    'handle_largest_funds_questions': 'En büyük fonlar',
+                    'handle_investor_count_questions': 'Yatırımcı sayısı analizi',
+                    'handle_fund_category_questions': 'Kategori analizi'
+                },
+                'execution_order': 120
+            }
+        }
     
-    def _parse_text_response(self, response: str) -> Optional[Dict]:
-        """Basit text parsing fallback"""
-        # AI bazen düz metin olarak yanıt verebilir
-        # Basit regex ile module ve method isimlerini bul
-        
-        routes = []
-        
-        # Module isimlerini ara
-        for module in self.module_descriptions.keys():
-            if module in response.lower():
-                # Method ara
-                methods = self.module_descriptions[module].get('methods', {})
-                for method in methods.keys():
-                    if method in response.lower():
-                        routes.append({
-                            'handler': module,
-                            'method': method,
-                            'confidence': 0.7,
-                            'reasoning': 'Text parsing',
-                            'context': {}
-                        })
-                        break
-        
-        return {'routes': routes} if routes else None
+    def _load_multi_handler_rules(self) -> Dict:
+        """Multi-handler kuralları"""
+        return {
+            'comprehensive_analysis': {
+                'triggers': ['detaylı', 'kapsamlı', 'tüm yönleri'],
+                'required_handlers': ['performance_analyzer', 'technical_analyzer'],
+                'optional_handlers': ['fundamental_analyzer']
+            },
+            'investment_decision': {
+                'triggers': ['yatırım kararı', 'hangisine yatırım', 'seçim'],
+                'required_handlers': ['performance_analyzer', 'risk_analyzer'],
+                'optional_handlers': ['scenario_analyzer']
+            },
+            'market_overview': {
+                'triggers': ['piyasa durumu', 'genel durum'],
+                'required_handlers': ['time_based_analyzer', 'performance_analyzer'],
+                'optional_handlers': ['macroeconomic_analyzer']
+            }
+        }
+    
+    def _load_fallback_patterns(self) -> List[Dict]:
+        """Fallback pattern'ler"""
+        return [
+            {
+                'handler': 'performance_analyzer',
+                'method': 'handle_top_gainers',
+                'patterns': [
+                    r'en\s*(?:çok\s*)?kazandıran',
+                    r'en\s*(?:iyi|yüksek)\s*(?:performans|getiri)'
+                ],
+                'priority': 0.9
+            },
+            {
+                'handler': 'performance_analyzer',
+                'method': 'handle_safest_funds_sql_fast',
+                'patterns': [
+                    r'en\s*güvenli',
+                    r'en\s*az\s*riskli'
+                ],
+                'priority': 0.9
+            },
+            {
+                'handler': 'technical_analyzer',
+                'method': 'handle_ai_pattern_analysis',
+                'patterns': [
+                    r'ai\s*pattern',
+                    r'ai\s*teknik',
+                    r'pattern\s*analiz'
+                ],
+                'priority': 1.0
+            },
+            {
+                'handler': 'scenario_analyzer',
+                'method': 'analyze_scenario_question',
+                'patterns': [
+                    r'olursa',
+                    r'durumunda',
+                    r'senaryosu'
+                ],
+                'priority': 0.8
+            },
+            {
+                'handler': 'personal_finance_analyzer',
+                'method': 'handle_retirement_planning',
+                'patterns': [
+                    r'emeklilik',
+                    r'emekliliğe.*?yıl'
+                ],
+                'priority': 0.8
+            }
+        ]
+    
+    def clear_cache(self):
+        """Cache'i temizle"""
+        self.route_cache.clear()
+        self.logger.info("Route cache cleared")
+    
+    def get_stats(self) -> Dict:
+        """İstatistikleri döndür"""
+        return {
+            'cache_size': len(self.route_cache),
+            'handlers_count': len(self.handler_descriptions),
+            'fallback_patterns_count': sum(len(p['patterns']) for p in self.fallback_patterns),
+            'multi_handler_rules_count': len(self.multi_handler_rules)
+        }
