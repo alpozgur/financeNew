@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    container_name: finance-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: finansdb      # Veritabanı adı (istediğini verebilirsin)
+      POSTGRES_USER: alpozgur    # Kullanıcı adı
+      POSTGRES_PASSWORD: AlpSin0415!   # Şifre (güçlü seç!)
+    ports:
+      - "15432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./data:/docker-entrypoint-initdb.d  # Dump veya init script için
+
+volumes:
+  postgres_data:

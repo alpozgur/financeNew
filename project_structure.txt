@@ -1,0 +1,1130 @@
+PROJECT STRUCTURE ANALYSIS
+Generated: 2025-06-08 12:53:53
+Project Path: C:\Projects\Personal\AI\financeNew
+============================================================
+
+DIRECTORY STRUCTURE:
+============================================================
+
+/
+├── analysis/
+│   ├── ai_analysis.py (20,953 bytes, 486 lines)
+│   ├── coordinator.py (24,769 bytes, 547 lines)
+│   ├── hybrid_fund_selector.py (22,521 bytes, 582 lines)
+│   ├── monte_carlo.py (27,379 bytes, 648 lines)
+│   ├── performance.py (12,688 bytes, 303 lines)
+│   ├── portfolio_optimization.py (29,135 bytes, 734 lines)
+│   ├── technical.py (21,789 bytes, 497 lines)
+├── config/
+│   ├── config.py (2,903 bytes, 80 lines)
+│   ├── multi_handler_config.py (701 bytes, 23 lines)
+├── data/
+├── database/
+│   ├── connection.py (5,803 bytes, 165 lines)
+├── examples/
+├── logs/
+│   ├── tefas_analysis.log (561 bytes, 0 lines)
+├── reports/
+├── tests/
+│   ├── test_analysis.py (8,461 bytes, 201 lines)
+├── TEFAS_Kullanici_Kilavuzu.html (28,051 bytes, 734 lines)
+├── TEFAS_Kullanici_Kilavuzu.pdf (16,852 bytes, 0 lines)
+├── advanced_metrics_analyzer.py (66,535 bytes, 1362 lines)
+├── ai_personalized_advisor.py (24,264 bytes, 613 lines)
+├── ai_provider.py (6,312 bytes, 157 lines)
+├── ai_smart_question_router.py (29,591 bytes, 683 lines)
+├── analyze_project.py (9,105 bytes, 213 lines)
+├── conflict_resolver.py (2,334 bytes, 57 lines)
+├── currency_inflation_analyzer.py (74,189 bytes, 1510 lines)
+├── db_yapisiornekveri.txt (69,773 bytes, 97 lines)
+├── financeNew.zip (273,115 bytes, 0 lines)
+├── fixer.py (10,208 bytes, 241 lines)
+├── fundamental_analysis.py (34,250 bytes, 745 lines)
+├── handler_registry.py (9,802 bytes, 234 lines)
+├── hybrid_smart_router.py (9,704 bytes, 257 lines)
+├── initialize_hybrid_router.py (1,991 bytes, 41 lines)
+├── interactive_qa_dual_ai.py (60,548 bytes, 1143 lines)
+├── macroeconomic_analyzer.py (36,302 bytes, 801 lines)
+├── main.py (1,657 bytes, 54 lines)
+├── mathematical_calculations.py (34,692 bytes, 783 lines)
+├── perf.ps1 (1,029 bytes, 0 lines)
+├── performance_analysis.py (67,827 bytes, 1457 lines)
+├── performance_analysis.py.backup_20250604_130500 (39,449 bytes, 0 lines)
+├── personal_finance_analyzer.py (49,294 bytes, 1092 lines)
+├── portfolio_company_analysis.py (51,656 bytes, 1035 lines)
+├── predictive_scenario_analyzer.py (30,902 bytes, 737 lines)
+├── question_catalog_generator.py (12,860 bytes, 310 lines)
+├── response_merger.py (2,586 bytes, 58 lines)
+├── risk_assessment.py (5,229 bytes, 133 lines)
+├── scenario_analysis.py (61,591 bytes, 1351 lines)
+├── setup.py (2,196 bytes, 75 lines)
+│   [Content Preview]:
+│   > """
+│   > TEFAS Analysis System kurulum scripti
+│   > """
+│   > from pathlib import Path
+│   > import subprocess
+│   > import sys
+│   > def install_requirements():
+│   > """Gerekli paketleri yükle"""
+│   > requirements_file = Path(__file__).parent / "requirements.txt"
+
+├── smart_question_router.py (21,868 bytes, 511 lines)
+├── soru_katalogu.md (4,674 bytes, 150 lines)
+├── technical_analysis.py (63,012 bytes, 1422 lines)
+├── tefas_user_guide_pdf.py (14,820 bytes, 450 lines)
+├── thematic_fund_analyzer.py (48,139 bytes, 1042 lines)
+├── time_based_analyzer.py (39,397 bytes, 831 lines)
+├── utils.py (872 bytes, 29 lines)
+
+============================================================
+PYTHON CODE STRUCTURE
+============================================================
+
+
+📄 advanced_metrics_analyzer.py
+----------------------------------------
+
+🔧 Imports:
+  import re
+  import pandas as pd
+  import numpy as np
+  from typing import Dict, List, Tuple, Optional
+  import logging
+  from datetime import datetime, timedelta
+  from scipy import stats
+  from risk_assessment import RiskAssessment
+
+🏗️ Classes and Methods:
+  Class: AdvancedMetricsAnalyzer
+    └─ __init__()
+    └─ handle_beta_analysis()
+    └─ handle_alpha_analysis()
+    └─ handle_tracking_error_analysis()
+    └─ handle_information_ratio_analysis()
+    └─ handle_sharpe_ratio_analysis()
+    └─ _get_fund_risk_data()
+    └─ _get_risk_indicator()
+    └─ _get_benchmark_data()
+    └─ _calculate_returns()
+    └─ _annualized_return()
+    └─ _calculate_beta()
+    └─ _calculate_alpha()
+    └─ _calculate_tracking_error()
+    └─ _calculate_information_ratio()
+    └─ _identify_index_funds()
+    └─ _get_ai_commentary_for_beta_with_risk()
+    └─ _get_ai_commentary_for_alpha_with_risk()
+    └─ _get_ai_commentary_for_ir_with_risk()
+    └─ get_examples()
+    └─ get_keywords()
+    └─ get_patterns()
+    └─ get_method_patterns()
+
+📄 ai_personalized_advisor.py
+----------------------------------------
+
+🔧 Imports:
+  import json
+  import re
+  from typing import Dict, List, Optional, Tuple
+  from dataclasses import dataclass
+  from datetime import datetime
+  import numpy as np
+
+🏗️ Classes and Methods:
+  Class: UserProfile
+  Class: AIPersonalizedAdvisor
+    └─ __init__()
+    └─ get_personalized_advice()
+    └─ _analyze_user_profile()
+    └─ _get_life_stage()
+    └─ _calculate_savings_rate()
+    └─ _assess_risk_capacity()
+    └─ _adjust_risk_profile()
+    └─ _assess_liquidity_needs()
+    └─ _get_tax_considerations()
+    └─ _get_suitable_funds()
+    └─ _get_equity_funds()
+    └─ _get_bond_funds()
+    └─ _get_money_market_funds()
+    └─ _get_special_situation_funds()
+    └─ _get_inflation_protection_funds()
+    └─ _get_conservative_funds()
+    └─ _get_ai_personalized_advice()
+    └─ _format_fund_recommendations()
+    └─ _format_personalized_response()
+    └─ _get_fallback_advice()
+    └─ _get_allocation_text()
+    └─ create_profile_from_text()
+    └─ analyze_from_question()
+    └─ _get_profile_creation_help()
+
+📄 ai_provider.py
+----------------------------------------
+
+🔧 Imports:
+  import os
+  from typing import Optional, Dict, Any
+  import logging
+
+🏗️ Classes and Methods:
+  Class: AIProvider
+    └─ __init__()
+    └─ _log_configuration()
+    └─ query()
+    └─ _query_openai()
+    └─ _query_ollama()
+    └─ _query_dual()
+    └─ _format_dual_response()
+    └─ _get_fallback_response()
+    └─ is_available()
+    └─ get_status()
+
+📄 ai_smart_question_router.py
+----------------------------------------
+
+🔧 Imports:
+  import json
+  import re
+  from typing import List, Dict, Optional, Tuple
+  from dataclasses import dataclass
+  import logging
+
+🏗️ Classes and Methods:
+  Class: AIRouteMatch
+  Class: AISmartQuestionRouter
+    └─ __init__()
+    └─ route_question()
+    └─ route_question_multi()
+    └─ _get_ai_routing()
+    └─ _extract_context()
+    └─ _parse_ai_response()
+    └─ _convert_ai_routes_to_matches_old()
+    └─ _convert_ai_routes_to_matches()
+    └─ _check_priority_patterns()
+    └─ _legacy_route()
+    └─ _guess_method()
+    └─ _load_legacy_patterns()
+    └─ _parse_text_response()
+
+📄 analyze_project.py
+----------------------------------------
+
+🔧 Imports:
+  import os
+  import json
+  from pathlib import Path
+  from datetime import datetime
+
+🏗️ Classes and Methods:
+  Class: ProjectAnalyzer
+    └─ __init__()
+    └─ should_ignore()
+    └─ get_file_info()
+    └─ analyze_directory()
+    └─ extract_python_structure()
+    └─ analyze_project()
+
+📄 conflict_resolver.py
+----------------------------------------
+
+🏗️ Classes and Methods:
+  Class: ConflictResolver
+    └─ __init__()
+    └─ _resolve_safety_conflict()
+    └─ _resolve_inflation_conflict()
+    └─ _resolve_portfolio_conflict()
+
+📄 currency_inflation_analyzer.py
+----------------------------------------
+
+🔧 Imports:
+  from datetime import datetime
+  import pandas as pd
+  import numpy as np
+  import logging
+  import time
+  from database.connection import DatabaseManager
+  from config.config import Config
+  from risk_assessment import RiskAssessment
+  import traceback
+  from config.config import Config
+  ... and 1 more imports
+
+🏗️ Classes and Methods:
+  Class: CurrencyInflationAnalyzer
+    └─ __init__()
+    └─ is_currency_inflation_question()
+    └─ analyze_currency_inflation_question()
+    └─ _handle_general_inflation_question()
+    └─ analyze_inflation_funds_mv()
+    └─ _get_inflation_recommendations_with_risk()
+  Class: CurrencyRiskManager
+    └─ calculate_var_for_currency()
+    └─ assess_currency_correlation()
+    └─ currency_diversification_score()
+
+⚡ Functions:
+  Function: check_fund_risk_before_recommendation()
+  Function: analyze_currency_portfolio_distribution()
+  Function: calculate_currency_exposure()
+  Function: demo_currency_inflation_analysis()
+
+📄 fixer.py
+----------------------------------------
+
+🔧 Imports:
+  import sys
+  from handler_registry import HandlerRegistry
+  from hybrid_smart_router import HybridSmartRouter
+  import time
+  import traceback
+
+⚡ Functions:
+  Function: initialize_test_router()
+  Function: run_test_suite()
+  Function: test_sbert_improvement()
+  Function: test_edge_cases()
+  Function: main()
+
+📄 fundamental_analysis.py
+----------------------------------------
+
+🔧 Imports:
+  import re
+  import time
+  from datetime import datetime, timedelta
+  import pandas as pd
+
+🏗️ Classes and Methods:
+  Class: FundamentalAnalysisEnhancement
+    └─ __init__()
+    └─ handle_capacity_questions()
+    └─ handle_investor_count_questions()
+    └─ handle_safest_funds_list()
+    └─ handle_new_funds_questions()
+    └─ handle_largest_funds_questions()
+    └─ handle_fund_age_questions()
+    └─ handle_fund_category_questions()
+    └─ capacity_help_message()
+
+📄 handler_registry.py
+----------------------------------------
+
+🔧 Imports:
+  from typing import Dict, List, Tuple, Optional
+  import inspect
+  import re
+
+🏗️ Classes and Methods:
+  Class: HandlerRegistry
+    └─ __init__()
+    └─ register()
+    └─ _initialize_patterns()
+    └─ get_handler_for_pattern()
+    └─ _calculate_keyword_score()
+    └─ _calculate_pattern_score()
+    └─ _calculate_example_score()
+    └─ _find_best_method()
+    └─ _get_technical_method()
+    └─ get_all_patterns()
+
+📄 hybrid_smart_router.py
+----------------------------------------
+
+🔧 Imports:
+  import re
+  from typing import List, Dict, Optional, Tuple
+  from dataclasses import dataclass
+  import numpy as np
+  from sentence_transformers import SentenceTransformer, util as st_util
+
+🏗️ Classes and Methods:
+  Class: HybridRouteMatch
+  Class: HybridSmartRouter
+    └─ __init__()
+    └─ _initialize_embeddings()
+    └─ route()
+    └─ route_multi()
+    └─ _sbert_route()
+    └─ _llm_route()
+    └─ _build_llm_routing_prompt()
+
+📄 initialize_hybrid_router.py
+----------------------------------------
+
+🔧 Imports:
+  from handler_registry import HandlerRegistry
+  from hybrid_smart_router import HybridSmartRouter
+
+⚡ Functions:
+  Function: initialize_hybrid_router()
+
+📄 interactive_qa_dual_ai.py
+----------------------------------------
+
+🔧 Imports:
+  import numbers
+  import re
+  import sys
+  from typing import List, Dict, Optional, Any, Tuple
+  from dataclasses import dataclass
+  import pandas as pd
+  import numpy as np
+  from config.config import Config
+  from analysis.coordinator import AnalysisCoordinator
+  from analysis.hybrid_fund_selector import HybridFundSelector, HighPerformanceFundAnalyzer
+  ... and 24 more imports
+
+🏗️ Classes and Methods:
+  Class: RouteMatch
+  Class: DualAITefasQA
+    └─ __init__()
+    └─ _load_active_funds()
+    └─ _check_ai_availability()
+    └─ answer_question()
+    └─ _execute_multi_handlers()
+    └─ _get_handler_instance()
+    └─ _prepare_handler_params()
+    └─ _legacy_single_handler()
+    └─ _legacy_routing()
+    └─ _handle_portfolio_companies_overview()
+    └─ _handle_company_comparison_enhanced()
+    └─ handle_company_comparison_enhanced()
+    └─ _handle_technical_analysis_questions_full_db()
+    └─ _handle_fund_category_question()
+    └─ _handle_fund_allocation_question()
+    └─ _handle_market_question_dual()
+    └─ _handle_ai_test_question()
+    └─ _handle_risk_question()
+    └─ _handle_general_question()
+    └─ run_interactive_session()
+
+⚡ Functions:
+  Function: main()
+
+📄 macroeconomic_analyzer.py
+----------------------------------------
+
+🔧 Imports:
+  import traceback
+  import pandas as pd
+  import numpy as np
+  from datetime import datetime, timedelta
+  import re
+  from typing import Dict, List, Tuple
+  import traceback
+  import traceback
+  import traceback
+
+🏗️ Classes and Methods:
+  Class: MacroeconomicAnalyzer
+    └─ __init__()
+    └─ is_macroeconomic_question()
+    └─ analyze_macroeconomic_impact()
+
+📄 main.py
+----------------------------------------
+
+🔧 Imports:
+  import logging
+  import sys
+  from pathlib import Path
+  from config.config import Config
+  from database.connection import DatabaseManager
+
+⚡ Functions:
+  Function: main()
+
+📄 mathematical_calculations.py
+----------------------------------------
+
+🔧 Imports:
+  import re
+  import numpy as np
+  import pandas as pd
+  from datetime import datetime, timedelta
+  from typing import Dict, List, Tuple, Optional
+
+🏗️ Classes and Methods:
+  Class: MathematicalCalculator
+    └─ __init__()
+    └─ is_mathematical_question()
+    └─ analyze_mathematical_question()
+    └─ _handle_monthly_investment_calculation()
+    └─ _handle_portfolio_distribution()
+    └─ _handle_target_amount_calculation()
+    └─ _handle_compound_interest_calculation()
+    └─ _handle_general_calculation()
+    └─ _calculate_future_value_monthly()
+    └─ _monte_carlo_monthly_investment()
+    └─ _conservative_distribution()
+    └─ _balanced_distribution()
+    └─ _aggressive_distribution()
+    └─ _get_fund_suggestions()
+    └─ _get_real_fund_suggestions()
+    └─ _calculate_required_investment_real_funds()
+    └─ get_examples()
+    └─ get_keywords()
+    └─ get_patterns()
+    └─ get_method_patterns()
+
+📄 performance_analysis.py
+----------------------------------------
+
+🔧 Imports:
+  from datetime import datetime
+  import time
+  import pandas as pd
+  import numpy as np
+  from risk_assessment import RiskAssessment
+  import re
+  import re
+
+🏗️ Classes and Methods:
+  Class: PerformanceAnalyzerMain
+    └─ __init__()
+    └─ _check_fund_risk()
+    └─ handle_fund_past_performance_question()
+    └─ handle_top_gainer_fund_question()
+    └─ handle_top_loser_fund_question()
+    └─ handle_top_sharpe_funds_question()
+    └─ handle_low_volatility_funds_question()
+    └─ handle_analysis_question_dual()
+    └─ handle_2025_recommendation_dual()
+    └─ handle_comparison_question()
+    └─ handle_top_gainers()
+    └─ handle_safest_funds_sql_fast()
+    └─ handle_safest_fund()
+    └─ handle_riskiest_funds_list()
+    └─ handle_most_risky_fund()
+    └─ handle_worst_funds_list()
+    └─ handle_worst_fund()
+    └─ calculate_2025_score()
+    └─ handle_safest_funds_list_fallback()
+    └─ get_fund_risk_indicator()
+    └─ filter_safe_funds()
+    └─ format_risk_summary()
+    └─ add_risk_warnings()
+    └─ batch_risk_check()
+    └─ create_risk_performance_report()
+    └─ get_examples()
+    └─ get_keywords()
+    └─ get_patterns()
+    └─ get_method_patterns()
+
+📄 personal_finance_analyzer.py
+----------------------------------------
+
+🔧 Imports:
+  import re
+  from datetime import datetime, timedelta
+  import pandas as pd
+  import numpy as np
+  from risk_assessment import RiskAssessment
+  from ai_personalized_advisor import AIPersonalizedAdvisor
+  from ai_personalized_advisor import AIPersonalizedAdvisor
+
+🏗️ Classes and Methods:
+  Class: PersonalFinanceAnalyzer
+    └─ __init__()
+    └─ handle_ai_personalized_planning()
+    └─ is_personal_finance_question()
+    └─ analyze_personal_finance_question()
+    └─ handle_retirement_planning()
+    └─ handle_education_planning()
+    └─ handle_house_planning()
+    └─ handle_child_planning()
+    └─ handle_general_savings_planning()
+    └─ _determine_risk_tolerance()
+    └─ _get_portfolio_distribution()
+    └─ _get_home_purchase_distribution()
+    └─ _get_funds_by_type_with_risk_control()
+    └─ _get_low_risk_funds_with_risk_control()
+    └─ _get_balanced_funds_for_education_with_risk()
+    └─ _get_home_purchase_funds_with_risk()
+    └─ _get_child_savings_funds_with_risk()
+    └─ _get_versatile_funds_with_risk()
+    └─ _get_blocked_high_risk_funds()
+    └─ _is_fund_suitable_for_risk_tolerance()
+    └─ _get_risk_indicator()
+    └─ _calculate_future_value()
+    └─ get_examples()
+    └─ get_keywords()
+    └─ get_patterns()
+    └─ get_method_patterns()
+
+📄 portfolio_company_analysis.py
+----------------------------------------
+
+🔧 Imports:
+  import time
+  import numpy as np
+  import pandas as pd
+  from risk_assessment import RiskAssessment
+
+🏗️ Classes and Methods:
+  Class: EnhancedPortfolioCompanyAnalyzer
+    └─ __init__()
+    └─ get_all_company_funds_unlimited()
+
+📄 predictive_scenario_analyzer.py
+----------------------------------------
+
+🔧 Imports:
+  import pandas as pd
+  import numpy as np
+  from datetime import datetime, timedelta
+  import re
+  from typing import Dict, List, Optional, Tuple
+
+🏗️ Classes and Methods:
+  Class: PredictiveScenarioAnalyzer
+    └─ __init__()
+    └─ is_predictive_question()
+    └─ analyze_predictive_scenario()
+    └─ _identify_scenario_type()
+    └─ _extract_time_period()
+    └─ _extract_target_value()
+    └─ _analyze_current_state()
+    └─ _analyze_historical_trend()
+    └─ _get_ai_predictions()
+    └─ _parse_ai_predictions()
+    └─ _get_scenario_relevant_funds_simple()
+    └─ _get_funds_from_mv()
+    └─ _get_funds_basic()
+    └─ _generate_rule_based_predictions()
+    └─ _format_rule_based_predictions()
+    └─ _format_predictive_results()
+    └─ get_examples()
+    └─ get_keywords()
+    └─ get_patterns()
+
+📄 question_catalog_generator.py
+----------------------------------------
+
+🔧 Imports:
+  import os
+  import re
+  import importlib
+  import inspect
+  from typing import List, Dict, Set
+  from smart_question_router import SmartQuestionRouter
+  from ai_smart_question_router import AISmartQuestionRouter
+
+🏗️ Classes and Methods:
+  Class: QuestionCatalogGenerator
+    └─ __init__()
+    └─ generate_catalog()
+    └─ _scan_handlers()
+    └─ _scan_router_patterns()
+    └─ _scan_ai_router_patterns()
+    └─ _extract_from_methods()
+    └─ _regex_to_example()
+    └─ _format_catalog()
+    └─ generate_markdown_report()
+
+📄 response_merger.py
+----------------------------------------
+
+🔧 Imports:
+  from typing import List, Dict, Any
+
+🏗️ Classes and Methods:
+  Class: ResponseMerger
+    └─ merge_responses()
+    └─ _get_handler_display_name()
+
+📄 risk_assessment.py
+----------------------------------------
+
+🏗️ Classes and Methods:
+  Class: RiskAssessment
+    └─ assess_fund_risk()
+    └─ format_risk_warning()
+
+📄 scenario_analysis.py
+----------------------------------------
+
+🔧 Imports:
+  import pandas as pd
+  import numpy as np
+  from datetime import datetime
+  import re
+  from risk_assessment import RiskAssessment
+
+🏗️ Classes and Methods:
+  Class: ScenarioAnalyzer
+    └─ __init__()
+    └─ is_scenario_question()
+    └─ analyze_scenario_question()
+    └─ _analyze_inflation_scenario()
+    └─ _analyze_stock_crash_scenario()
+    └─ _analyze_currency_scenario()
+    └─ _check_fund_risk()
+    └─ _analyze_funds_for_inflation()
+    └─ _analyze_funds_for_inflation_old()
+    └─ _analyze_defensive_funds()
+    └─ _analyze_defensive_funds_old()
+    └─ _analyze_fx_funds()
+    └─ _analyze_fx_funds_old()
+    └─ _create_inflation_portfolio()
+    └─ _create_crisis_portfolio()
+    └─ _create_fx_portfolio()
+    └─ _estimate_portfolio_return()
+    └─ _analyze_recession_scenario()
+    └─ _general_scenario_analysis()
+    └─ _extract_percentage()
+    └─ _extract_currency_level()
+    └─ check_mv_freshness()
+    └─ refresh_mvs_if_needed()
+    └─ get_examples()
+    └─ get_keywords()
+    └─ get_patterns()
+    └─ get_method_patterns()
+
+📄 setup.py
+----------------------------------------
+
+🔧 Imports:
+  from pathlib import Path
+  import subprocess
+  import sys
+
+⚡ Functions:
+  Function: install_requirements()
+  Function: create_directories()
+  Function: create_env_template()
+  Function: main()
+
+📄 smart_question_router.py
+----------------------------------------
+
+🔧 Imports:
+  import re
+  from typing import Dict, List, Tuple, Optional, Any
+  from dataclasses import dataclass, field
+
+🏗️ Classes and Methods:
+  Class: RouteMatch
+  Class: SmartQuestionRouter
+    └─ __init__()
+    └─ route_question()
+    └─ route_question_multi()
+    └─ _apply_multi_handler_rules()
+    └─ _get_handler_config()
+    └─ _check_if_multi()
+    └─ route_question_with_confidence()
+    └─ _get_alternatives()
+
+📄 technical_analysis.py
+----------------------------------------
+
+🔧 Imports:
+  import pandas as pd
+  from risk_assessment import RiskAssessment
+  import traceback
+  import traceback
+  import traceback
+
+🏗️ Classes and Methods:
+  Class: TechnicalAnalysis
+    └─ __init__()
+    └─ handle_macd_signals_sql()
+    └─ handle_bollinger_signals_sql()
+    └─ handle_rsi_signals_sql()
+    └─ handle_moving_average_signals_sql()
+    └─ handle_general_technical_signals_sql()
+    └─ ai_technical_pattern_recognition()
+    └─ _generate_pattern_analysis()
+    └─ handle_ai_pattern_analysis()
+
+📄 tefas_user_guide_pdf.py
+----------------------------------------
+
+🔧 Imports:
+  import os
+  from datetime import datetime
+
+⚡ Functions:
+  Function: create_html_guide()
+
+📄 thematic_fund_analyzer.py
+----------------------------------------
+
+🔧 Imports:
+  import pandas as pd
+  import numpy as np
+  from typing import Dict, List, Optional, Tuple
+  import logging
+  import time
+  import re
+  from datetime import datetime, timedelta
+  from database.connection import DatabaseManager
+  from config.config import Config
+  from thematic_fund_analyzer import ThematicFundAnalyzer
+  ... and 3 more imports
+
+🏗️ Classes and Methods:
+  Class: ThematicFundAnalyzer
+    └─ __init__()
+    └─ is_thematic_question()
+    └─ determine_fund_type_from_portfolio()
+    └─ analyze_thematic_question()
+    └─ analyze_single_theme_comprehensive()
+    └─ find_thematic_funds_sql()
+    └─ analyze_thematic_performance()
+    └─ calculate_thematic_score()
+    └─ format_thematic_analysis_results()
+    └─ compare_multiple_themes()
+    └─ format_theme_comparison_results()
+    └─ _handle_general_thematic_overview()
+    └─ get_portfolio_distribution_summary()
+
+⚡ Functions:
+  Function: add_to_answer_question()
+  Function: demo_thematic_analysis()
+  Function: create_thematic_database_indexes()
+  Function: setup_thematic_logging()
+
+📄 time_based_analyzer.py
+----------------------------------------
+
+🔧 Imports:
+  import pandas as pd
+  import numpy as np
+  from datetime import datetime, timedelta
+  import re
+
+🏗️ Classes and Methods:
+  Class: TimeBasedAnalyzer
+    └─ __init__()
+    └─ analyze_time_based_question()
+    └─ handle_period_performance()
+    └─ handle_weekly_trend_analysis()
+    └─ handle_monthly_leaders()
+    └─ handle_year_to_date_analysis()
+    └─ handle_long_term_stability()
+    └─ is_time_based_question()
+    └─ get_examples()
+    └─ get_keywords()
+    └─ get_patterns()
+    └─ get_method_patterns()
+
+📄 utils.py
+----------------------------------------
+
+🔧 Imports:
+  import re
+
+⚡ Functions:
+  Function: normalize_turkish_text()
+  Function: extract_company_from_fund_name()
+
+📄 analysis\ai_analysis.py
+----------------------------------------
+
+🔧 Imports:
+  import pandas as pd
+  import numpy as np
+  from typing import Dict, List
+  import logging
+  import requests
+  from datetime import datetime
+  from database.connection import DatabaseManager
+  from config.config import Config
+  from openai import OpenAI
+
+🏗️ Classes and Methods:
+  Class: AIAnalyzer
+    └─ __init__()
+    └─ _setup_openai()
+    └─ _check_ollama_connection()
+    └─ query_openai()
+    └─ query_ollama()
+    └─ analyze_fund_with_ai()
+    └─ _prepare_fund_summary()
+    └─ _create_consensus_analysis()
+    └─ generate_market_sentiment()
+    └─ predict_fund_performance()
+    └─ get_ai_status()
+
+📄 analysis\coordinator.py
+----------------------------------------
+
+🔧 Imports:
+  import pandas as pd
+  import numpy as np
+  from typing import Dict, List
+  import logging
+  from datetime import datetime
+  import json
+  from database.connection import DatabaseManager
+  from config.config import Config
+  from analysis.performance import PerformanceAnalyzer
+  from analysis.technical import TechnicalAnalyzer
+  ... and 4 more imports
+
+🏗️ Classes and Methods:
+  Class: AnalysisCoordinator
+    └─ __init__()
+    └─ comprehensive_fund_analysis()
+    └─ multi_fund_comparison()
+    └─ daily_market_analysis()
+    └─ generate_investment_report()
+    └─ _calculate_investment_score()
+    └─ _create_overall_rankings()
+    └─ _create_daily_highlights()
+    └─ _generate_ai_investment_report()
+    └─ _create_executive_summary()
+    └─ _create_risk_assessment()
+    └─ _create_actionable_recommendations()
+    └─ save_analysis_results()
+    └─ json_serializer()
+
+📄 analysis\hybrid_fund_selector.py
+----------------------------------------
+
+🔧 Imports:
+  import pandas as pd
+  import numpy as np
+  from typing import Dict, List, Tuple, Optional
+  import logging
+  import random
+  from datetime import datetime
+  from concurrent.futures import ThreadPoolExecutor, as_completed
+  import time
+  from database.connection import DatabaseManager
+  from config.config import Config
+
+🏗️ Classes and Methods:
+  Class: HybridFundSelector
+    └─ __init__()
+    └─ load_funds_hybrid()
+    └─ _get_top_funds_by_size()
+    └─ _stratified_sampling()
+    └─ _check_funds_activity_parallel()
+    └─ check_single_fund()
+    └─ _select_analysis_funds()
+  Class: HighPerformanceFundAnalyzer
+    └─ __init__()
+    └─ analyze_all_funds_optimized()
+    └─ _bulk_fetch_fund_data()
+    └─ _vectorized_calculations()
+    └─ _parallel_detailed_analysis()
+    └─ analyze_single_fund()
+    └─ _calculate_2025_score_optimized()
+    └─ _get_score_category()
+    └─ _get_recommendation()
+    └─ _combine_results()
+
+⚡ Functions:
+  Function: print_optimization_guide()
+  Function: integrate_hybrid_system()
+
+📄 analysis\monte_carlo.py
+----------------------------------------
+
+🔧 Imports:
+  import pandas as pd
+  import numpy as np
+  from typing import Dict, List
+  import logging
+  from scipy import stats
+  from database.connection import DatabaseManager
+  from config.config import Config
+
+🏗️ Classes and Methods:
+  Class: MonteCarloAnalyzer
+    └─ __init__()
+    └─ simulate_price_paths()
+    └─ geometric_brownian_motion()
+    └─ calculate_var_cvar()
+    └─ stress_testing()
+    └─ portfolio_monte_carlo()
+    └─ efficient_frontier_monte_carlo()
+    └─ black_swan_analysis()
+    └─ tail_risk_analysis()
+    └─ fit_gumbel_distribution()
+    └─ fit_weibull_distribution()
+  Class: RiskAnalyzer
+    └─ __init__()
+    └─ calculate_correlation_analysis()
+    └─ _calculate_diversification_ratio()
+    └─ comprehensive_risk_analysis()
+    └─ _calculate_risk_score()
+    └─ _get_risk_category()
+
+📄 analysis\performance.py
+----------------------------------------
+
+🔧 Imports:
+  import pandas as pd
+  import numpy as np
+  from typing import Dict, List
+  import logging
+  from datetime import datetime
+  from scipy import stats
+  from database.connection import DatabaseManager
+  from config.config import Config
+
+🏗️ Classes and Methods:
+  Class: PerformanceAnalyzer
+    └─ __init__()
+    └─ calculate_returns()
+    └─ calculate_cumulative_returns()
+    └─ calculate_basic_metrics()
+    └─ calculate_drawdown()
+    └─ calculate_var()
+    └─ calculate_advanced_ratios()
+    └─ analyze_fund_performance()
+    └─ compare_funds_performance()
+
+📄 analysis\portfolio_optimization.py
+----------------------------------------
+
+🔧 Imports:
+  import pandas as pd
+  import numpy as np
+  from typing import Dict, List, Tuple
+  import logging
+  from scipy.optimize import minimize
+  from scipy import stats
+  import cvxpy as cp
+  from database.connection import DatabaseManager
+  from config.config import Config
+
+🏗️ Classes and Methods:
+  Class: PortfolioOptimizer
+    └─ __init__()
+    └─ get_fund_returns_matrix()
+    └─ calculate_portfolio_metrics()
+    └─ optimize_max_sharpe()
+    └─ negative_sharpe()
+    └─ optimize_min_volatility()
+    └─ portfolio_variance()
+    └─ generate_efficient_frontier()
+    └─ _calculate_cal()
+    └─ risk_parity_optimization()
+    └─ risk_parity_objective()
+    └─ black_litterman_optimization()
+    └─ negative_sharpe_bl()
+    └─ _process_views()
+    └─ cvar_optimization()
+    └─ robust_optimization()
+    └─ multi_objective_optimization()
+    └─ multi_objective_function()
+    └─ comprehensive_portfolio_analysis()
+    └─ _select_best_portfolio()
+
+📄 analysis\technical.py
+----------------------------------------
+
+🔧 Imports:
+  import pandas as pd
+  import numpy as np
+  from typing import Dict, List
+  import logging
+  from database.connection import DatabaseManager
+  from config.config import Config
+
+🏗️ Classes and Methods:
+  Class: TechnicalAnalyzer
+    └─ __init__()
+    └─ calculate_moving_averages()
+    └─ calculate_rsi()
+    └─ calculate_macd()
+    └─ calculate_bollinger_bands()
+    └─ calculate_stochastic()
+    └─ calculate_ichimoku()
+    └─ calculate_atr()
+    └─ calculate_williams_r()
+    └─ calculate_cci()
+    └─ detect_support_resistance()
+    └─ generate_trading_signals()
+    └─ calculate_momentum_indicators()
+    └─ analyze_fund_technical()
+    └─ _analyze_trend()
+    └─ batch_technical_analysis()
+    └─ _create_technical_summary()
+
+📄 config\config.py
+----------------------------------------
+
+🔧 Imports:
+  import os
+  from dotenv import load_dotenv
+  from dataclasses import dataclass
+  from typing import Dict, Any
+  import json
+
+🏗️ Classes and Methods:
+  Class: DatabaseConfig
+    └─ connection_string()
+  Class: AIConfig
+  Class: AnalysisConfig
+    └─ __post_init__()
+  Class: Config
+    └─ __init__()
+    └─ save_to_json()
+
+📄 config\multi_handler_config.py
+----------------------------------------
+
+📄 database\connection.py
+----------------------------------------
+
+🔧 Imports:
+  from sqlalchemy import create_engine, text
+  from sqlalchemy.orm import sessionmaker, declarative_base
+  from sqlalchemy.pool import QueuePool
+  import pandas as pd
+  from typing import Optional, Dict, List
+  import logging
+  from config.config import Config
+
+🏗️ Classes and Methods:
+  Class: DatabaseManager
+    └─ __init__()
+    └─ _initialize_connection()
+    └─ execute_query()
+    └─ get_fund_data()
+    └─ get_all_fund_codes()
+    └─ get_fund_price_history()
+    └─ get_fund_details()
+    └─ get_all_fund_details()
+    └─ get_funds_with_details()
+    └─ get_fund_full_history_with_details()
+    └─ get_fund_descriptions()
+
+📄 tests\test_analysis.py
+----------------------------------------
+
+🔧 Imports:
+  import unittest
+  import sys
+  import os
+  from config.config import Config
+  from analysis.coordinator import AnalysisCoordinator
+  import argparse
+
+🏗️ Classes and Methods:
+  Class: TestAnalysisFramework
+    └─ setUp()
+    └─ test_database_connection()
+    └─ test_single_fund_analysis()
+    └─ test_multi_fund_comparison()
+    └─ test_performance_analysis()
+    └─ test_technical_analysis()
+
+⚡ Functions:
+  Function: run_comprehensive_test()
+
+============================================================
+PROJECT STATISTICS
+============================================================
+
+Total Files: 50
+Python Files: 42
+Total Python Lines: 23,693

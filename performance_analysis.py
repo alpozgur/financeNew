@@ -153,11 +153,19 @@ class PerformanceAnalyzerMain:
             response += f"{fcode}: Volatilite: %{vol:.2f}\n"
         return response
     
+# performance_analysis.py - handle_analysis_question_dual DÜZELTME
+
     def handle_analysis_question_dual(self, question):
-        """Tek fon analizi - Risk kontrolü ile"""
+        """Tek fon analizi - Risk kontrolü ile - DÜZELTME"""
         words = question.upper().split()
         fund_code = None
 
+        # Risk değişkenlerini BAŞTAN tanımla
+        is_safe = True
+        risk_assessment = None
+        risk_warning = ""
+
+        # Fon kodu bulma
         for word in words:
             if len(word) == 3 and word.isalpha():
                 if word.upper() in [x.upper() for x in self.active_funds]:
@@ -166,10 +174,17 @@ class PerformanceAnalyzerMain:
         
         if fund_code:
             # ✅ RİSK KONTROLÜ
-            is_safe, risk_assessment, risk_warning = self._check_fund_risk(fund_code)
+            try:
+                is_safe, risk_assessment, risk_warning = self._check_fund_risk(fund_code)
+            except Exception as e:
+                print(f"Risk kontrolü hatası: {e}")
+                # Hata durumunda default değerler
+                is_safe = True
+                risk_assessment = None
+                risk_warning = ""
             
             # Extreme risk durumunda özel yanıt
-            if not is_safe and risk_assessment and risk_assessment['risk_level'] == 'EXTREME':
+            if not is_safe and risk_assessment and risk_assessment.get('risk_level') == 'EXTREME':
                 response = f"\n⛔ {fund_code} FONU RİSK UYARISI\n"
                 response += f"{'='*40}\n"
                 response += risk_warning
@@ -184,7 +199,16 @@ class PerformanceAnalyzerMain:
                 if len(word) == 3 and word.isalpha():
                     if word.upper() in all_funds:
                         fund_code = word.upper()
+                        # Yeni fon için de risk kontrolü yap
+                        try:
+                            is_safe, risk_assessment, risk_warning = self._check_fund_risk(fund_code)
+                        except Exception as e:
+                            print(f"Risk kontrolü hatası (tüm fonlar): {e}")
+                            is_safe = True
+                            risk_assessment = None
+                            risk_warning = ""
                         break
+        
         if not fund_code:
             return f"❌ Geçerli bir fon kodu bulunamadı. Örnek: 'AKB fonunu analiz et'\nMevcut fonlar: {', '.join(self.active_funds[:10])}..."
 
@@ -227,12 +251,12 @@ class PerformanceAnalyzerMain:
             response += f"   Sharpe Oranı: {sharpe:.3f}\n"
             response += f"   Kazanma Oranı: %{win_rate:.1f}\n\n"
 
-            # ✅ RİSK DURUMU RAPORU
+            # ✅ RİSK DURUMU RAPORU - risk_assessment kontrolü
             if risk_assessment:
                 response += f"🛡️ RİSK DEĞERLENDİRMESİ:\n"
-                response += f"   Risk Seviyesi: {risk_assessment['risk_level']}\n"
+                response += f"   Risk Seviyesi: {risk_assessment.get('risk_level', 'Bilinmiyor')}\n"
                 response += f"   Genel Değerlendirme: {'✅ Güvenli' if is_safe else '⚠️ Riskli'}\n"
-                if risk_assessment['risk_factors']:
+                if risk_assessment.get('risk_factors'):
                     response += f"   Risk Faktörleri: {len(risk_assessment['risk_factors'])} adet\n"
                 response += f"\n"
 
@@ -247,7 +271,7 @@ class PerformanceAnalyzerMain:
             Sharpe Oranı: {sharpe:.3f}
             Kazanma Oranı: %{win_rate:.1f}
             Veri Periyodu: {len(prices)} gün
-            Risk Seviyesi: {risk_assessment['risk_level'] if risk_assessment else 'Bilinmiyor'}
+            Risk Seviyesi: {risk_assessment.get('risk_level', 'Bilinmiyor') if risk_assessment else 'Bilinmiyor'}
 
             Yukarıdaki fon bilgileriyle, bu fonun risk ve getiri profilini, avantaj/dezavantajlarını ve hangi yatırımcıya uygun olabileceğini 150 kelimeyi aşmadan açıklayıp özetle.
             """
@@ -268,7 +292,7 @@ class PerformanceAnalyzerMain:
                 response += "⚠️ AI sistemi şu anda kullanılamıyor.\n"
 
             # ✅ Risk uyarısını en sona ekle
-            if risk_warning and risk_assessment and risk_assessment['risk_level'] in ['HIGH', 'MEDIUM']:
+            if risk_warning and risk_assessment and risk_assessment.get('risk_level') in ['HIGH', 'MEDIUM']:
                 response += f"\n{risk_warning}"
 
             response += f"\n✅ Analiz tamamlandı: {datetime.now().strftime('%H:%M:%S')}\n"
@@ -276,8 +300,10 @@ class PerformanceAnalyzerMain:
             return response
 
         except Exception as e:
-            return f"❌ Analiz hatası: {e}"
-    
+            import traceback
+            print(f"Analiz hatası detayı:")
+            traceback.print_exc()
+            return f"❌ Analiz hatası: {e}"    
     def handle_2025_recommendation_dual(self, question):
         """2025 fon önerisi - Risk kontrolü ile"""
         print("🎯 2025 Fund Recommendation Analysis - Dual AI...")
@@ -532,9 +558,9 @@ class PerformanceAnalyzerMain:
         except Exception as e:
             return f"❌ Karşılaştırma hatası: {e}"
     
-    def handle_top_gainers(self, question, count=10):
+    def handle_top_gainers(self, question, count=10, risk_context=None):
         """En çok kazandıran fonların listesi - Risk kontrolü ile"""
-        print(f"[PERF] handle_top_gainers called with question='{question}', count={count}")
+        print(f"[PERF] handle_top_gainers called with question='{question}', count={count}, risk_context: {risk_context is not None}")
         
         # Zaman periyodunu belirle
         if 'son 1 ay' in question.lower() or '1 ay' in question.lower():
