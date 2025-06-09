@@ -501,7 +501,7 @@ class CurrencyInflationAnalyzer:
         except Exception as e:
             return f"❌ Enflasyon analizi hatası: {str(e)}"
 
-    def analyze_currency_funds(self, currency_type, question):
+    def analyze_currency_funds(self, question, currency_type='all'):
         """Belirli döviz/enflasyon tipinde fonları analiz et - Risk Assessment dahil"""
         print(f"💱 {currency_type.upper()} fonları analiz ediliyor...")
         

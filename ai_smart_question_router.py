@@ -216,8 +216,11 @@ class AISmartQuestionRouter:
         - 3 harfli FON KODLARI (AKB, TYH vb) tespit et, "FON_KODU" placeholder kullanma
         - "En güvenli X fon" → handle_safest_funds_sql_fast
         - "[FON_KODU] analiz et" → handle_analysis_question_dual
-        - Yukarıdaki method mapping örneklerine uy
-        
+        - "Enflasyon X olursa" → scenario_analyzer.analyze_inflation_scenario (ÖNEMLİ!)
+        - "olursa" kelimesi geçen sorular genelde scenario_analyzer kullanır
+        - Yukarıdaki method mapping örneklerine kesinlikle uy
+        - "piyasa durumu" soruları için performance_analyzer.handle_top_gainers kullan
+        - "kapsamlı" kelimesi varsa multi-handler olarak işaretle
         FORMAT:
         {{
             "routes": [
@@ -563,19 +566,20 @@ class AISmartQuestionRouter:
             },
             'currency_inflation_analyzer': {
                 'description': 'Döviz, enflasyon, dolar, euro fonları analizi',
+                'keywords': ['dolar', 'euro', 'döviz', 'enflasyon', 'kur', 'usd', 'eur'],
                 'methods': {
                     'analyze_currency_funds': 'Döviz fonlarını analiz eder',
                     'analyze_inflation_funds_mv': 'Enflasyon korumalı fonları bulur',
-                    'analyze_currency_inflation_question': 'Genel döviz/enflasyon analizi'
+                    'analyze_currency_inflation_question': 'Genel döviz/enflasyon sorusu analizi'
                 },
                 'execution_order': 30
             },
             'scenario_analyzer': {
                 'description': 'What-if senaryoları, kriz, enflasyon durumları',
+                'keywords': ['eğer', 'olursa', 'senaryo', 'kriz', 'durumunda', 'enflasyon olursa'],
                 'methods': {
-                    'analyze_scenario_question': 'Senaryo bazlı analiz',
-                    'analyze_inflation_scenario': 'Enflasyon senaryosu',
-                    'analyze_stock_crash_scenario': 'Borsa çöküşü senaryosu'
+                    'analyze_stock_crash_scenario': 'Borsa çöküşü senaryosu',
+                    'analyze_scenario_question': 'Genel senaryo analizi'
                 },
                 'execution_order': 40
             },
@@ -742,6 +746,29 @@ class AISmartQuestionRouter:
         
         # ÖNCELİK 1: Özel pattern'ler (en spesifik)
         special_patterns = {
+            r'piyasa.*?durum.*?kapsamlı|kapsamlı.*?piyasa': {
+                'handler': 'performance_analyzer',
+                'method': 'handle_top_gainers',
+                'priority': 100,
+                'is_multi_handler': True  # Multi-handler tetikle
+            },
+            # Kişisel finans - DAHA SPESIFIK
+            r'\d+\s*yaşında.*?emeklilik': {
+                'handler': 'personal_finance_analyzer',
+                'method': 'handle_retirement_planning',
+                'priority': 100
+            },
+            r'emekliliğe.*?\d+\s*yıl': {
+                'handler': 'personal_finance_analyzer',
+                'method': 'handle_retirement_planning',
+                'priority': 100
+            },
+            # Enflasyon senaryosu - YENİ EKLEME
+            r'enflasyon.*?\d+.*?olursa': {
+                'handler': 'scenario_analyzer',
+                'method': 'analyze_scenario_question',
+                'priority': 100
+            },
             # Beta + Sharpe kombinasyonu
             r'beta.*?sharpe|sharpe.*?beta': {
                 'handler': 'advanced_metrics_analyzer',

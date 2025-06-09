@@ -751,47 +751,66 @@ class AdvancedMetricsAnalyzer:
         # SQL ile hızlı Sharpe hesaplama ve risk kontrolü
         try:
             query = f"""
-            WITH fund_returns AS (
-                SELECT 
-                    f.fcode,
-                    AVG(f.price) as avg_price,
-                    STDDEV(f.price / LAG(f.price) OVER (PARTITION BY f.fcode ORDER BY f.pdate) - 1) as volatility,
-                    (MAX(f.price) - MIN(f.price)) / MIN(f.price) as total_return,
-                    COUNT(*) as data_points,
-                    MAX(f.price) as current_price,
-                    MAX(f.investorcount) as investors
-                FROM tefasfunds f
-                WHERE f.pdate >= CURRENT_DATE - INTERVAL '252 days'
-                AND f.investorcount > 100
-                AND f.price > 0
-                GROUP BY f.fcode
-                HAVING COUNT(*) >= 60
-                AND MIN(f.price) > 0
-            ),
-            sharpe_calc AS (
+            WITH price_data AS (
                 SELECT 
                     fcode,
-                    current_price,
-                    investors,
-                    total_return * 252 / data_points as annualized_return,
-                    volatility * SQRT(252) as annual_volatility,
+                    pdate,
+                    price,
+                    LAG(price) OVER (PARTITION BY fcode ORDER BY pdate) as prev_price
+                FROM tefasfunds
+                WHERE pdate >= CURRENT_DATE - INTERVAL '252 days'
+                AND investorcount > 100
+                AND price > 0
+            ),
+            returns_calc AS (
+                SELECT 
+                    fcode,
                     CASE 
-                        WHEN volatility > 0 AND volatility IS NOT NULL THEN
-                            ((total_return * 252 / data_points) - 0.15) / (volatility * SQRT(252))
+                        WHEN prev_price > 0 THEN (price / prev_price - 1)
+                        ELSE NULL
+                    END as daily_return
+                FROM price_data
+                WHERE prev_price IS NOT NULL
+            ),
+            fund_metrics AS (
+                SELECT 
+                    r.fcode,
+                    STDDEV(r.daily_return) as volatility,
+                    AVG(r.daily_return) as avg_daily_return,
+                    COUNT(*) as data_points
+                FROM returns_calc r
+                WHERE r.daily_return IS NOT NULL
+                GROUP BY r.fcode
+                HAVING COUNT(*) >= 60
+            ),
+            final_calc AS (
+                SELECT 
+                    fm.fcode,
+                    p.price as current_price,
+                    p.investorcount as investors,
+                    fm.avg_daily_return * 252 * 100 as annualized_return,
+                    fm.volatility * SQRT(252) * 100 as annual_volatility,
+                    CASE 
+                        WHEN fm.volatility > 0 THEN
+                            ((fm.avg_daily_return * 252) - 0.15) / (fm.volatility * SQRT(252))
                         ELSE 0
                     END as sharpe_ratio
-                FROM fund_returns
-                WHERE volatility > 0
+                FROM fund_metrics fm
+                JOIN (
+                    SELECT DISTINCT ON (fcode) fcode, price, investorcount
+                    FROM tefasfunds
+                    WHERE pdate >= CURRENT_DATE - INTERVAL '7 days'
+                    ORDER BY fcode, pdate DESC
+                ) p ON fm.fcode = p.fcode
             )
             SELECT fcode, current_price, investors, annualized_return, annual_volatility, sharpe_ratio
-            FROM sharpe_calc
+            FROM final_calc
             WHERE sharpe_ratio > {sharpe_threshold}
             ORDER BY sharpe_ratio DESC
             LIMIT 30
             """
             
-            result = self.coordinator.db.execute_query(query)
-            
+            result = self.coordinator.db.execute_query(query)            
             if not result.empty:
                 for _, row in result.iterrows():
                     fcode = row['fcode']
@@ -920,7 +939,7 @@ class AdvancedMetricsAnalyzer:
     def _get_fund_risk_data(self, fcode):
         """Fonun risk verilerini MV'den çek"""
         try:
-            query = """
+            query = f"""
             SELECT 
                 price_vs_sma20,
                 rsi_14,
@@ -928,10 +947,10 @@ class AdvancedMetricsAnalyzer:
                 days_since_last_trade,
                 investorcount
             FROM mv_fund_technical_indicators
-            WHERE fcode = %s
+            WHERE fcode = '{fcode}'
             """
             
-            result = self.coordinator.db.execute_query(query, [fcode])
+            result = self.coordinator.db.execute_query(query)
             
             if not result.empty:
                 row = result.iloc[0]
@@ -950,7 +969,6 @@ class AdvancedMetricsAnalyzer:
         except Exception as e:
             print(f"Risk veri hatası ({fcode}): {e}")
             return None
-
     def _get_risk_indicator(self, risk_level):
         """Risk seviyesi göstergesi"""
         indicators = {

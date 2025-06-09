@@ -234,8 +234,13 @@ class DualAITefasQA:
             # Her method için özel parametre mapping
             if method_name == 'handle_safest_funds_sql_fast':
                 if 'count' in sig.parameters:
-                    params['count'] = route.context.get('requested_count', 10)
-                    
+                    # 'X' veya string değerleri kontrol et
+                    count = route.context.get('requested_count', 10)
+                    if isinstance(count, str) and not count.isdigit():
+                        count = 10  # Default değer
+                    else:
+                        count = int(count) if isinstance(count, str) else count
+                    params['count'] = count                    
             elif method_name == 'handle_top_gainers':
                 if 'question' in sig.parameters:
                     params['question'] = question
@@ -386,7 +391,7 @@ class DualAITefasQA:
         """Handler instance'ını döndür"""
         handler_map = {
             'performance_analyzer': self.performanceMain,
-            'scenario_analyzer': self.scenario_analyzer,
+            'scenario_analyzer': self.scenario_analyzer,  # BU SATIR EKSİK OLABİLİR
             'personal_finance_analyzer': self.personal_analyzer,
             'technical_analyzer': self.technical_analyzer,
             'currency_inflation_analyzer': self.currency_analyzer,
@@ -396,11 +401,9 @@ class DualAITefasQA:
             'macroeconomic_analyzer': self.macro_analyzer,
             'advanced_metrics_analyzer': self.advanced_metrics_analyzer,
             'thematic_analyzer': self.thematic_analyzer,
-            'fundamental_analyzer': self.fundamental_analyzer,
-            'predictive_analyzer': self.predictive_analyzer
+            'fundamental_analyzer': self.fundamental_analyzer
         }
-        return handler_map.get(handler_name)
-    
+        return handler_map.get(handler_name)    
     def _legacy_single_handler(self, question: str, question_lower: str) -> str:
         """Eski tek handler sistemi (fallback)"""
         # Mevcut _legacy_routing metodunuzu buraya taşıyın
@@ -1037,6 +1040,7 @@ class DualAITefasQA:
                         "Sen piyasa analisti uzmanısın."
                     )
                     response += ai_market_analysis
+                    return response
                 except Exception as e:
                     response += "❌ AI piyasa analizi alınamadı\n"                
 
