@@ -245,23 +245,36 @@ class AISmartQuestionRouter:
         """Sorudan context bilgilerini çıkar"""
         context = {}
         question_lower = question.lower()
+        # Fund code extraction - DÜZELTME
+        words = question.upper().split()
+        fund_code = None
         
-        # 1. Sayılar ve count
-        numbers = re.findall(r'\d+', question)
+        # 3 harfli ve alfabetik kelimeleri kontrol et
+        for word in words:
+            if len(word) == 3 and word.isalpha():
+                # "FON", "ILE", "VE" gibi yaygın kelimeleri hariç tut
+                if word not in ['FON', 'ILE', 'VE', 'BIR', 'IKI', 'UCU']:
+                    fund_code = word
+                    break
+        
+        if fund_code:
+            context['fund_code'] = fund_code
+        
+        # Sayılar - DÜZELTME
+        numbers = re.findall(r'(\d+)', question)
         if numbers:
             # "X fon" pattern
-            count_match = re.search(r'(\d+)\s*fon', question_lower)
-            if count_match:
-                context['requested_count'] = int(count_match.group(1))
+            count_pattern = re.search(r'(\d+)\s*(fon|tane|adet)', question.lower())
+            if count_pattern:
+                context['requested_count'] = int(count_pattern.group(1))        
             else:
                 # En büyük sayıyı al
                 context['requested_count'] = max(int(n) for n in numbers)
         
-        # 2. Fon kodu
-        fund_codes = re.findall(r'\b[A-Z]{3}\b', question)
-        if fund_codes:
-            context['fund_code'] = fund_codes[0]
-        
+        # # 2. Fon kodu
+        # fund_codes = re.findall(r'\b[A-Z]{3}\b', question)
+        # if fund_codes:
+        #     context['fund_code'] = fund_codes[0]
         # 3. Zaman periyodu
         time_patterns = [
             (r'son\s*(\d+)\s*gün', lambda m: {'days': int(m.group(1))}),

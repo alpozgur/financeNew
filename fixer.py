@@ -1,41 +1,44 @@
-# test_fixed_routing.py - Düzeltmeleri test et
-
+# test_ai_routing.py
 from interactive_qa_dual_ai import DualAITefasQA
 
-def test_fixed_routing():
-    """Düzeltilmiş routing'i test et"""
+def test_routing():
     qa = DualAITefasQA()
     
-    # Sorunlu test case'leri
     test_cases = [
-        "AKB fonunu analiz et",  # Fund analysis
-        "TYH AI pattern analizi",  # AI pattern
-        "Beta katsayısı 1'den düşük fonlar",  # Beta analysis
+        # Basit sorular
+        "En güvenli 10 fon",
+        "AKB fonunu analiz et",
+        
+        # Multi-handler tetikleyiciler
+        "AKB fonunun detaylı analizi",
+        "Piyasa durumu hakkında kapsamlı bilgi",
+        
+        # Karmaşık sorular
+        "35 yaşındayım, emekliliğe 25 yıl var, 100 bin TL ile nasıl yatırım yapmalıyım?",
+        "Enflasyon %50 olursa hangi fonlar güvenli?",
+        
+        # Teknik
+        "Beta katsayısı 1'den düşük ve Sharpe oranı 0.5'ten yüksek fonlar",
+        "AI pattern analizi ile TYH fonunu incele"
     ]
     
     for question in test_cases:
         print(f"\n{'='*80}")
-        print(f"TEST: {question}")
+        print(f"SORU: {question}")
         print(f"{'='*80}")
         
-        # Manuel routing test
+        # Routing sonuçları
         routes = qa.ai_router.route_question_multi(question)
-        if routes:
-            print("ROUTING SONUCU:")
-            for r in routes:
-                print(f"  ✓ {r.handler}.{r.method}")
-                print(f"    Context: {r.context}")
-                print(f"    Reasoning: {r.reasoning}")
-        else:
-            print("❌ Routing başarısız!")
+        print("\nROUTING:")
+        for r in routes:
+            print(f"  {r.handler}.{r.method} (güven: {r.confidence:.2f})")
+            print(f"    Context: {r.context}")
+            print(f"    Sebep: {r.reasoning}")
         
-        # Gerçek cevap
-        try:
-            answer = qa.answer_question(question)
-            print(f"\nCEVAP (ilk 300 karakter):")
-            print(answer[:300] + "..." if len(answer) > 300 else answer)
-        except Exception as e:
-            print(f"❌ HATA: {e}")
+        # Cevap
+        print("\nCEVAP:")
+        answer = qa.answer_question(question)
+        print(answer[:500] + "..." if len(answer) > 500 else answer)
 
 if __name__ == "__main__":
-    test_fixed_routing()
+    test_routing()
