@@ -7,10 +7,10 @@ def test_routing():
     test_cases = [
         # Basit sorular
         "En güvenli 10 fon",
-        "AKB fonunu analiz et",
+        "MPP fonunu analiz et",
         
         # Multi-handler tetikleyiciler
-        "AKB fonunun detaylı analizi",
+        "MPP fonunun detaylı analizi",
         "Piyasa durumu hakkında kapsamlı bilgi",
         
         # Karmaşık sorular

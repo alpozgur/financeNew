@@ -209,25 +209,86 @@ class DualAITefasQA:
 
     # 4. YENİ METODLAR EKLE
     def _execute_single_handler_ai(self, route: AIRouteMatch, question: str) -> Optional[str]:
-        """Tek handler execution - AI routing için"""
-        handler = self._get_handler_instance(route.handler)
+        """Tek handler'ı çalıştır - DÜZELTME"""
+        handler_name = route.handler
+        method_name = route.method
+        
+        # Handler'ı bul
+        handler = self._get_handler_instance(handler_name)
         if not handler:
-            print(f"❌ Handler bulunamadı: {route.handler}")
+            print(f"❌ Handler bulunamadı: {handler_name}")
+            return None
+        
+        # Method'u bul
+        method = getattr(handler, method_name, None)
+        if not method:
+            print(f"❌ Method bulunamadı: {handler_name}.{method_name}")
             return None
         
         try:
-            method = getattr(handler, route.method, None)
-            if not method:
-                print(f"❌ Method bulunamadı: {route.handler}.{route.method}")
-                return None
-            
             # Parametreleri hazırla
-            params = self._prepare_method_params_ai(method, route.context, question)
+            import inspect
+            sig = inspect.signature(method)
+            params = {}
             
-            print(f"✅ Executing: {route.handler}.{route.method}")
+            # Her method için özel parametre mapping
+            if method_name == 'handle_safest_funds_sql_fast':
+                if 'count' in sig.parameters:
+                    params['count'] = route.context.get('requested_count', 10)
+                    
+            elif method_name == 'handle_top_gainers':
+                if 'question' in sig.parameters:
+                    params['question'] = question
+                if 'count' in sig.parameters:
+                    params['count'] = route.context.get('requested_count', 10)
+                if 'risk_context' in sig.parameters:
+                    params['risk_context'] = False
+                    
+            elif method_name == 'analyze_inflation_scenario':
+                if 'question' in sig.parameters:
+                    params['question'] = question
+                    
+            elif method_name == 'handle_combined_metrics_analysis':
+                if 'question' in sig.parameters:
+                    params['question'] = question
+                    
+            elif method_name == 'handle_ai_pattern_analysis':
+                if 'question' in sig.parameters:
+                    # Fund code varsa ekle
+                    fund_code = route.context.get('fund_code')
+                    if fund_code:
+                        params['question'] = f"{fund_code} {question}"
+                    else:
+                        params['question'] = question                    
+            elif method_name == 'handle_beta_analysis':
+                if 'question' in sig.parameters:
+                    params['question'] = question
+                    
+            elif method_name == 'handle_analysis_question_dual':
+                if 'question' in sig.parameters:
+                    # Fund code'u question'a ekle
+                    fund_code = route.context.get('fund_code')
+                    if fund_code and fund_code not in question:
+                        params['question'] = f"{fund_code} {question}"
+                    else:
+                        params['question'] = question
+                        
+            elif method_name == 'analyze_currency_funds':
+                # Bu method currency_type parametresi istiyor
+                if 'currency_type' in sig.parameters:
+                    params['currency_type'] = route.context.get('currency', 'USD')
+                if 'top_n' in sig.parameters:
+                    params['top_n'] = route.context.get('requested_count', 10)
+                    
+            else:
+                # Genel durum
+                if 'question' in sig.parameters:
+                    params['question'] = question
+            
+            print(f"✅ Executing: {handler_name}.{method_name}")
             print(f"   Parameters: {list(params.keys())}")
             
-            # Execute
+            # Handler'ı çalıştır
             result = method(**params)
             return result
             
@@ -236,7 +297,6 @@ class DualAITefasQA:
             import traceback
             traceback.print_exc()
             return None
-
     def _execute_multi_handlers_ai(self, routes: List[AIRouteMatch], question: str) -> List[Dict]:
         """Multi handler execution - AI routing için"""
         responses = []

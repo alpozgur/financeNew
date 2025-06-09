@@ -34,35 +34,52 @@ class DatabaseManager:
 
         # with self.engine.connect()
 
+    def format_query_params(self, query: str, params=None) -> tuple:
+        """
+        Query ve parametreleri PostgreSQL formatına çevir
+        
+        Returns:
+            tuple: (formatted_query, formatted_params)
+        """
+        if not params:
+            return query, None
+        
+        # Eğer string formatting kullanılıyorsa, güvenli bir şekilde çevir
+        if isinstance(params, dict):
+            # :param → %(param)s dönüşümü
+            formatted_query = query
+            for key in params.keys():
+                formatted_query = formatted_query.replace(f':{key}', f'%({key})s')
+            return formatted_query, params
+            
+        elif isinstance(params, (list, tuple)):
+            # Positional parametreler - PostgreSQL array syntax kullan
+            formatted_query = query
+            placeholders = []
+            for i, _ in enumerate(params):
+                placeholders.append(f'${i+1}')
+            
+            # %s'leri $1, $2, ... ile değiştir
+            for placeholder in placeholders:
+                formatted_query = formatted_query.replace('%s', placeholder, 1)
+                
+            return formatted_query, params
+        
+        return query, params
 
+    # Kullanım:
     def execute_query(self, query: str, params=None) -> pd.DataFrame:
-        """SQL sorgusunu çalıştır - PARAMETRE DESTEĞİ"""
+        """SQL sorgusunu çalıştır"""
+        formatted_query, formatted_params = self.format_query_params(query, params)
+        
         try:
             with self.engine.connect() as conn:
-                if params:
-                    # Parametreli sorgu
-                    return pd.read_sql_query(query, conn, params=params)
+                if formatted_params:
+                    return pd.read_sql_query(formatted_query, conn, params=formatted_params)
                 else:
-                    # Parametresiz sorgu
-                    return pd.read_sql_query(query, conn)
+                    return pd.read_sql_query(formatted_query, conn)
         except Exception as e:
-            # Hata durumunda loglama
             print(f"Query execution error: {e}")
-            
-            # Eğer parametre hatası ise, string formatting dene
-            if params and "List argument must consist only of tuples or dictionaries" in str(e):
-                # Yeniden bağlan ve dene
-                with self.engine.connect() as conn:
-                    if isinstance(params, (list, tuple)) and len(params) == 1:
-                        formatted_query = query.replace('%s', f"'{params[0]}'")
-                        return pd.read_sql_query(formatted_query, conn)
-                    elif isinstance(params, (list, tuple)):
-                        # Birden fazla parametre
-                        formatted_query = query
-                        for param in params:
-                            formatted_query = formatted_query.replace('%s', f"'{param}'", 1)
-                        return pd.read_sql_query(formatted_query, conn)
-            
             raise e
     # --- TEFASFUNDS ---
 
@@ -98,19 +115,18 @@ class DatabaseManager:
         result = self.execute_query(query)
         return result['fcode'].tolist()
 
-    def get_fund_price_history(self, fcode: str, days: int = 252) -> pd.DataFrame:
+    def get_fund_price_history(self, fund_code, days=30):
+        """Fonun fiyat geçmişini al - PostgreSQL format fix"""
         query = """
         SELECT pdate, price, fcode
-        FROM tefasfunds 
-        WHERE fcode = :fcode and investorcount>10
-        ORDER BY pdate DESC 
-        LIMIT :days
+        FROM tefasfunds
+        WHERE fcode = %(fcode)s and investorcount>10
+        ORDER BY pdate DESC
+        LIMIT %(days)s
         """
-        params = {'fcode': fcode, 'days': days}
+        params = {'fcode': fund_code, 'days': days}
         result = self.execute_query(query, params)
-        result['pdate'] = pd.to_datetime(result['pdate'])
-        return result.sort_values('pdate')
-
+        return result
     # --- TEFAS_FUNDDETAILS ---
 
     def get_fund_details(self, fcode: str) -> dict:

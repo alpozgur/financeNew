@@ -34,7 +34,117 @@ class AISmartQuestionRouter:
         
         # Handler bilgileri - AI'ya context sağlamak için
         self.handler_descriptions = self._load_handler_descriptions()
-        
+        # YENİ: Method mapping patterns - AI'ya hangi pattern'de hangi method'u kullanacağını öğret
+        self.method_mapping_patterns = {
+            'performance_analyzer': {
+                # Güvenli/Riskli fon listeleri
+                r'en\s*(güvenli|az\s*riskli)\s*\d*\s*fon': 'handle_safest_funds_sql_fast',
+                r'güvenli\s*fonlar': 'handle_safest_funds_sql_fast',
+                r'en\s*riskli\s*\d*\s*fon': 'handle_riskiest_funds_list',
+                r'riskli\s*fonlar': 'handle_riskiest_funds_list',
+                
+                # Kazandıran/Kaybettiren fonlar
+                r'en\s*(çok\s*)?kazandıran\s*\d*\s*fon': 'handle_top_gainers',
+                r'en\s*(iyi|yüksek)\s*performans': 'handle_top_gainers',
+                r'en\s*(çok\s*)?kaybettiren\s*\d*\s*fon': 'handle_worst_funds_list',
+                r'en\s*kötü\s*performans': 'handle_worst_funds_list',
+                
+                # Tek fon analizi - ÖNEMLİ
+                r'^[A-Z]{3}$': 'handle_analysis_question_dual',  # Sadece fon kodu
+                r'\b[A-Z]{3}\b.*?(analiz|incele|değerlendir|nasıl)': 'handle_analysis_question_dual',
+                r'(analiz\s*et|incele|değerlendir).*?\b[A-Z]{3}\b': 'handle_analysis_question_dual',
+                r'\b[A-Z]{3}\b\s+fonu': 'handle_analysis_question_dual',
+                
+                # Öneriler
+                r'2025.*?(öneri|tavsiye)': 'handle_2025_recommendation_dual',
+                r'öneri.*?2025': 'handle_2025_recommendation_dual',
+                
+                # Karşılaştırma
+                r'\b[A-Z]{3}\b.*?vs.*?\b[A-Z]{3}\b': 'handle_comparison_question',
+                r'karşılaştır': 'handle_comparison_question',
+                
+                # Sharpe/Volatilite
+                r'sharpe\s*oranı.*?yüksek': 'handle_top_sharpe_funds_question',
+                r'volatilite.*?düşük': 'handle_low_volatility_funds_question'
+            },
+            
+            'technical_analyzer': {
+                # MACD
+                r'macd.*?(pozitif|negatif|sinyal)': 'handle_macd_signals_sql',
+                r'macd\s*sinyali': 'handle_macd_signals_sql',
+                
+                # RSI
+                r'rsi.*?(\d+).*?(altında|üstünde)': 'handle_rsi_signals_sql',
+                r'aşırı\s*(satım|alım)': 'handle_rsi_signals_sql',
+                
+                # Bollinger
+                r'bollinger.*?(alt|üst)\s*band': 'handle_bollinger_signals_sql',
+                
+                # AI Pattern - ÖNEMLİ
+                r'ai\s*pattern.*?ile.*?[A-Z]{3}': 'handle_ai_pattern_analysis',
+                r'[A-Z]{3}.*?ai\s*pattern': 'handle_ai_pattern_analysis',
+                r'ai\s*teknik': 'handle_ai_pattern_analysis',
+                r'pattern\s*analiz': 'handle_ai_pattern_analysis',
+                
+                # Genel teknik
+                r'teknik\s*sinyal': 'handle_general_technical_signals_sql'
+            },
+            
+            'currency_inflation_analyzer': {
+                # Enflasyon
+                r'enflasyon.*?korumalı': 'analyze_inflation_funds_mv',
+                r'enflasyon.*?\d+.*?olursa': 'analyze_inflation_scenario',
+                
+                # Döviz
+                r'dolar.*?fonları': 'analyze_currency_funds',
+                r'euro.*?fonları': 'analyze_currency_funds'
+            },
+            
+            'scenario_analyzer': {
+                # Senaryolar
+                r'enflasyon.*?\d+.*?olursa': 'analyze_inflation_scenario',
+                r'enflasyon.*?güvenli': 'analyze_inflation_scenario',
+                r'borsa.*?(düş|çök)': 'analyze_stock_crash_scenario',
+                r'eğer.*?olursa': 'analyze_scenario_question'
+            },
+            
+            'personal_finance_analyzer': {
+                # Emeklilik
+                r'emeklilik.*?plan': 'handle_retirement_planning',
+                r'emekliliğe.*?\d+.*?yıl': 'handle_retirement_planning',
+                r'\d+\s*yaşında.*?emeklilik': 'handle_ai_personalized_planning'
+            },
+            
+            'mathematical_calculator': {
+                # Portföy dağıtımı
+                r'\d+.*?tl.*?dağıt': 'handle_portfolio_distribution',
+                r'portföy.*?dağılım': 'handle_portfolio_distribution',
+                r'\d+.*?fona\s*böl': 'handle_portfolio_distribution'
+            },
+            
+            'portfolio_company_analyzer': {
+                # Şirket analizi
+                r'(iş|ak|garanti|qnb)\s*portföy': 'analyze_company_comprehensive',
+                r'portföy\s*şirket.*?analiz': 'analyze_company_comprehensive'
+            },
+            
+            'advanced_metrics_analyzer': {
+                # Beta - öncelik sırası önemli!
+                r'beta.*?\d.*?(düşük|altında).*?sharpe': 'handle_combined_metrics_analysis',
+                r'sharpe.*?\d.*?(yüksek|üstünde).*?beta': 'handle_combined_metrics_analysis',
+                r'beta.*?katsayısı.*?\d': 'handle_beta_analysis',
+                r'beta.*?(düşük|altında)': 'handle_beta_analysis',
+                
+                # Sharpe
+                r'sharpe.*?oranı.*?\d': 'handle_sharpe_ratio_analysis',
+                r'sharpe.*?(yüksek|üstünde)': 'handle_sharpe_ratio_analysis',
+                
+                # Kombine Beta + Sharpe
+                r'beta.*?sharpe': 'handle_combined_metrics_analysis',  # YENİ
+                r'sharpe.*?beta': 'handle_combined_metrics_analysis'   # YENİ
+            }
+        }
+
         # Multi-handler kuralları
         self.multi_handler_rules = self._load_multi_handler_rules()
         
@@ -75,14 +185,26 @@ class AISmartQuestionRouter:
     def _get_ai_routing(self, question: str) -> Optional[Dict]:
         """AI'dan routing önerisi al"""
         
+        # ÖNCE: Pattern matching ile kesin eşleşmeleri kontrol et
+        pattern_matches = self._check_pattern_matches(question)
+        if pattern_matches:
+            self.logger.info(f"Pattern match found for: {question}")
+            return {"routes": pattern_matches, "pattern_matched": True}
+        
         # Handler bilgilerini JSON formatında hazırla
         handlers_info = json.dumps(self.handler_descriptions, indent=2, ensure_ascii=False)
+        
+        # Method mapping örnekleri
+        mapping_examples = self._prepare_mapping_examples()
         
         prompt = f"""
         Kullanıcı sorusu: "{question}"
 
         Mevcut handler'lar ve yetenekleri:
         {handlers_info}
+        
+        Method mapping örnekleri:
+        {mapping_examples}
 
         GÖREV:
         1. Soruyu analiz et ve en uygun handler(ları) belirle
@@ -91,49 +213,36 @@ class AISmartQuestionRouter:
         4. Güven skorunu belirt (0-1 arası)
 
         ÖZEL KURALLAR:
-        - Eğer soruda 3 harfli büyük FON KODU varsa (örn: AKB, TYH) ve "analiz et", "incele", "nasıl" gibi kelimeler varsa:
-        → handler: "performance_analyzer"
-        → method: "handle_analysis_question_dual"
-        → context: {{"fund_code": "FON_KODU"}}
-
-        - "AI pattern" veya "pattern analizi" varsa:
-        → handler: "technical_analyzer"
-        → method: "handle_ai_pattern_analysis"
+        - 3 harfli FON KODLARI (AKB, TYH vb) tespit et, "FON_KODU" placeholder kullanma
+        - "En güvenli X fon" → handle_safest_funds_sql_fast
+        - "[FON_KODU] analiz et" → handle_analysis_question_dual
+        - Yukarıdaki method mapping örneklerine uy
         
-        - Birden fazla perspektif gerekiyorsa multi-handler kullan
-        - Context'te sayılar, tarihler, para birimleri vb. çıkar
-        - Method adları GERÇEK olmalı (handler_descriptions'tan)
-
-        ÖRNEK FORMAT:
+        FORMAT:
         {{
             "routes": [
                 {{
                     "handler": "performance_analyzer",
-                    "method": "handle_analysis_question_dual",
+                    "method": "handle_safest_funds_sql_fast",
                     "confidence": 0.95,
-                    "reasoning": "AKB fonunun detaylı analizi isteniyor",
-                    "context": {{
-                        "fund_code": "AKB"
-                    }}
+                    "reasoning": "En güvenli 10 fon listesi isteniyor",
+                    "context": {{"requested_count": 10}}
                 }}
-            ],
-            "requires_multi_handler": false,
-            "detected_intent": "fund_analysis"
+            ]
         }}
         """
-
+        
         try:
             response = self.ai_provider.query(
                 prompt,
-                "Sen akıllı bir soru yönlendirme uzmanısın. Soruları doğru handler'lara yönlendiriyorsun."
+                "Sen akıllı bir soru yönlendirme uzmanısın."
             )
             
             return self._parse_ai_response(response)
             
         except Exception as e:
             self.logger.error(f"AI routing error: {e}")
-            return None
-    
+            return None    
     def _parse_ai_response(self, response: str) -> Optional[Dict]:
         """AI yanıtını parse et"""
         try:
@@ -245,22 +354,53 @@ class AISmartQuestionRouter:
         """Sorudan context bilgilerini çıkar"""
         context = {}
         question_lower = question.lower()
-        # Fund code extraction - DÜZELTME
         words = question.upper().split()
-        fund_code = None
         
-        # 3 harfli ve alfabetik kelimeleri kontrol et
-        for word in words:
-            if len(word) == 3 and word.isalpha():
-                # "FON", "ILE", "VE" gibi yaygın kelimeleri hariç tut
-                if word not in ['FON', 'ILE', 'VE', 'BIR', 'IKI', 'UCU']:
-                    fund_code = word
-                    break
+        # Fund code detection - SADECE gerçek fon kodları
+        fund_code = None
+        fund_code_matches = re.findall(r'\b[A-Z]{3}\b', question.upper())
+        
+        if fund_code_matches:
+            # Genişletilmiş yaygın kelimeler listesi
+            common_words = [
+                # Türkçe yaygın kelimeler
+                'BIR', 'IKI', 'UÇ', 'DÖR', 'BEŞ', 'ALT', 'YED', 'SEK', 'DOK', 'ON',
+                'YIL', 'GUN', 'AY', 'VE', 'ILE', 'AMA', 'YOK', 'VAR', 'HER', 'BU', 
+                'ŞU', 'O', 'NE', 'KIM', 'GEL', 'GIT', 'YAP', 'ET', 'AL', 'VER',
+                'SAT', 'KOY', 'CEK', 'BAK', 'DUR', 'KAL', 'OL', 'BIL', 'IST',
+                'DEN', 'TEN', 'DAN', 'TAN', 'BIN', 'YÜZ', 'MIL',
+                # İngilizce yaygın kelimeler  
+                'THE', 'AND', 'FOR', 'ARE', 'BUT', 'NOT', 'YOU', 'ALL', 'WHO',
+                'CAN', 'HAS', 'HER', 'WAS', 'ONE', 'OUR', 'OUT', 'DAY', 'NOW',
+                'NEW', 'WAY', 'MAY', 'SAY', 'GET', 'HAS', 'HIM', 'HOW', 'ITS',
+                'TWO', 'BOY', 'DID', 'CAR', 'LET', 'SUN', 'BIG', 'BED', 'BOX',
+                # Para birimleri
+                'TRY', 'USD', 'EUR', 'GBP', 'JPY', 'CHF', 'CAD', 'AUD',
+                # Sayılar
+                'BIN', 'YUZ', 'ELL', 'KIR', 'SEK', 'DOK',
+                # Zaman
+                'GUN', 'YIL', 'AY', 'DUN', 'BUG', 'YAR',
+                # Diğer
+                'FON', 'PAR', 'HIS', 'TAH', 'END', 'BOR', 'DÖV', 'ALT', 'ÜST'
+            ]
+            
+            # Sadece yaygın olmayan kelimeleri al
+            for code in fund_code_matches:
+                if code not in common_words:
+                    # Ek kontrol: Cümle içindeki pozisyona bak
+                    # "... için TYH fonunu ..." gibi durumlarda TYH fon kodu
+                    pattern = rf'\b{code}\b\s*(fonu?|fonlar|yatırım|hisse)'
+                    if re.search(pattern, question, re.IGNORECASE):
+                        fund_code = code
+                        break
+                    # Veya cümle başında/sonunda tek başına
+                    elif re.search(rf'^{code}\b|\b{code}$', question):
+                        fund_code = code
+                        break
         
         if fund_code:
             context['fund_code'] = fund_code
-        
-        # Sayılar - DÜZELTME
+            # Sayılar - DÜZELTME
         numbers = re.findall(r'(\d+)', question)
         if numbers:
             # "X fon" pattern
@@ -594,3 +734,82 @@ class AISmartQuestionRouter:
             'fallback_patterns_count': sum(len(p['patterns']) for p in self.fallback_patterns),
             'multi_handler_rules_count': len(self.multi_handler_rules)
         }
+    
+    def _check_pattern_matches(self, question: str) -> List[Dict]:
+        """Pattern matching ile kesin eşleşmeleri kontrol et - ÖNCELİK SIRALI"""
+        question_lower = question.lower()
+        matches = []
+        
+        # ÖNCELİK 1: Özel pattern'ler (en spesifik)
+        special_patterns = {
+            # Beta + Sharpe kombinasyonu
+            r'beta.*?sharpe|sharpe.*?beta': {
+                'handler': 'advanced_metrics_analyzer',
+                'method': 'handle_combined_metrics_analysis',
+                'priority': 100
+            },
+            # AI pattern
+            r'ai\s*pattern.*?[A-Z]{3}|pattern\s*analiz.*?[A-Z]{3}': {
+                'handler': 'technical_analyzer',
+                'method': 'handle_ai_pattern_analysis',
+                'priority': 100
+            },
+            # Kişisel finans
+            r'\d+\s*yaş.*?emeklilik.*?\d+\s*yıl': {
+                'handler': 'personal_finance_analyzer',
+                'method': 'handle_retirement_planning',
+                'priority': 100
+            }
+        }
+        
+        # Önce özel pattern'leri kontrol et
+        for pattern, config in special_patterns.items():
+            if re.search(pattern, question_lower, re.IGNORECASE):
+                context = self._extract_context_from_question(question)
+                matches.append({
+                    "handler": config['handler'],
+                    "method": config['method'],
+                    "confidence": 0.98,
+                    "reasoning": f"Special pattern match: {pattern}",
+                    "context": context
+                })
+                return matches  # İlk eşleşmede dur
+        
+        # ÖNCELİK 2: Normal pattern'ler
+        for handler, patterns in self.method_mapping_patterns.items():
+            for pattern, method in patterns.items():
+                if re.search(pattern, question_lower, re.IGNORECASE):
+                    context = self._extract_context_from_question(question)
+                    
+                    matches.append({
+                        "handler": handler,
+                        "method": method,
+                        "confidence": 0.95,
+                        "reasoning": f"Pattern match: {pattern}",
+                        "context": context
+                    })
+                    return matches  # İlk eşleşmede dur
+        
+        return []
+    def _prepare_mapping_examples(self) -> str:
+        """AI için method mapping örnekleri hazırla"""
+        examples = []
+        
+        # Her handler'dan birkaç örnek
+        example_mappings = {
+            '"En güvenli 10 fon"': 'performance_analyzer.handle_safest_funds_sql_fast',
+            '"AKB fonunu analiz et"': 'performance_analyzer.handle_analysis_question_dual',
+            '"En çok kazandıran fonlar"': 'performance_analyzer.handle_top_gainers',
+            '"MACD sinyali pozitif fonlar"': 'technical_analyzer.handle_macd_signals_sql',
+            '"AI pattern analizi TYH"': 'technical_analyzer.handle_ai_pattern_analysis',
+            '"Enflasyon %50 olursa"': 'scenario_analyzer.analyze_inflation_scenario',
+            '"Beta katsayısı 1 altında"': 'advanced_metrics_analyzer.handle_beta_analysis',
+            '"İş Portföy analizi"': 'portfolio_company_analyzer.analyze_company_comprehensive',
+            '"100000 TL nasıl dağıtmalı"': 'mathematical_calculator.handle_portfolio_distribution',
+            '"Emekliliğe 25 yıl var"': 'personal_finance_analyzer.handle_retirement_planning'
+        }
+        
+        for example, mapping in example_mappings.items():
+            examples.append(f'{example} → {mapping}')
+        
+        return '\n'.join(examples)
