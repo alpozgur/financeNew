@@ -1,8 +1,8 @@
 # currency_inflation_analyzer.py
 """
-TEFAS Döviz ve Enflasyon Analiz Sistemi - Risk Assessment Entegreli
+TEFAS Döviz ve Enflasyon Analiz Sistemi - Risk Assessment ve MV Entegreli
 Dolar, Euro, TL bazlı fonlar ve enflasyon korumalı yatırım araçları analizi
-Risk değerlendirme sistemi ile güçlendirilmiş versiyon
+Risk değerlendirme sistemi ve Materialized View'lar ile güçlendirilmiş versiyon
 """
 
 from datetime import datetime
@@ -15,7 +15,7 @@ from config.config import Config
 from risk_assessment import RiskAssessment
 
 class CurrencyInflationAnalyzer:
-    """Döviz ve Enflasyon analiz sistemi - TÜM VERİTABANI + Risk Assessment"""
+    """Döviz ve Enflasyon analiz sistemi - MV + Risk Assessment"""
     
     def __init__(self, db_manager: DatabaseManager, config: Config):
         self.db = db_manager
@@ -122,7 +122,7 @@ class CurrencyInflationAnalyzer:
         
         # Enflasyon korumalı fonlar sorusu
         if any(word in question_lower for word in ['enflasyon korumalı', 'enflasyona karşı', 'inflation protected']):
-            # Önce MV versiyonunu dene
+            # MV versiyonunu kullan
             return self.analyze_inflation_funds_mv()
         
         # Diğer durumlar için mevcut logic...
@@ -156,33 +156,43 @@ class CurrencyInflationAnalyzer:
         
         try:
             # MV güncellik kontrolü
-            # freshness_check = """
-            # SELECT 
-            #     EXTRACT(EPOCH FROM (NOW() - last_refresh))/3600 as hours_since_refresh
-            # FROM pg_matviews
-            # WHERE matviewname = 'mv_scenario_analysis_funds'
-            # """
+            freshness_check = """
+            SELECT 
+                EXTRACT(EPOCH FROM (NOW() - last_refresh))/3600 as hours_since_refresh
+            FROM pg_matviews
+            WHERE matviewname = 'mv_scenario_analysis_funds'
+            """
             
-            # freshness = self.db.execute_query(freshness_check)
-            # if not freshness.empty and freshness.iloc[0]['hours_since_refresh'] > 24:
-            #     print("   ⚠️ MV 24 saatten eski, güncelleniyor...")
-            #     self.db.execute_query("REFRESH MATERIALIZED VIEW CONCURRENTLY mv_scenario_analysis_funds")
+            try:
+                freshness = self.db.execute_query(freshness_check)
+                if not freshness.empty and freshness.iloc[0]['hours_since_refresh'] > 24:
+                    print("   ⚠️ MV 24 saatten eski, güncelleniyor...")
+                    self.db.execute_query("REFRESH MATERIALIZED VIEW CONCURRENTLY mv_scenario_analysis_funds")
+            except:
+                # MV kontrolü başarısız olsa bile devam et
+                pass
             
             # Kategorilere göre grupla ve en iyileri al
             query = """
             WITH ranked_funds AS (
                 SELECT 
-                    *,
+                    saf.*,
+                    ti.rsi_14,
+                    ti.stochastic_14,
+                    ti.price_vs_sma20,
+                    ti.days_since_last_trade,
+                    lf.ftitle as fund_name,
                     ROW_NUMBER() OVER (
-                        PARTITION BY protection_category 
-                        ORDER BY inflation_scenario_score DESC
+                        PARTITION BY saf.protection_category 
+                        ORDER BY saf.inflation_scenario_score DESC
                     ) as category_rank
-                FROM mv_scenario_analysis_funds
-                WHERE inflation_protection_score > 15
-                AND investorcount > 100  -- Minimum yatırımcı filtresi
+                FROM mv_scenario_analysis_funds saf
+                JOIN mv_fund_technical_indicators ti ON saf.fcode = ti.fcode
+                LEFT JOIN mv_latest_fund_data lf ON saf.fcode = lf.fcode
+                WHERE saf.inflation_protection_score > 15
+                AND saf.investorcount > 100
             ),
             category_stats AS (
-                -- Her kategori için istatistikler
                 SELECT 
                     protection_category,
                     COUNT(*) as category_count,
@@ -200,7 +210,7 @@ class CurrencyInflationAnalyzer:
                 cs.avg_return_30d as category_avg_return
             FROM ranked_funds rf
             JOIN category_stats cs ON rf.protection_category = cs.protection_category
-            WHERE rf.category_rank <= 5  -- Her kategoriden en iyi 5
+            WHERE rf.category_rank <= 5
             ORDER BY rf.protection_category, rf.inflation_scenario_score DESC
             """
             
@@ -224,11 +234,11 @@ class CurrencyInflationAnalyzer:
                 # Risk verileri hazırla
                 risk_data = {
                     'fcode': fund['fcode'],
-                    'price_vs_sma20': fund.get('price_vs_sma20', 0),
-                    'rsi_14': fund.get('rsi_14', 50),
-                    'stochastic_14': fund.get('stochastic_14', 50),
-                    'days_since_last_trade': fund.get('days_since_last_trade', 0),
-                    'investorcount': fund['investorcount']
+                    'price_vs_sma20': float(fund.get('price_vs_sma20', 0)),
+                    'rsi_14': float(fund.get('rsi_14', 50)),
+                    'stochastic_14': float(fund.get('stochastic_14', 50)),
+                    'days_since_last_trade': int(fund.get('days_since_last_trade', 0)),
+                    'investorcount': int(fund['investorcount'])
                 }
                 
                 # Risk değerlendirmesi yap
@@ -245,13 +255,15 @@ class CurrencyInflationAnalyzer:
                 fund_with_risk['risk_level'] = risk_assessment['risk_level']
                 fund_with_risk['risk_score'] = risk_assessment['risk_score']
                 fund_with_risk['risk_factors'] = risk_assessment['risk_factors']
+                fund_with_risk['tradeable'] = risk_assessment.get('tradeable', True)
+                fund_with_risk['requires_research'] = risk_assessment.get('requires_research', False)
                 
                 risk_assessed_funds.append(fund_with_risk)
             
             print(f"   📊 Risk Dağılımı: {extreme_risk_count} Ekstrem, {high_risk_count} Yüksek risk")
             
             # Sonuçları formatla - Risk Assessment dahil
-            response = f"\n💹 ENFLASYON KORUMALI FONLAR ANALİZİ (Risk Assessment Dahil)\n"
+            response = f"\n💹 ENFLASYON KORUMALI FONLAR ANALİZİ (MV + Risk Assessment)\n"
             response += f"{'='*70}\n\n"
             response += f"⚡ Süre: {elapsed:.3f} saniye (MV kullanıldı)\n"
             response += f"📊 Toplam: {len(result)} fon (kategorilere göre gruplu)\n"
@@ -334,23 +346,28 @@ class CurrencyInflationAnalyzer:
                 
                 # Fon detayları
                 fcode = fund_data['fcode']
-                fname = (fund_data['fund_name'] or f'Fon {fcode}')[:40]
+                fname = (fund_data.get('fund_name') or f'Fon {fcode}')[:40]
                 rank = int(fund_data['category_rank'])
                 
                 # Performans emoji
-                if fund_data['return_30d'] > 5:
-                    perf_emoji = "🚀"
-                elif fund_data['return_30d'] > 2:
-                    perf_emoji = "📈"
-                elif fund_data['return_30d'] > 0:
-                    perf_emoji = "➕"
+                if pd.notna(fund_data.get('return_30d')):
+                    if fund_data['return_30d'] > 5:
+                        perf_emoji = "🚀"
+                    elif fund_data['return_30d'] > 2:
+                        perf_emoji = "📈"
+                    elif fund_data['return_30d'] > 0:
+                        perf_emoji = "➕"
+                    else:
+                        perf_emoji = "➖"
                 else:
-                    perf_emoji = "➖"
+                    perf_emoji = ""
                 
                 # EXTREME risk uyarısı
                 risk_warning = ""
                 if fund_data['risk_level'] == 'EXTREME':
                     risk_warning = " ⛔ EXTREME RİSK"
+                    if not fund_data.get('tradeable', True):
+                        risk_warning += " - TRADE EDİLEMEZ"
                 elif fund_data['risk_level'] == 'HIGH':
                     risk_warning = " ⚠️ YÜKSEK RİSK"
                 
@@ -360,13 +377,13 @@ class CurrencyInflationAnalyzer:
                 response += f"   🎯 Risk Skoru: {fund_data['risk_score']:.1f}/100 ({fund_data['risk_level']})\n"
                 
                 # Performans metrikleri
-                if pd.notna(fund_data['return_30d']):
+                if pd.notna(fund_data.get('return_30d')):
                     response += f"   📈 30 Gün: %{fund_data['return_30d']:+.2f}\n"
-                if pd.notna(fund_data['return_90d']):
+                if pd.notna(fund_data.get('return_90d')):
                     response += f"   📈 90 Gün: %{fund_data['return_90d']:+.2f}\n"
-                if pd.notna(fund_data['volatility_30d']):
+                if pd.notna(fund_data.get('volatility_30d')):
                     response += f"   📉 Risk: %{fund_data['volatility_30d']:.2f}\n"
-                if pd.notna(fund_data['sharpe_ratio_approx']) and fund_data['sharpe_ratio_approx'] > 0:
+                if pd.notna(fund_data.get('sharpe_ratio_approx')) and fund_data['sharpe_ratio_approx'] > 0:
                     response += f"   ⚡ Sharpe: {fund_data['sharpe_ratio_approx']:.2f}\n"
                 
                 response += f"   💰 Fiyat: {fund_data['current_price']:.4f} TL\n"
@@ -376,16 +393,16 @@ class CurrencyInflationAnalyzer:
                 if fund_data['risk_factors']:
                     critical_factors = [f for f in fund_data['risk_factors'] if f['severity'] in ['CRITICAL', 'HIGH']]
                     if critical_factors:
-                        response += f"   ⚠️ Risk Faktörleri: "
-                        response += ", ".join([f['factor'] for f in critical_factors[:2]])
-                        response += "\n"
+                        response += f"   ⚠️ Risk Faktörleri: {critical_factors[0]['description']}\n"
+                        if 'action' in critical_factors[0]:
+                            response += f"   → {critical_factors[0]['action']}\n"
                 
                 # Portföy kompozisyonu (önemli olanlar)
-                if fund_data['gold_ratio'] > 10:
+                if fund_data.get('gold_ratio', 0) > 10:
                     response += f"   🥇 Altın: %{fund_data['gold_ratio']:.1f}\n"
-                if fund_data['equity_ratio'] > 10:
+                if fund_data.get('equity_ratio', 0) > 10:
                     response += f"   📊 Hisse: %{fund_data['equity_ratio']:.1f}\n"
-                if fund_data['fx_ratio'] > 10:
+                if fund_data.get('fx_ratio', 0) > 10:
                     response += f"   💱 Döviz: %{fund_data['fx_ratio']:.1f}\n"
                 
                 response += "\n"
@@ -501,14 +518,19 @@ class CurrencyInflationAnalyzer:
         except Exception as e:
             return f"❌ Enflasyon analizi hatası: {str(e)}"
 
-    def analyze_currency_funds(self, question, currency_type='all'):
-        """Belirli döviz/enflasyon tipinde fonları analiz et - Risk Assessment dahil"""
-        print(f"💱 {currency_type.upper()} fonları analiz ediliyor...")
+    def analyze_currency_funds(self, currency_type='all', question=''):
+        """Belirli döviz/enflasyon tipinde fonları analiz et - MV entegreli + Risk Assessment"""
+        print(f"💱 {currency_type.upper()} fonları analiz ediliyor (MV kullanımı ile)...")
         
         start_time = datetime.now().timestamp()
         
-        # 1. İlgili fonları bul
-        currency_funds = self.find_currency_funds_sql(currency_type)
+        # 1. MV'den ilgili fonları bul
+        currency_funds = self._find_currency_funds_mv(currency_type)
+        
+        if not currency_funds:
+            # Fallback: SQL sorgusu
+            print("   ⚠️ MV'de veri bulunamadı, SQL fallback kullanılıyor...")
+            currency_funds = self.find_currency_funds_sql(currency_type)
         
         if not currency_funds:
             currency_info = self.currency_keywords.get(currency_type, {})
@@ -517,8 +539,8 @@ class CurrencyInflationAnalyzer:
         
         print(f"   📊 {len(currency_funds)} {currency_type} fonu bulundu")
         
-        # 2. Performans analizi
-        performance_results = self.analyze_currency_performance(currency_type, currency_funds)
+        # 2. Performans analizi (MV tabanlı)
+        performance_results = self.analyze_currency_performance_mv(currency_type, currency_funds)
         
         if not performance_results:
             return f"❌ {currency_type.upper()} fonları için performans verisi hesaplanamadı."
@@ -529,8 +551,258 @@ class CurrencyInflationAnalyzer:
         # 3. Sonuçları formatla
         return self.format_currency_analysis_results(currency_type, performance_results, elapsed)
 
+    def _find_currency_funds_mv(self, currency_type):
+        """MV'den döviz fonlarını bul"""
+        try:
+            currency_data = self.currency_keywords.get(currency_type, {})
+            keywords = currency_data.get('keywords', [])
+            
+            if not keywords:
+                return []
+            
+            # SQL LIKE koşulları oluştur
+            like_conditions = []
+            for keyword in keywords[:5]:  # İlk 5 keyword kullan
+                like_conditions.append(f"UPPER(lf.ftitle) LIKE '%{keyword}%'")
+            
+            where_clause = " OR ".join(like_conditions)
+            
+            # MV sorgusu
+            query = f"""
+            WITH currency_funds AS (
+                SELECT 
+                    lf.fcode,
+                    lf.ftitle as fund_name,
+                    lf.fcapacity,
+                    lf.investorcount,
+                    lf.price as current_price,
+                    pm.annual_return,
+                    pm.annual_volatility,
+                    pm.sharpe_ratio,
+                    pm.win_rate,
+                    ti.rsi_14,
+                    ti.stochastic_14,
+                    ti.price_vs_sma20,
+                    ti.days_since_last_trade,
+                    -- Portföy detayları
+                    fd.eurobonds,
+                    fd.foreigncurrencybills,
+                    fd.foreigndebtinstruments,
+                    fd.preciousmetals,
+                    fd.stock,
+                    fd.governmentbond,
+                    fd.treasurybill,
+                    fd.termdeposittl,
+                    fd.governmentleasecertificates,
+                    fd.derivatives
+                FROM mv_latest_fund_data lf
+                LEFT JOIN mv_fund_performance_metrics pm ON lf.fcode = pm.fcode
+                LEFT JOIN mv_fund_technical_indicators ti ON lf.fcode = ti.fcode
+                LEFT JOIN mv_fund_details_latest fd ON lf.fcode = fd.fcode
+                WHERE ({where_clause})
+                AND lf.investorcount > 50
+            )
+            SELECT * FROM currency_funds
+            ORDER BY fcapacity DESC NULLS LAST
+            LIMIT 50
+            """
+            
+            result = self.db.execute_query(query)
+            
+            if result.empty:
+                return []
+            
+            funds_list = []
+            for _, row in result.iterrows():
+                # Portföy skorunu hesapla
+                portfolio_score = self._calculate_currency_portfolio_score_mv(row, currency_type)
+                
+                funds_list.append({
+                    'fcode': row['fcode'],
+                    'fund_name': row['fund_name'],
+                    'capacity': float(row['fcapacity']) if pd.notna(row['fcapacity']) else 0,
+                    'investors': int(row['investorcount']) if pd.notna(row['investorcount']) else 0,
+                    'current_price': float(row['current_price']) if pd.notna(row['current_price']) else 0,
+                    'portfolio_score': portfolio_score,
+                    'currency_type': currency_type,
+                    # MV'den gelen performans verileri
+                    'annual_return': float(row['annual_return']) * 100 if pd.notna(row['annual_return']) else None,
+                    'volatility': float(row['annual_volatility']) * 100 if pd.notna(row['annual_volatility']) else None,
+                    'sharpe_ratio': float(row['sharpe_ratio']) if pd.notna(row['sharpe_ratio']) else None,
+                    'win_rate': float(row['win_rate']) * 100 if pd.notna(row['win_rate']) else None,
+                    # Risk verileri
+                    'rsi_14': float(row['rsi_14']) if pd.notna(row['rsi_14']) else 50,
+                    'stochastic_14': float(row['stochastic_14']) if pd.notna(row['stochastic_14']) else 50,
+                    'price_vs_sma20': float(row['price_vs_sma20']) if pd.notna(row['price_vs_sma20']) else 0,
+                    'days_since_last_trade': int(row['days_since_last_trade']) if pd.notna(row['days_since_last_trade']) else 0
+                })
+            
+            # Portföy skoruna göre filtrele ve sırala
+            filtered_funds = [f for f in funds_list if f['portfolio_score'] > 0.1]  # %10+ ilgili varlık
+            filtered_funds.sort(key=lambda x: x['portfolio_score'], reverse=True)
+            
+            print(f"   ✅ MV'den {len(filtered_funds)} uygun fon yüklendi")
+            return filtered_funds
+            
+        except Exception as e:
+            print(f"   ❌ MV sorgu hatası: {e}")
+            return []
+
+    def _calculate_currency_portfolio_score_mv(self, row, currency_type):
+        """MV verisinden portföy skoru hesapla"""
+        try:
+            currency_data = self.currency_keywords.get(currency_type, {})
+            portfolio_fields = currency_data.get('portfolio_fields', [])
+            
+            total_score = 0
+            
+            # İlgili portföy alanlarından skor hesapla
+            for field in portfolio_fields:
+                if field in row and pd.notna(row[field]):
+                    value = float(row[field])
+                    total_score += value
+            
+            # Özel hesaplamalar
+            if currency_type == 'usd' or currency_type == 'eur':
+                # Dolar/Euro için: yabancı varlıklar
+                foreign_assets = (
+                    float(row.get('eurobonds', 0) or 0) +
+                    float(row.get('foreigncurrencybills', 0) or 0) +
+                    float(row.get('foreigndebtinstruments', 0) or 0)
+                )
+                total_score = max(total_score, foreign_assets)
+                
+            elif currency_type == 'tl_based':
+                # TL için: yerli borçlanma araçları
+                tl_assets = (
+                    float(row.get('governmentbond', 0) or 0) +
+                    float(row.get('treasurybill', 0) or 0) +
+                    float(row.get('termdeposittl', 0) or 0)
+                )
+                total_score = max(total_score, tl_assets)
+                
+            elif currency_type == 'precious_metals':
+                # Altın için
+                total_score = float(row.get('preciousmetals', 0) or 0)
+            
+            return min(total_score / 100, 1.0)  # 0-1 arası normalize et
+            
+        except Exception as e:
+            return 0
+
+    def analyze_currency_performance_mv(self, currency_type, funds_list):
+        """MV tabanlı performans analizi - Risk Assessment dahil"""
+        print(f"   📈 {len(funds_list)} fon için performans + risk analizi (MV tabanlı)...")
+        
+        performance_results = []
+        successful = 0
+        high_risk_count = 0
+        extreme_risk_count = 0
+        
+        for i, fund_info in enumerate(funds_list, 1):
+            fcode = fund_info['fcode']
+            
+            if i % 10 == 0:
+                print(f"   [{i}/{len(funds_list)}] işlendi...")
+            
+            try:
+                # Risk değerlendirmesi
+                risk_data = {
+                    'fcode': fcode,
+                    'price_vs_sma20': fund_info.get('price_vs_sma20', 0),
+                    'rsi_14': fund_info.get('rsi_14', 50),
+                    'stochastic_14': fund_info.get('stochastic_14', 50),
+                    'days_since_last_trade': fund_info.get('days_since_last_trade', 0),
+                    'investorcount': fund_info['investors']
+                }
+                
+                risk_assessment = RiskAssessment.assess_fund_risk(risk_data)
+                
+                # Risk sayacları
+                if risk_assessment['risk_level'] == 'HIGH':
+                    high_risk_count += 1
+                elif risk_assessment['risk_level'] == 'EXTREME':
+                    extreme_risk_count += 1
+                
+                # MV'den gelen performans verilerini kullan
+                if fund_info.get('annual_return') is not None:
+                    # MV verileri mevcut
+                    annual_return = fund_info['annual_return']
+                    volatility = fund_info.get('volatility', 20)
+                    sharpe = fund_info.get('sharpe_ratio', 0)
+                    win_rate = fund_info.get('win_rate', 50)
+                    
+                    # Max drawdown tahmini (volatilite bazlı)
+                    max_drawdown = min(volatility * 2, 50)
+                    
+                else:
+                    # MV verileri yoksa hesapla
+                    data = self.db.get_fund_price_history(fcode, 120)
+                    
+                    if len(data) < 30:
+                        continue
+                    
+                    prices = data.set_index('pdate')['price'].sort_index()
+                    returns = prices.pct_change().dropna()
+                    
+                    # Temel metrikler
+                    total_return = (prices.iloc[-1] / prices.iloc[0] - 1) * 100
+                    annual_return = total_return * (252 / len(prices))
+                    volatility = returns.std() * np.sqrt(252) * 100
+                    
+                    # Sharpe ratio
+                    if volatility > 0:
+                        sharpe = (annual_return - 15) / volatility
+                    else:
+                        sharpe = 0
+                    
+                    win_rate = (returns > 0).sum() / len(returns) * 100
+                    
+                    # Max drawdown
+                    cumulative = (1 + returns).cumprod()
+                    running_max = cumulative.expanding().max()
+                    drawdown = (cumulative - running_max) / running_max
+                    max_drawdown = abs(drawdown.min()) * 100
+                
+                # Döviz/Enflasyon özel skor
+                currency_score = self.calculate_currency_score(
+                    annual_return, volatility, sharpe, win_rate, currency_type, max_drawdown
+                )
+                
+                fund_result = {
+                    'fcode': fcode,
+                    'fund_name': fund_info['fund_name'],
+                    'capacity': fund_info['capacity'],
+                    'investors': fund_info['investors'],
+                    'current_price': fund_info['current_price'],
+                    'portfolio_score': fund_info['portfolio_score'],
+                    'total_return': annual_return / 2,  # 6 aylık tahmin
+                    'annual_return': annual_return,
+                    'volatility': volatility,
+                    'sharpe_ratio': sharpe,
+                    'win_rate': win_rate,
+                    'max_drawdown': max_drawdown,
+                    'currency_score': currency_score,
+                    # Risk Assessment verileri
+                    'risk_level': risk_assessment['risk_level'],
+                    'risk_score': risk_assessment['risk_score'],
+                    'risk_factors': risk_assessment['risk_factors'],
+                    'tradeable': risk_assessment.get('tradeable', True),
+                    'requires_research': risk_assessment.get('requires_research', False)
+                }
+                
+                performance_results.append(fund_result)
+                successful += 1
+                
+            except Exception as e:
+                continue
+        
+        print(f"   ✅ {successful}/{len(funds_list)} fon başarıyla analiz edildi")
+        print(f"   🛡️ Risk Dağılımı: {extreme_risk_count} Ekstrem, {high_risk_count} Yüksek")
+        return performance_results
+
     def analyze_currency_performance(self, currency_type, funds_list, analysis_days=180):
-        """Döviz/Enflasyon fonları performans analizi - Risk Assessment dahil"""
+        """Döviz/Enflasyon fonları performans analizi - Risk Assessment dahil (Fallback)"""
         print(f"   📈 {len(funds_list)} fon için performans + risk analizi...")
         
         performance_results = []
@@ -624,7 +896,9 @@ class CurrencyInflationAnalyzer:
                         # Risk Assessment verileri
                         'risk_level': risk_assessment['risk_level'],
                         'risk_score': risk_assessment['risk_score'],
-                        'risk_factors': risk_assessment['risk_factors']
+                        'risk_factors': risk_assessment['risk_factors'],
+                        'tradeable': risk_assessment.get('tradeable', True),
+                        'requires_research': risk_assessment.get('requires_research', False)
                     }
                     
                     performance_results.append(fund_result)
@@ -648,7 +922,7 @@ class CurrencyInflationAnalyzer:
         return indicators.get(risk_level, '')
 
     def find_currency_funds_sql(self, currency_type):
-        """SQL ile döviz/enflasyon fonlarını bul"""
+        """SQL ile döviz/enflasyon fonlarını bul (Fallback)"""
         currency_data = self.currency_keywords.get(currency_type, {})
         keywords = currency_data.get('keywords', [])
         
@@ -859,6 +1133,7 @@ class CurrencyInflationAnalyzer:
         high_risk_count = len([f for f in results if f['risk_level'] == 'HIGH'])
         medium_risk_count = len([f for f in results if f['risk_level'] == 'MEDIUM'])
         low_risk_count = len([f for f in results if f['risk_level'] == 'LOW'])
+        non_tradeable_count = len([f for f in results if not f.get('tradeable', True)])
         
         response = f"\n💱 {description.upper()} ANALİZİ - Risk Assessment Dahil\n"
         response += f"{'='*70}\n\n"
@@ -874,11 +1149,19 @@ class CurrencyInflationAnalyzer:
         response += f"   🟢 Düşük Risk: {low_risk_count} fon (%{low_risk_count/len(results)*100:.1f})\n"
         response += f"   🟡 Orta Risk: {medium_risk_count} fon (%{medium_risk_count/len(results)*100:.1f})\n"
         response += f"   🟠 Yüksek Risk: {high_risk_count} fon (%{high_risk_count/len(results)*100:.1f})\n"
-        response += f"   🔴 Ekstrem Risk: {extreme_risk_count} fon (%{extreme_risk_count/len(results)*100:.1f})\n\n"
+        response += f"   🔴 Ekstrem Risk: {extreme_risk_count} fon (%{extreme_risk_count/len(results)*100:.1f})\n"
+        if non_tradeable_count > 0:
+            response += f"   ⛔ Trade Edilemez: {non_tradeable_count} fon\n"
+        response += f"\n"
         
         # Risk uyarısı
-        if extreme_risk_count > 0:
-            response += f"⚠️ UYARI: {extreme_risk_count} fon EXTREME RİSK seviyesinde! Bu fonlardan kaçının.\n\n"
+        if extreme_risk_count > 0 or non_tradeable_count > 0:
+            response += f"⚠️ UYARI: "
+            if extreme_risk_count > 0:
+                response += f"{extreme_risk_count} fon EXTREME RİSK seviyesinde! "
+            if non_tradeable_count > 0:
+                response += f"{non_tradeable_count} fon TRADE EDİLEMEZ durumda!"
+            response += f"\n\n"
         
         # GENEL İSTATİSTİKLER
         if results:
@@ -901,7 +1184,7 @@ class CurrencyInflationAnalyzer:
             response += f"   🛡️ Ortalama Risk Skoru: {avg_risk_score:.1f}/100\n\n"
         
         # EN İYİ 10 FON - Risk seviyesine göre filtrelenmiş
-        safe_funds = [f for f in results if f['risk_level'] in ['LOW', 'MEDIUM']]
+        safe_funds = [f for f in results if f['risk_level'] in ['LOW', 'MEDIUM'] and f.get('tradeable', True)]
         if safe_funds:
             response += f"🏆 EN İYİ {min(10, len(safe_funds))} GÜVENLİ {currency_code} FONU:\n\n"
             
@@ -940,19 +1223,27 @@ class CurrencyInflationAnalyzer:
                 if fund['risk_factors']:
                     critical_factors = [f for f in fund['risk_factors'] if f['severity'] in ['CRITICAL', 'HIGH']]
                     if critical_factors:
-                        response += f"    ⚠️ Risk Faktörleri: {', '.join([f['factor'] for f in critical_factors[:2]])}\n"
+                        response += f"    ⚠️ Risk: {critical_factors[0]['description']}\n"
+                        if 'action' in critical_factors[0]:
+                            response += f"    → {critical_factors[0]['action']}\n"
                 
                 response += f"    📝 Adı: {fund['fund_name'][:40]}...\n"
                 response += f"\n"
         
         # RİSKLİ FONLAR UYARISI
-        risky_funds = [f for f in results if f['risk_level'] in ['HIGH', 'EXTREME']]
+        risky_funds = [f for f in results if f['risk_level'] in ['HIGH', 'EXTREME'] or not f.get('tradeable', True)]
         if risky_funds:
             response += f"⚠️ RİSKLİ FONLAR UYARISI ({len(risky_funds)} fon):\n\n"
             
             for i, fund in enumerate(risky_funds[:5], 1):
                 risk_indicator = self._get_risk_indicator(fund['risk_level'])
-                risk_warning = "⛔ EXTREME RİSK" if fund['risk_level'] == 'EXTREME' else "⚠️ YÜKSEK RİSK"
+                
+                if not fund.get('tradeable', True):
+                    risk_warning = "⛔ TRADE EDİLEMEZ"
+                elif fund['risk_level'] == 'EXTREME':
+                    risk_warning = "⛔ EXTREME RİSK"
+                else:
+                    risk_warning = "⚠️ YÜKSEK RİSK"
                 
                 response += f"{i}. {fund['fcode']} - {risk_warning} {risk_indicator}\n"
                 response += f"   🛡️ Risk Skoru: {fund['risk_score']:.1f}/100\n"
@@ -962,7 +1253,9 @@ class CurrencyInflationAnalyzer:
                 if fund['risk_factors']:
                     critical_factors = [f for f in fund['risk_factors'] if f['severity'] in ['CRITICAL', 'HIGH']]
                     if critical_factors:
-                        response += f"   🚨 Risk Faktörleri: {', '.join([f['factor'] for f in critical_factors])}\n"
+                        response += f"   🚨 Sebep: {critical_factors[0]['description']}\n"
+                        if 'action' in critical_factors[0]:
+                            response += f"   → {critical_factors[0]['action']}\n"
                 
                 response += "\n"
         
@@ -1022,8 +1315,14 @@ class CurrencyInflationAnalyzer:
         
         # RİSK UYARILARI
         response += f"\n⚠️ {currency_code} RİSK UYARILARI:\n"
-        response += f"   🔴 {extreme_risk_count} EXTREME RİSK fonu tespit edildi - KAÇININ!\n"
-        response += f"   🟠 {high_risk_count} YÜKSEK RİSK fonu - Dikkatli olun\n"
+        
+        if extreme_risk_count > 0:
+            response += f"   🔴 {extreme_risk_count} EXTREME RİSK fonu tespit edildi - KAÇININ!\n"
+        if non_tradeable_count > 0:
+            response += f"   ⛔ {non_tradeable_count} fon TRADE EDİLEMEZ durumda!\n"
+        if high_risk_count > 0:
+            response += f"   🟠 {high_risk_count} YÜKSEK RİSK fonu - Dikkatli olun\n"
+        
         response += f"   🟡 {medium_risk_count} ORTA RİSK fonu - Kabul edilebilir\n"
         response += f"   🟢 {low_risk_count} DÜŞÜK RİSK fonu - Güvenli seçenek\n"
         response += f"   • Döviz kurlarındaki volatilite yüksek risk içerir\n"
@@ -1040,21 +1339,32 @@ class CurrencyInflationAnalyzer:
             response += f"   🛡️ Risk Skoru: {top_fund['risk_score']:.1f}/100 ({top_fund['risk_level']})\n"
             response += f"   📈 Beklenen Getiri: %{top_fund['annual_return']:+.1f}\n"
             response += f"   🛡️ Risk Seviyesi: %{top_fund['volatility']:.1f}\n"
+            
+            if top_fund.get('requires_research'):
+                response += f"   ⚠️ Yatırım öncesi detaylı araştırma önerilir\n"
         
         return response
     
     def analyze_all_foreign_currencies(self, question):
-        """Tüm döviz fonlarını karşılaştırmalı analiz et - Risk Assessment dahil"""
-        print("💱 Tüm döviz fonları karşılaştırmalı analiz...")
+        """Tüm döviz fonlarını karşılaştırmalı analiz et - MV tabanlı + Risk Assessment"""
+        print("💱 Tüm döviz fonları karşılaştırmalı analiz (MV tabanlı)...")
         
         currency_types = ['usd', 'eur', 'hedge_funds']
         comparison_results = {}
         
         for currency_type in currency_types:
             print(f"   📊 {currency_type.upper()} analizi...")
-            funds = self.find_currency_funds_sql(currency_type)
+            
+            # MV tabanlı arama
+            funds = self._find_currency_funds_mv(currency_type)
+            if not funds:
+                # Fallback
+                funds = self.find_currency_funds_sql(currency_type)
+                
             if funds:
-                performance = self.analyze_currency_performance(currency_type, funds, 120)
+                # MV tabanlı performans analizi
+                performance = self.analyze_currency_performance_mv(currency_type, funds[:30])
+                
                 if performance:
                     # Risk istatistikleri
                     extreme_risk = len([f for f in performance if f['risk_level'] == 'EXTREME'])
@@ -1089,10 +1399,11 @@ class CurrencyInflationAnalyzer:
     def format_currency_comparison_results(self, comparison_results):
         """Döviz karşılaştırma sonuçlarını formatla - Risk Assessment dahil"""
         
-        response = f"\n💱 DÖVİZ FONLARI KARŞILAŞTIRMALI ANALİZ (Risk Assessment Dahil)\n"
+        response = f"\n💱 DÖVİZ FONLARI KARŞILAŞTIRMALI ANALİZ (MV + Risk Assessment)\n"
         response += f"{'='*70}\n\n"
         
-        response += f"📊 KARŞILAŞTIRILAN DÖVİZ TİPLERİ: {len(comparison_results)}\n\n"
+        response += f"📊 KARŞILAŞTIRILAN DÖVİZ TİPLERİ: {len(comparison_results)}\n"
+        response += f"⚡ Materialized View kullanıldı\n\n"
         
         # KARŞILAŞTIRMA TABLOSU - Risk bilgileri dahil
         response += f"📈 DÖVİZ PERFORMANS & RİSK KARŞILAŞTIRMASI:\n\n"
@@ -1169,7 +1480,7 @@ class CurrencyInflationAnalyzer:
     
     def _handle_general_currency_overview(self):
         """Genel döviz/enflasyon fon genel bakış"""
-        response = f"\n💱 DÖVİZ VE ENFLASYON FON ANALİZ SİSTEMİ (Risk Assessment Dahil)\n"
+        response = f"\n💱 DÖVİZ VE ENFLASYON FON ANALİZ SİSTEMİ (MV + Risk Assessment)\n"
         response += f"{'='*70}\n\n"
         
         response += f"📊 DESTEKLENEN DÖVİZ/ENFLASYON KATEGORİLERİ:\n\n"
@@ -1188,6 +1499,7 @@ class CurrencyInflationAnalyzer:
         response += f"   • 'Altın fonları karşılaştırması'\n\n"
         
         response += f"🎯 ANALİZ ÖZELLİKLERİ:\n"
+        response += f"   ✅ Materialized View entegrasyonu (hızlı analiz)\n"
         response += f"   ✅ TÜM veritabanı tarama (1700+ fon)\n"
         response += f"   ✅ Döviz özel skorlama sistemi\n"
         response += f"   ✅ Portföy uyumluluk analizi\n"
@@ -1197,7 +1509,8 @@ class CurrencyInflationAnalyzer:
         response += f"   ✅ Yatırım önerileri ve uyarılar\n"
         response += f"   🆕 **Risk Assessment entegrasyonu**\n"
         response += f"   🆕 **EXTREME/YÜKSEK risk tespiti**\n"
-        response += f"   🆕 **Güvenli fon filtreleme**\n\n"
+        response += f"   🆕 **Güvenli fon filtreleme**\n"
+        response += f"   🆕 **Trade edilebilirlik kontrolü**\n\n"
         
         response += f"📈 HIZLI BAŞLANGIÇ:\n"
         response += f"   Döviz adı veya 'enflasyon' yazmanız yeterli!\n"
@@ -1206,6 +1519,7 @@ class CurrencyInflationAnalyzer:
         response += f"🛡️ RİSK ASSESSMENT ÖZELLİKLERİ:\n"
         response += f"   • Otomatik risk seviyesi tespiti\n"
         response += f"   • EXTREME risk fonları uyarısı\n"
+        response += f"   • Trade edilebilirlik kontrolü\n"
         response += f"   • Güvenli fon önerileri\n"
         response += f"   • Risk faktörü analizi\n"
         response += f"   • Portföy güvenlik skoru\n\n"
@@ -1216,6 +1530,7 @@ class CurrencyInflationAnalyzer:
         response += f"   • Portföy diversifikasyonu kritik önemde\n"
         response += f"   • Uzun vadeli yatırım stratejisi önerilir\n"
         response += f"   🔴 EXTREME risk fonlarından uzak durun!\n"
+        response += f"   ⛔ Trade edilemez fonlara yatırım yapmayın!\n"
         response += f"   🟢 Sadece güvenli fonları tercih edin\n"
         
         return response
@@ -1310,7 +1625,7 @@ def check_fund_risk_before_recommendation(coordinator, fcode):
         risk_assessment = RiskAssessment.assess_fund_risk(risk_data)
         risk_warning = RiskAssessment.format_risk_warning(risk_assessment)
         
-        is_safe = risk_assessment['risk_level'] not in ['EXTREME']
+        is_safe = risk_assessment['risk_level'] not in ['EXTREME'] and risk_assessment.get('tradeable', True)
         
         return is_safe, risk_assessment, risk_warning
         
@@ -1323,8 +1638,20 @@ def check_fund_risk_before_recommendation(coordinator, fcode):
 # =============================================================
 
 def analyze_currency_portfolio_distribution(db_manager, fcode):
-    """Detaylı portföy dağılım analizi"""
+    """Detaylı portföy dağılım analizi - MV tabanlı"""
     try:
+        # Önce MV'den kontrol et
+        mv_query = f"""
+        SELECT * FROM mv_fund_details_latest 
+        WHERE fcode = '{fcode}'
+        """
+        
+        result = db_manager.execute_query(mv_query)
+        
+        if not result.empty:
+            return result.iloc[0].to_dict()
+        
+        # Fallback: Normal sorgu
         query = f"""
         SELECT 
             stock, foreignequity, foreigndebtinstruments, foreigncurrencybills,
@@ -1428,11 +1755,57 @@ class CurrencyRiskManager:
         return 1 - herfindahl_index  # 0-1 arası, 1 = tam diversifiye
 
 # =============================================================
+# ENHANCED MV QUERIES
+# =============================================================
+
+def get_currency_funds_from_mv(db_manager, currency_type='all'):
+    """MV'den döviz fonlarını çek - performans dahil"""
+    try:
+        currency_filter = ""
+        if currency_type != 'all':
+            keywords = CurrencyInflationAnalyzer(db_manager, None).currency_keywords.get(currency_type, {}).get('keywords', [])
+            if keywords:
+                conditions = [f"UPPER(lf.ftitle) LIKE '%{kw}%'" for kw in keywords[:3]]
+                currency_filter = f"WHERE ({' OR '.join(conditions)})"
+        
+        query = f"""
+        SELECT 
+            lf.fcode,
+            lf.ftitle,
+            lf.price,
+            lf.fcapacity,
+            lf.investorcount,
+            pm.annual_return * 100 as annual_return_pct,
+            pm.annual_volatility * 100 as volatility_pct,
+            pm.sharpe_ratio,
+            pm.win_rate * 100 as win_rate_pct,
+            ti.rsi_14,
+            ti.price_vs_sma20,
+            ti.days_since_last_trade,
+            pp.return_30d,
+            pp.return_90d,
+            pp.return_180d
+        FROM mv_latest_fund_data lf
+        LEFT JOIN mv_fund_performance_metrics pm ON lf.fcode = pm.fcode
+        LEFT JOIN mv_fund_technical_indicators ti ON lf.fcode = ti.fcode
+        LEFT JOIN mv_fund_period_performance pp ON lf.fcode = pp.fcode
+        {currency_filter}
+        ORDER BY pm.sharpe_ratio DESC NULLS LAST
+        LIMIT 100
+        """
+        
+        return db_manager.execute_query(query)
+        
+    except Exception as e:
+        logging.getLogger(__name__).error(f"MV currency query error: {e}")
+        return pd.DataFrame()
+
+# =============================================================
 # DEMO VE TEST FONKSİYONLARI
 # =============================================================
 
 def demo_currency_inflation_analysis():
-    """Demo döviz/enflasyon analiz fonksiyonu"""
+    """Demo döviz/enflasyon analiz fonksiyonu - MV entegreli"""
     from config.config import Config
     from database.connection import DatabaseManager
     
@@ -1450,7 +1823,7 @@ def demo_currency_inflation_analysis():
         "Altın fonları analizi"
     ]
     
-    print("💱 DÖVİZ VE ENFLASYON ANALİZ SİSTEMİ DEMO (Risk Assessment Dahil)")
+    print("💱 DÖVİZ VE ENFLASYON ANALİZ SİSTEMİ DEMO (MV + Risk Assessment)")
     print("="*70)
     
     for i, question in enumerate(test_questions, 1):
@@ -1462,7 +1835,7 @@ def demo_currency_inflation_analysis():
             # İlk 300 karakteri göster
             preview = result[:300] + "..." if len(result) > 300 else result
             print(preview)
-            print("✅ Demo başarılı (Risk Assessment dahil)")
+            print("✅ Demo başarılı (MV + Risk Assessment dahil)")
             
             if i < len(test_questions):
                 input("\nDevam etmek için Enter'a basın...")
@@ -1470,7 +1843,7 @@ def demo_currency_inflation_analysis():
         except Exception as e:
             print(f"❌ Demo hatası: {e}")
     
-    print(f"\n🎉 Döviz/Enflasyon analiz demo tamamlandı! (Risk Assessment ile güçlendirilmiş)")
+    print(f"\n🎉 Döviz/Enflasyon analiz demo tamamlandı! (MV + Risk Assessment ile güçlendirilmiş)")
 
 # =============================================================
 # CURRENCY ANALYSIS CONFIGURATION
@@ -1484,6 +1857,8 @@ CURRENCY_CONFIG = {
     'performance_threshold': 8,         # Performans eşiği %
     'max_funds_per_currency': 50,       # Para birimi başına maksimum fon
     'sql_timeout': 30,                  # SQL timeout saniye
+    'use_materialized_views': True,     # MV kullanımı
+    'mv_refresh_hours': 24,             # MV yenileme süresi
     'volatility_thresholds': {          # Risk seviye eşikleri
         'low': 10,
         'medium': 20,
@@ -1496,12 +1871,13 @@ CURRENCY_CONFIG = {
         'inflation_protected': {'expected_return': 20, 'max_volatility': 18},
         'precious_metals': {'expected_return': 15, 'max_volatility': 35}
     },
-    # YENİ: Risk Assessment konfigürasyonu
+    # Risk Assessment konfigürasyonu
     'risk_settings': {
         'exclude_extreme_risk': True,    # Extreme risk fonları listeden çıkar
         'warn_high_risk': True,          # Yüksek risk uyarısı ver
         'prefer_safe_funds': True,       # Güvenli fonları önceliklendir
-        'risk_weight_in_score': 0.3      # Risk skorunun toplam skordaki ağırlığı
+        'risk_weight_in_score': 0.3,     # Risk skorunun toplam skordaki ağırlığı
+        'check_tradeability': True       # Trade edilebilirlik kontrolü
     }
 }
 

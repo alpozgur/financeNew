@@ -1,0 +1,50 @@
+SELECT ti.fcode,
+    ti.last_update,
+    ti.current_price,
+    ti.investorcount,
+    ti.fcapacity,
+    ti.sma_10,
+    ti.sma_20,
+    ti.sma_50,
+    ti.std_20,
+    ti.bb_upper,
+    ti.bb_lower,
+    ti.bb_position,
+    ti.stochastic_14,
+    ti.rsi_14,
+    ti.macd_line,
+    ti.price_vs_sma20,
+    ti.data_points,
+    ti.rsi_data_points,
+    ti.days_since_last_trade,
+    pp.return_30d,
+    pp.return_90d,
+    pp.volatility_30d,
+    lf.ftitle AS fund_name,
+        CASE
+            WHEN ((ti.rsi_14 < (30)::numeric) AND (ti.bb_position < 0.3)) THEN 'STRONG_BUY'::text
+            WHEN ((ti.rsi_14 > (70)::numeric) AND (ti.bb_position > 0.7)) THEN 'STRONG_SELL'::text
+            WHEN ((ti.macd_line > (0)::numeric) AND (ti.price_vs_sma20 > (0)::numeric)) THEN 'BUY'::text
+            WHEN ((ti.macd_line < (0)::numeric) AND (ti.price_vs_sma20 < (0)::numeric)) THEN 'SELL'::text
+            ELSE 'NEUTRAL'::text
+        END AS signal_type,
+    (((
+        CASE
+            WHEN (ti.rsi_14 < (30)::numeric) THEN 2
+            ELSE 0
+        END +
+        CASE
+            WHEN (ti.macd_line > (0)::numeric) THEN 1
+            ELSE '-1'::integer
+        END) +
+        CASE
+            WHEN (ti.bb_position < 0.3) THEN 1
+            ELSE 0
+        END) +
+        CASE
+            WHEN (ti.price_vs_sma20 > (0)::numeric) THEN 1
+            ELSE '-1'::integer
+        END) AS technical_score
+   FROM ((mv_fund_technical_indicators ti
+     LEFT JOIN mv_fund_period_performance pp ON (((ti.fcode)::text = (pp.fcode)::text)))
+     LEFT JOIN mv_latest_fund_data lf ON (((ti.fcode)::text = (lf.fcode)::text)))
