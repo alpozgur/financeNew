@@ -1,0 +1,43 @@
+WITH daily_returns AS (
+         SELECT mv_fund_price_changes.fcode,
+            mv_fund_price_changes.return_1d,
+            mv_fund_price_changes.pdate,
+            mv_fund_price_changes.price
+           FROM mv_fund_price_changes
+          WHERE (mv_fund_price_changes.return_1d IS NOT NULL)
+        ), fund_metrics AS (
+         SELECT dr.fcode,
+            ( SELECT mv_fund_price_changes.price
+                   FROM mv_fund_price_changes
+                  WHERE ((mv_fund_price_changes.fcode)::text = (dr.fcode)::text)
+                  ORDER BY mv_fund_price_changes.pdate DESC
+                 LIMIT 1) AS current_price,
+            (avg(dr.return_1d) * (252)::numeric) AS annual_return,
+            ((stddev(dr.return_1d))::double precision * sqrt((252)::double precision)) AS annual_volatility,
+            count(*) AS trading_days,
+            ((count(*) FILTER (WHERE (dr.return_1d > (0)::numeric)))::double precision / (count(*))::double precision) AS win_rate,
+            min(dr.return_1d) AS worst_daily_return,
+            max(dr.return_1d) AS best_daily_return
+           FROM daily_returns dr
+          WHERE (dr.pdate >= (CURRENT_DATE - '252 days'::interval))
+          GROUP BY dr.fcode
+         HAVING (count(*) >= 20)
+        )
+ SELECT fcode,
+    current_price,
+    annual_return,
+    annual_volatility,
+    trading_days,
+    win_rate,
+    worst_daily_return,
+    best_daily_return,
+        CASE
+            WHEN (annual_volatility > (0)::double precision) THEN (((annual_return - 0.15))::double precision / annual_volatility)
+            ELSE (0)::double precision
+        END AS sharpe_ratio,
+        CASE
+            WHEN (worst_daily_return < (0)::numeric) THEN ((annual_return)::double precision / abs(((worst_daily_return)::double precision * sqrt((252)::double precision))))
+            ELSE (0)::double precision
+        END AS calmar_ratio_approx,
+    CURRENT_TIMESTAMP AS last_calculated
+   FROM fund_metrics f

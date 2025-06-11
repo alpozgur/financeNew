@@ -1,0 +1,47 @@
+WITH company_mapping AS (
+         SELECT recent_funds.fcode,
+            recent_funds.ftitle,
+                CASE
+                    WHEN ((upper(recent_funds.ftitle) ~~ '%İŞ PORTFÖY%'::text) OR (upper(recent_funds.ftitle) ~~ '%IS PORTFOY%'::text)) THEN 'İş Portföy'::text
+                    WHEN ((upper(recent_funds.ftitle) ~~ '%AK PORTFÖY%'::text) OR (upper(recent_funds.ftitle) ~~ '%AKBANK PORTFÖY%'::text)) THEN 'Ak Portföy'::text
+                    WHEN ((upper(recent_funds.ftitle) ~~ '%GARANTİ PORTFÖY%'::text) OR (upper(recent_funds.ftitle) ~~ '%GARANTI PORTFOY%'::text)) THEN 'Garanti Portföy'::text
+                    WHEN ((upper(recent_funds.ftitle) ~~ '%ATA PORTFÖY%'::text) OR (upper(recent_funds.ftitle) ~~ '%ATA PORTFOY%'::text)) THEN 'Ata Portföy'::text
+                    WHEN ((upper(recent_funds.ftitle) ~~ '%QNB PORTFÖY%'::text) OR (upper(recent_funds.ftitle) ~~ '%QNB PORTFOY%'::text)) THEN 'QNB Portföy'::text
+                    WHEN ((upper(recent_funds.ftitle) ~~ '%FİBA PORTFÖY%'::text) OR (upper(recent_funds.ftitle) ~~ '%FIBA PORTFOY%'::text)) THEN 'Fiba Portföy'::text
+                    WHEN ((upper(recent_funds.ftitle) ~~ '%YAPI KREDİ PORTFÖY%'::text) OR (upper(recent_funds.ftitle) ~~ '%YKB PORTFÖY%'::text)) THEN 'Yapı Kredi Portföy'::text
+                    WHEN ((upper(recent_funds.ftitle) ~~ '%TEB PORTFÖY%'::text) OR (upper(recent_funds.ftitle) ~~ '%TEB PORTFOY%'::text)) THEN 'TEB Portföy'::text
+                    WHEN ((upper(recent_funds.ftitle) ~~ '%DENİZ PORTFÖY%'::text) OR (upper(recent_funds.ftitle) ~~ '%DENIZ PORTFOY%'::text)) THEN 'Deniz Portföy'::text
+                    WHEN ((upper(recent_funds.ftitle) ~~ '%ZİRAAT PORTFÖY%'::text) OR (upper(recent_funds.ftitle) ~~ '%ZIRAAT PORTFOY%'::text)) THEN 'Ziraat Portföy'::text
+                    WHEN ((upper(recent_funds.ftitle) ~~ '%HALK PORTFÖY%'::text) OR (upper(recent_funds.ftitle) ~~ '%HALK PORTFOY%'::text)) THEN 'Halk Portföy'::text
+                    WHEN ((upper(recent_funds.ftitle) ~~ '%İSTANBUL PORTFÖY%'::text) OR (upper(recent_funds.ftitle) ~~ '%ISTANBUL PORTFOY%'::text)) THEN 'İstanbul Portföy'::text
+                    WHEN ((upper(recent_funds.ftitle) ~~ '%VAKIF PORTFÖY%'::text) OR (upper(recent_funds.ftitle) ~~ '%VAKIFBANK PORTFÖY%'::text)) THEN 'Vakıf Portföy'::text
+                    ELSE 'Diğer'::text
+                END AS company_name
+           FROM ( SELECT DISTINCT tefasfunds.fcode,
+                    tefasfunds.ftitle
+                   FROM tefasfunds
+                  WHERE (tefasfunds.pdate >= (CURRENT_DATE - '30 days'::interval))) recent_funds
+        ), latest_fund_data AS (
+         SELECT DISTINCT ON (tefasfunds.fcode) tefasfunds.fcode,
+            tefasfunds.price,
+            tefasfunds.fcapacity,
+            tefasfunds.investorcount,
+            tefasfunds.pdate
+           FROM tefasfunds
+          WHERE (tefasfunds.pdate >= (CURRENT_DATE - '7 days'::interval))
+          ORDER BY tefasfunds.fcode, tefasfunds.pdate DESC
+        )
+ SELECT cm.company_name,
+    cm.fcode,
+    cm.ftitle AS fund_name,
+    lfd.price AS current_price,
+    lfd.fcapacity,
+    lfd.investorcount,
+    pm.annual_return,
+    pm.annual_volatility,
+    pm.sharpe_ratio,
+    pm.win_rate
+   FROM ((company_mapping cm
+     JOIN latest_fund_data lfd ON (((cm.fcode)::text = (lfd.fcode)::text)))
+     LEFT JOIN mv_fund_performance_metrics pm ON (((cm.fcode)::text = (pm.fcode)::text)))
+  WHERE (cm.company_name <> 'Diğer'::text)

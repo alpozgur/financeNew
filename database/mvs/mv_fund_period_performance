@@ -1,0 +1,57 @@
+WITH price_data AS (
+         SELECT tefasfunds.fcode,
+            tefasfunds.pdate,
+            tefasfunds.price,
+            first_value(tefasfunds.price) OVER (PARTITION BY tefasfunds.fcode ORDER BY tefasfunds.pdate DESC) AS current_price,
+            first_value(tefasfunds.pdate) OVER (PARTITION BY tefasfunds.fcode ORDER BY tefasfunds.pdate DESC) AS "current_date",
+                CASE
+                    WHEN ((tefasfunds.pdate <= (CURRENT_DATE - '30 days'::interval)) AND (tefasfunds.pdate >= (CURRENT_DATE - '37 days'::interval))) THEN tefasfunds.price
+                    ELSE NULL::numeric
+                END AS price_30d_ago,
+                CASE
+                    WHEN ((tefasfunds.pdate <= (CURRENT_DATE - '90 days'::interval)) AND (tefasfunds.pdate >= (CURRENT_DATE - '97 days'::interval))) THEN tefasfunds.price
+                    ELSE NULL::numeric
+                END AS price_90d_ago,
+                CASE
+                    WHEN ((tefasfunds.pdate <= (CURRENT_DATE - '180 days'::interval)) AND (tefasfunds.pdate >= (CURRENT_DATE - '187 days'::interval))) THEN tefasfunds.price
+                    ELSE NULL::numeric
+                END AS price_180d_ago
+           FROM tefasfunds
+          WHERE ((tefasfunds.pdate >= (CURRENT_DATE - '200 days'::interval)) AND (tefasfunds.price > (0)::numeric))
+        ), performance_calc AS (
+         SELECT price_data.fcode,
+            max(price_data.current_price) AS current_price,
+            max(CURRENT_DATE) AS last_update,
+                CASE
+                    WHEN (min(price_data.price_30d_ago) > (0)::numeric) THEN (((max(price_data.current_price) / min(price_data.price_30d_ago)) - (1)::numeric) * (100)::numeric)
+                    ELSE NULL::numeric
+                END AS return_30d,
+                CASE
+                    WHEN (min(price_data.price_90d_ago) > (0)::numeric) THEN (((max(price_data.current_price) / min(price_data.price_90d_ago)) - (1)::numeric) * (100)::numeric)
+                    ELSE NULL::numeric
+                END AS return_90d,
+                CASE
+                    WHEN (min(price_data.price_180d_ago) > (0)::numeric) THEN (((max(price_data.current_price) / min(price_data.price_180d_ago)) - (1)::numeric) * (100)::numeric)
+                    ELSE NULL::numeric
+                END AS return_180d,
+            ((stddev(
+                CASE
+                    WHEN (price_data.pdate >= (CURRENT_DATE - '30 days'::interval)) THEN price_data.price
+                    ELSE NULL::numeric
+                END) / NULLIF(avg(
+                CASE
+                    WHEN (price_data.pdate >= (CURRENT_DATE - '30 days'::interval)) THEN price_data.price
+                    ELSE NULL::numeric
+                END), (0)::numeric)) * (100)::numeric) AS volatility_30d
+           FROM price_data
+          GROUP BY price_data.fcode
+        )
+ SELECT fcode,
+    current_price,
+    last_update,
+    return_30d,
+    return_90d,
+    return_180d,
+    volatility_30d
+   FROM performance_calc
+  WHERE ((return_30d IS NOT NULL) OR (return_90d IS NOT NULL))

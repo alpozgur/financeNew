@@ -1,0 +1,9 @@
+SELECT DISTINCT ON (fcode) fcode,
+    ftitle,
+    price,
+    fcapacity,
+    investorcount,
+    pdate
+   FROM tefasfunds
+  WHERE (pdate >= (CURRENT_DATE - '7 days'::interval))
+  ORDER BY fcode, pdate DESC

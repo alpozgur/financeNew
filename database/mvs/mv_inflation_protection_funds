@@ -1,0 +1,64 @@
+WITH latest_portfolio AS (
+         SELECT DISTINCT ON (tefasfunddetails.fcode) tefasfunddetails.fcode,
+            tefasfunddetails.fdate,
+            (((COALESCE(tefasfunddetails.preciousmetals, (0)::numeric) + COALESCE(tefasfunddetails.preciousmetalskba, (0)::numeric)) + COALESCE(tefasfunddetails.preciousmetalskks, (0)::numeric)) + COALESCE(tefasfunddetails.preciousmetalsbyf, (0)::numeric)) AS gold_ratio,
+            (COALESCE(tefasfunddetails.stock, (0)::numeric) + COALESCE(tefasfunddetails.foreignequity, (0)::numeric)) AS equity_ratio,
+            (((((((COALESCE(tefasfunddetails.eurobonds, (0)::numeric) + COALESCE(tefasfunddetails.foreigncurrencybills, (0)::numeric)) + COALESCE(tefasfunddetails.foreigndebtinstruments, (0)::numeric)) + COALESCE(tefasfunddetails.foreigndomesticdebtinstruments, (0)::numeric)) + COALESCE(tefasfunddetails.foreignprivatesectordebtinstruments, (0)::numeric)) + COALESCE(tefasfunddetails.fxpayablebills, (0)::numeric)) + COALESCE(tefasfunddetails.governmentbondsandbillsfx, (0)::numeric)) + COALESCE(tefasfunddetails.privatesectorforeigndebtinstruments, (0)::numeric)) AS fx_ratio,
+            (((((((COALESCE(tefasfunddetails.participationaccount, (0)::numeric) + COALESCE(tefasfunddetails.participationaccountau, (0)::numeric)) + COALESCE(tefasfunddetails.participationaccountd, (0)::numeric)) + COALESCE(tefasfunddetails.participationaccounttl, (0)::numeric)) + COALESCE(tefasfunddetails.governmentleasecertificates, (0)::numeric)) + COALESCE(tefasfunddetails.governmentleasecertificatesd, (0)::numeric)) + COALESCE(tefasfunddetails.governmentleasecertificatestl, (0)::numeric)) + COALESCE(tefasfunddetails.privatesectorleasecertificates, (0)::numeric)) AS islamic_ratio,
+            (((COALESCE(tefasfunddetails.governmentbond, (0)::numeric) + COALESCE(tefasfunddetails.privatesectorbond, (0)::numeric)) + COALESCE(tefasfunddetails.treasurybill, (0)::numeric)) + COALESCE(tefasfunddetails.bankbills, (0)::numeric)) AS bond_ratio,
+            ((((((COALESCE(tefasfunddetails.reverserepo, (0)::numeric) + COALESCE(tefasfunddetails.repo, (0)::numeric)) + COALESCE(tefasfunddetails.termdeposit, (0)::numeric)) + COALESCE(tefasfunddetails.termdeposittl, (0)::numeric)) + COALESCE(tefasfunddetails.termdepositau, (0)::numeric)) + COALESCE(tefasfunddetails.termdepositd, (0)::numeric)) + COALESCE(tefasfunddetails.tmm, (0)::numeric)) AS money_market_ratio
+           FROM tefasfunddetails
+          WHERE (tefasfunddetails.fdate >= (CURRENT_DATE - '30 days'::interval))
+          ORDER BY tefasfunddetails.fcode, tefasfunddetails.fdate DESC
+        ), latest_fund_data AS (
+         SELECT DISTINCT ON (tefasfunds.fcode) tefasfunds.fcode,
+            tefasfunds.ftitle AS fund_name,
+            tefasfunds.price AS current_price,
+            tefasfunds.fcapacity,
+            tefasfunds.investorcount,
+            tefasfunds.pdate AS last_update
+           FROM tefasfunds
+          WHERE ((tefasfunds.pdate >= (CURRENT_DATE - '7 days'::interval)) AND (tefasfunds.price > (0)::numeric) AND (tefasfunds.investorcount > 50))
+          ORDER BY tefasfunds.fcode, tefasfunds.pdate DESC
+        ), inflation_scores AS (
+         SELECT lf.fcode,
+            lf.fund_name,
+            lf.current_price,
+            lf.fcapacity,
+            lf.investorcount,
+            lf.last_update,
+            lp.gold_ratio,
+            lp.equity_ratio,
+            lp.fx_ratio,
+            lp.islamic_ratio,
+            lp.bond_ratio,
+            lp.money_market_ratio,
+            (((((lp.gold_ratio * 2.5) + (lp.equity_ratio * 2.0)) + (lp.fx_ratio * 1.8)) + (lp.islamic_ratio * 1.5)) + ((((100)::numeric - lp.money_market_ratio) - lp.bond_ratio) * 0.5)) AS inflation_protection_score,
+                CASE
+                    WHEN (lp.gold_ratio > (50)::numeric) THEN 'ALTIN_AGIRLIKLI'::text
+                    WHEN (lp.equity_ratio > (60)::numeric) THEN 'HISSE_AGIRLIKLI'::text
+                    WHEN (lp.fx_ratio > (40)::numeric) THEN 'DOVIZ_AGIRLIKLI'::text
+                    WHEN (lp.islamic_ratio > (50)::numeric) THEN 'KATILIM_FONU'::text
+                    WHEN ((lp.gold_ratio > (20)::numeric) AND (lp.equity_ratio > (30)::numeric)) THEN 'KARMA_KORUMA'::text
+                    WHEN (lp.bond_ratio > (60)::numeric) THEN 'TAHVIL_AGIRLIKLI'::text
+                    ELSE 'DIGER'::text
+                END AS protection_category
+           FROM (latest_fund_data lf
+             JOIN latest_portfolio lp ON (((lf.fcode)::text = (lp.fcode)::text)))
+        )
+ SELECT fcode,
+    fund_name,
+    current_price,
+    fcapacity,
+    investorcount,
+    last_update,
+    gold_ratio,
+    equity_ratio,
+    fx_ratio,
+    islamic_ratio,
+    bond_ratio,
+    money_market_ratio,
+    inflation_protection_score,
+    protection_category
+   FROM inflation_scores
+  WHERE (inflation_protection_score > (10)::numeric)

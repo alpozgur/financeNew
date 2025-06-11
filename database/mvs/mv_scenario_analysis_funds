@@ -1,0 +1,37 @@
+SELECT ipf.fcode,
+    ipf.fund_name,
+    ipf.current_price,
+    ipf.fcapacity,
+    ipf.investorcount,
+    ipf.last_update,
+    ipf.gold_ratio,
+    ipf.equity_ratio,
+    ipf.fx_ratio,
+    ipf.islamic_ratio,
+    ipf.bond_ratio,
+    ipf.money_market_ratio,
+    ipf.inflation_protection_score,
+    ipf.protection_category,
+    fpp.return_30d,
+    fpp.return_90d,
+    fpp.return_180d,
+    fpp.volatility_30d,
+        CASE
+            WHEN ((fpp.volatility_30d > (0)::numeric) AND (fpp.return_90d IS NOT NULL)) THEN (((fpp.return_90d * (4)::numeric) - (15)::numeric) / fpp.volatility_30d)
+            ELSE NULL::numeric
+        END AS sharpe_ratio_approx,
+        CASE
+            WHEN (ipf.protection_category = ANY (ARRAY['ALTIN_AGIRLIKLI'::text, 'HISSE_AGIRLIKLI'::text, 'DOVIZ_AGIRLIKLI'::text])) THEN (ipf.inflation_protection_score + COALESCE((fpp.return_30d * 0.5), (0)::numeric))
+            ELSE ipf.inflation_protection_score
+        END AS inflation_scenario_score,
+        CASE
+            WHEN ((ipf.money_market_ratio > (50)::numeric) OR (ipf.bond_ratio > (50)::numeric)) THEN ((100)::numeric - COALESCE(fpp.volatility_30d, (50)::numeric))
+            ELSE ((50)::numeric - COALESCE(fpp.volatility_30d, (50)::numeric))
+        END AS crisis_scenario_score,
+        CASE
+            WHEN (ipf.fcapacity > (1000000000)::numeric) THEN 'BUYUK'::text
+            WHEN (ipf.fcapacity > (100000000)::numeric) THEN 'ORTA'::text
+            ELSE 'KUCUK'::text
+        END AS size_category
+   FROM (mv_inflation_protection_funds ipf
+     LEFT JOIN mv_fund_period_performance fpp ON (((ipf.fcode)::text = (fpp.fcode)::text)))

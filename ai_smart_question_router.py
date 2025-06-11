@@ -833,7 +833,17 @@ class AISmartQuestionRouter:
             '"Beta katsayısı 1 altında"': 'advanced_metrics_analyzer.handle_beta_analysis',
             '"İş Portföy analizi"': 'portfolio_company_analyzer.analyze_company_comprehensive',
             '"100000 TL nasıl dağıtmalı"': 'mathematical_calculator.handle_portfolio_distribution',
-            '"Emekliliğe 25 yıl var"': 'personal_finance_analyzer.handle_retirement_planning'
+            '"Emekliliğe 25 yıl var"': 'personal_finance_analyzer.handle_retirement_planning',
+            '"BHL vs AJE"': 'performance_analyzer.handle_comparison_question',
+            '"FPH ve GFL karşılaştır"': 'performance_analyzer.handle_comparison_question',
+            '"USD bazlı fonlar"': 'currency_inflation_analyzer.analyze_currency_funds',
+            '"dolar fonları"': 'currency_inflation_analyzer.analyze_currency_funds',
+            '"alpha değeri pozitif fonlar"': 'advanced_metrics_analyzer.handle_alpha_analysis',
+            '"tracking error düşük index fonlar"': 'advanced_metrics_analyzer.handle_tracking_error_analysis',
+            '"information ratio yüksek aktif fonlar"': 'advanced_metrics_analyzer.handle_information_ratio_analysis',
+            '"50 günlük hareketli ortalama üstünde fonlar"': 'technical_analyzer.handle_moving_average_signals_sql',
+            '"beta 0.5 düşük fonlar"': 'advanced_metrics_analyzer.handle_beta_analysis',
+
         }
         
         for example, mapping in example_mappings.items():

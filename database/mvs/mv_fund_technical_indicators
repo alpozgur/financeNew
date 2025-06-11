@@ -1,0 +1,86 @@
+WITH latest_data AS (
+         SELECT DISTINCT ON (tefasfunds.fcode) tefasfunds.fcode,
+            tefasfunds.pdate,
+            tefasfunds.price AS current_price,
+            tefasfunds.investorcount,
+            tefasfunds.fcapacity
+           FROM tefasfunds
+          WHERE ((tefasfunds.pdate >= (CURRENT_DATE - '30 days'::interval)) AND (tefasfunds.price > (0)::numeric))
+          ORDER BY tefasfunds.fcode, tefasfunds.pdate DESC
+        ), price_changes AS (
+         SELECT tefasfunds.fcode,
+            tefasfunds.pdate,
+            tefasfunds.price,
+            (tefasfunds.price - lag(tefasfunds.price) OVER (PARTITION BY tefasfunds.fcode ORDER BY tefasfunds.pdate)) AS price_change,
+            row_number() OVER (PARTITION BY tefasfunds.fcode ORDER BY tefasfunds.pdate DESC) AS rn
+           FROM tefasfunds
+          WHERE ((tefasfunds.pdate >= (CURRENT_DATE - '90 days'::interval)) AND (tefasfunds.price > (0)::numeric))
+        ), rsi_calc AS (
+         SELECT price_changes.fcode,
+            avg(
+                CASE
+                    WHEN (price_changes.price_change > (0)::numeric) THEN price_changes.price_change
+                    ELSE (0)::numeric
+                END) AS avg_gain,
+            avg(
+                CASE
+                    WHEN (price_changes.price_change < (0)::numeric) THEN abs(price_changes.price_change)
+                    ELSE (0)::numeric
+                END) AS avg_loss,
+            count(*) AS change_count
+           FROM price_changes
+          WHERE ((price_changes.rn <= 15) AND (price_changes.price_change IS NOT NULL))
+          GROUP BY price_changes.fcode
+        ), ma_calculations AS (
+         SELECT ranked_data.fcode,
+            avg(ranked_data.price) FILTER (WHERE (ranked_data.rn <= 10)) AS sma_10,
+            avg(ranked_data.price) FILTER (WHERE (ranked_data.rn <= 20)) AS sma_20,
+            avg(ranked_data.price) FILTER (WHERE (ranked_data.rn <= 50)) AS sma_50,
+            stddev(ranked_data.price) FILTER (WHERE (ranked_data.rn <= 20)) AS std_20,
+            min(ranked_data.price) FILTER (WHERE (ranked_data.rn <= 14)) AS min_14,
+            max(ranked_data.price) FILTER (WHERE (ranked_data.rn <= 14)) AS max_14,
+            count(*) AS data_points
+           FROM ( SELECT tefasfunds.fcode,
+                    tefasfunds.price,
+                    row_number() OVER (PARTITION BY tefasfunds.fcode ORDER BY tefasfunds.pdate DESC) AS rn
+                   FROM tefasfunds
+                  WHERE ((tefasfunds.pdate >= (CURRENT_DATE - '90 days'::interval)) AND (tefasfunds.price > (0)::numeric))) ranked_data
+          GROUP BY ranked_data.fcode
+        )
+ SELECT l.fcode,
+    l.pdate AS last_update,
+    l.current_price,
+    l.investorcount,
+    l.fcapacity,
+    m.sma_10,
+    m.sma_20,
+    m.sma_50,
+    m.std_20,
+    (m.sma_20 + ((2)::numeric * m.std_20)) AS bb_upper,
+    (m.sma_20 - ((2)::numeric * m.std_20)) AS bb_lower,
+        CASE
+            WHEN (((m.sma_20 + ((2)::numeric * m.std_20)) - (m.sma_20 - ((2)::numeric * m.std_20))) > (0)::numeric) THEN ((l.current_price - (m.sma_20 - ((2)::numeric * m.std_20))) / ((m.sma_20 + ((2)::numeric * m.std_20)) - (m.sma_20 - ((2)::numeric * m.std_20))))
+            ELSE 0.5
+        END AS bb_position,
+        CASE
+            WHEN ((m.max_14 - m.min_14) > (0)::numeric) THEN (((l.current_price - m.min_14) / (m.max_14 - m.min_14)) * (100)::numeric)
+            ELSE (50)::numeric
+        END AS stochastic_14,
+        CASE
+            WHEN (r.avg_loss = (0)::numeric) THEN (100)::numeric
+            WHEN (r.avg_gain = (0)::numeric) THEN (0)::numeric
+            WHEN ((r.avg_loss IS NULL) OR (r.avg_gain IS NULL)) THEN NULL::numeric
+            ELSE ((100)::numeric - ((100)::numeric / ((1)::numeric + (r.avg_gain / r.avg_loss))))
+        END AS rsi_14,
+    (m.sma_10 - m.sma_20) AS macd_line,
+        CASE
+            WHEN (m.sma_20 > (0)::numeric) THEN (((l.current_price / m.sma_20) - (1)::numeric) * (100)::numeric)
+            ELSE (0)::numeric
+        END AS price_vs_sma20,
+    m.data_points,
+    r.change_count AS rsi_data_points,
+    (CURRENT_DATE - l.pdate) AS days_since_last_trade
+   FROM ((latest_data l
+     JOIN ma_calculations m ON (((l.fcode)::text = (m.fcode)::text)))
+     LEFT JOIN rsi_calc r ON (((l.fcode)::text = (r.fcode)::text)))
+  WHERE (m.data_points >= 20)

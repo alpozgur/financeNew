@@ -75,17 +75,17 @@ class TEFASAutomatedQATester:
             {"category": "Performance", "question": "en çok düşen fonlar", "handler": "performance_analyzer", "method": "handle_worst_funds_list"},
             
             # Fon analizi - Çeşitli fon kodları
-            {"category": "Performance", "question": "AKB", "handler": "performance_analyzer", "method": "handle_analysis_question_dual"},
-            {"category": "Performance", "question": "TYH analiz", "handler": "performance_analyzer", "method": "handle_analysis_question_dual"},
-            {"category": "Performance", "question": "YAS fonunu incele", "handler": "performance_analyzer", "method": "handle_analysis_question_dual"},
-            {"category": "Performance", "question": "IPB fonu nasıl", "handler": "performance_analyzer", "method": "handle_analysis_question_dual"},
-            {"category": "Performance", "question": "GAF fonunu değerlendir", "handler": "performance_analyzer", "method": "handle_analysis_question_dual"},
-            {"category": "Performance", "question": "TCD fon analizi yap", "handler": "performance_analyzer", "method": "handle_analysis_question_dual"},
+            {"category": "Performance", "question": "AJE", "handler": "performance_analyzer", "method": "handle_analysis_question_dual"},
+            {"category": "Performance", "question": "BHL analiz", "handler": "performance_analyzer", "method": "handle_analysis_question_dual"},
+            {"category": "Performance", "question": "BUP fonunu incele", "handler": "performance_analyzer", "method": "handle_analysis_question_dual"},
+            {"category": "Performance", "question": "DPC fonu nasıl", "handler": "performance_analyzer", "method": "handle_analysis_question_dual"},
+            {"category": "Performance", "question": "FPH fonunu değerlendir", "handler": "performance_analyzer", "method": "handle_analysis_question_dual"},
+            {"category": "Performance", "question": "GFL fon analizi yap", "handler": "performance_analyzer", "method": "handle_analysis_question_dual"},
             
             # Karşılaştırmalar
-            {"category": "Performance", "question": "AKB vs TYH", "handler": "performance_analyzer", "method": "handle_comparison_question"},
-            {"category": "Performance", "question": "YAS ve IPB karşılaştır", "handler": "performance_analyzer", "method": "handle_comparison_question"},
-            {"category": "Performance", "question": "GAF ile TCD karşılaştırması", "handler": "performance_analyzer", "method": "handle_comparison_question"},
+            {"category": "Performance", "question": "BHL vs AJE", "handler": "performance_analyzer", "method": "handle_comparison_question"},
+            {"category": "Performance", "question": "FPH ve GFL karşılaştır", "handler": "performance_analyzer", "method": "handle_comparison_question"},
+            {"category": "Performance", "question": "GJB ile GNH karşılaştırması", "handler": "performance_analyzer", "method": "handle_comparison_question"},
             
             # 2025 önerileri
             {"category": "Performance", "question": "2025 için hangi fonları önerirsin", "handler": "performance_analyzer", "method": "handle_2025_recommendation_dual"},
@@ -101,8 +101,8 @@ class TEFASAutomatedQATester:
             {"category": "Performance", "question": "düşük volatiliteli fonlar", "handler": "performance_analyzer", "method": "handle_low_volatility_funds_question"},
             
             # Geçmiş performans
-            {"category": "Performance", "question": "AKB son 1 yıl getirisi", "handler": "performance_analyzer", "method": "handle_fund_past_performance_question"},
-            {"category": "Performance", "question": "TYH geçtiğimiz yıl kazancı", "handler": "performance_analyzer", "method": "handle_fund_past_performance_question"},
+            {"category": "Performance", "question": "GNH son 1 yıl getirisi", "handler": "performance_analyzer", "method": "handle_fund_past_performance_question"},
+            {"category": "Performance", "question": "HGU geçtiğimiz yıl kazancı", "handler": "performance_analyzer", "method": "handle_fund_past_performance_question"},
         ])
         
         # 2. TECHNICAL ANALYZER TESTLERİ
@@ -129,9 +129,9 @@ class TEFASAutomatedQATester:
             {"category": "Technical", "question": "50 günlük hareketli ortalama üstünde fonlar", "handler": "technical_analyzer", "method": "handle_moving_average_signals_sql"},
             
             # AI Pattern
-            {"category": "Technical", "question": "AI pattern analizi ile AKB", "handler": "technical_analyzer", "method": "handle_ai_pattern_analysis"},
-            {"category": "Technical", "question": "TYH için AI teknik analiz", "handler": "technical_analyzer", "method": "handle_ai_pattern_analysis"},
-            {"category": "Technical", "question": "AI pattern ile YAS fonu", "handler": "technical_analyzer", "method": "handle_ai_pattern_analysis"},
+            {"category": "Technical", "question": "AI pattern analizi ile ICD", "handler": "technical_analyzer", "method": "handle_ai_pattern_analysis"},
+            {"category": "Technical", "question": "HGU için AI teknik analiz", "handler": "technical_analyzer", "method": "handle_ai_pattern_analysis"},
+            {"category": "Technical", "question": "AI pattern ile HPF fonu", "handler": "technical_analyzer", "method": "handle_ai_pattern_analysis"},
             
             # Genel teknik sinyal
             {"category": "Technical", "question": "teknik alım sinyali veren fonlar", "handler": "technical_analyzer", "method": "handle_general_technical_signals_sql"},
@@ -367,10 +367,10 @@ class TEFASAutomatedQATester:
         
         # 16. FON DAĞILIMI VE KATEGORİ SORULARI
         test_questions.extend([
-            {"category": "Allocation", "question": "AKB yatırım dağılımı", "handler": "general", "method": "_handle_fund_allocation_question"},
-            {"category": "Allocation", "question": "TYH fonu içeriği", "handler": "general", "method": "_handle_fund_allocation_question"},
-            {"category": "Allocation", "question": "YAS portföy kompozisyonu", "handler": "general", "method": "_handle_fund_allocation_question"},
-            {"category": "Allocation", "question": "IPB varlık dağılımı", "handler": "general", "method": "_handle_fund_allocation_question"},
+            {"category": "Allocation", "question": "ICH yatırım dağılımı", "handler": "general", "method": "_handle_fund_allocation_question"},
+            {"category": "Allocation", "question": "IIA fonu içeriği", "handler": "general", "method": "_handle_fund_allocation_question"},
+            {"category": "Allocation", "question": "KCL portföy kompozisyonu", "handler": "general", "method": "_handle_fund_allocation_question"},
+            {"category": "Allocation", "question": "KKE varlık dağılımı", "handler": "general", "method": "_handle_fund_allocation_question"},
         ])
         
         # 17. AI TEST SORULARI

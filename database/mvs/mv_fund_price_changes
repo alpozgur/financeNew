@@ -1,0 +1,45 @@
+WITH price_data AS (
+         SELECT tefasfunds.fcode,
+            tefasfunds.price,
+            tefasfunds.pdate,
+            tefasfunds.investorcount,
+            tefasfunds.fcapacity,
+            lag(tefasfunds.price, 1) OVER (PARTITION BY tefasfunds.fcode ORDER BY tefasfunds.pdate) AS prev_price_1d,
+            lag(tefasfunds.price, 5) OVER (PARTITION BY tefasfunds.fcode ORDER BY tefasfunds.pdate) AS prev_price_5d,
+            lag(tefasfunds.price, 10) OVER (PARTITION BY tefasfunds.fcode ORDER BY tefasfunds.pdate) AS prev_price_10d,
+            lag(tefasfunds.price, 20) OVER (PARTITION BY tefasfunds.fcode ORDER BY tefasfunds.pdate) AS prev_price_20d,
+            lag(tefasfunds.price, 50) OVER (PARTITION BY tefasfunds.fcode ORDER BY tefasfunds.pdate) AS prev_price_50d
+           FROM tefasfunds
+          WHERE ((tefasfunds.price > (0)::numeric) AND (tefasfunds.pdate >= (CURRENT_DATE - '100 days'::interval)))
+        )
+ SELECT fcode,
+    pdate,
+    price,
+    investorcount,
+    fcapacity,
+    prev_price_1d,
+    prev_price_5d,
+    prev_price_10d,
+    prev_price_20d,
+    prev_price_50d,
+        CASE
+            WHEN (prev_price_1d > (0)::numeric) THEN ((price - prev_price_1d) / prev_price_1d)
+            ELSE NULL::numeric
+        END AS return_1d,
+        CASE
+            WHEN (prev_price_5d > (0)::numeric) THEN ((price - prev_price_5d) / prev_price_5d)
+            ELSE NULL::numeric
+        END AS return_5d,
+        CASE
+            WHEN (prev_price_10d > (0)::numeric) THEN ((price - prev_price_10d) / prev_price_10d)
+            ELSE NULL::numeric
+        END AS return_10d,
+        CASE
+            WHEN (prev_price_20d > (0)::numeric) THEN ((price - prev_price_20d) / prev_price_20d)
+            ELSE NULL::numeric
+        END AS return_20d,
+        CASE
+            WHEN (prev_price_50d > (0)::numeric) THEN ((price - prev_price_50d) / prev_price_50d)
+            ELSE NULL::numeric
+        END AS return_50d
+   FROM price_data

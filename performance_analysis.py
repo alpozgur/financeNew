@@ -1,4 +1,5 @@
 from datetime import datetime
+import re
 import time
 import pandas as pd
 import numpy as np
@@ -568,15 +569,32 @@ class PerformanceAnalyzerMain:
         return response
     
     def handle_comparison_question(self, question):
-        """Fon karşılaştırması (önceki kodla aynı)"""
-        words = question.upper().split()
+        """Fon karşılaştırması - DÜZELTILMIŞ"""
+        question_upper = question.upper()
         fund_codes = []
         
-        for word in words:
-            if len(word) == 3 and word.isalpha():
-                if word in self.active_funds:
-                    fund_codes.append(word)
+        # Önce VS pattern'ini kontrol et
+        vs_patterns = [
+            r'(\w{3})\s+VS\s+(\w{3})',
+            r'(\w{3})\s+İLE\s+(\w{3})',
+            r'(\w{3})\s+KARŞI\s+(\w{3})',
+            r'(\w{3})\s+VE\s+(\w{3})\s+KARŞILAŞTIR'
+        ]
         
+        for pattern in vs_patterns:
+            match = re.search(pattern, question_upper)
+            if match:
+                fund_codes = list(match.groups())
+                break
+        
+        # Pattern bulunamazsa, eski yöntem
+        if not fund_codes:
+            words = question_upper.split()
+            for word in words:
+                if len(word) == 3 and word.isalpha() and word != 'VE':
+                    if word in self.active_funds:
+                        fund_codes.append(word)
+
         if len(fund_codes) < 2:
             return f"❌ Karşılaştırma için en az 2 fon kodu gerekli. Örnek: 'AKB ve YAS karşılaştır'"
         
@@ -1528,6 +1546,11 @@ class PerformanceAnalyzerMain:
     @staticmethod
     def get_method_patterns():
         return {
+            'handle_comparison_question': [
+            'karşılaştır', 'vs', 'ile.*karşı', 've.*karşılaştır',
+            r'\w{3}\s+vs\s+\w{3}',  # Regex pattern
+            r'\w{3}\s+\w{3}\s+karşılaştır'
+            ],
             'handle_safest_funds_sql_fast': ['güvenli', 'en az riskli', 'düşük risk', 'güvenli fon'],
             'handle_top_gainers': ['kazandıran', 'en iyi performans', 'getiri', 'yükselen', 'son.*gün.*performans'],
             'handle_worst_funds_list': ['kaybettiren', 'en çok kaybeden', 'düşen', 'kayıp'],

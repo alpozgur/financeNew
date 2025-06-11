@@ -2,7 +2,7 @@ from interactive_qa_dual_ai import DualAITefasQA
 
 all_test_questions = [
     # (Buraya yukarıdaki listeden tüm soruları ekle, birkaç örnek aşağıda)
-    "AKB fonunun son 1 yıl performansı nedir?",
+    "KKE fonunun son 1 yıl performansı nedir?",
     "Son 30 günde en çok kazandıran 5 fon nedir?",
     "Sharpe oranı en yüksek 10 fon?",
     "En güvenli fonları sıralar mısın?",
@@ -14,7 +14,7 @@ all_test_questions = [
     "Aylık 2000 TL yatırırsam 8 yılda ne kadar birikir?",
     "Altın fonları önerir misin?",
     "Son 5 yılda istikrarlı fonlar hangileri?",
-    "akb fonunu analiz et",
+    "KKE fonunu analiz et",
     "xyzxyz fonu hakkında bilgi",
     # Tüm diğer varyasyonlar buraya ekle!
     # ...
