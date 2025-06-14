@@ -738,17 +738,7 @@ class MacroeconomicAnalyzer:
                     response += f"\n📱 OpenAI Değerlendirmesi:\n{ai_response}\n"
                 except:
                     pass
-            
-            # if self.coordinator.ai_analyzer.ollama_available:
-            #     try:
-            #         ollama_response = self.coordinator.ai_analyzer.query_ollama(
-            #             prompt,
-            #             "Sen Türkiye ekonomisi ve para politikası uzmanısın."
-            #         )
-            #         response += f"\n🦙 Ollama Değerlendirmesi:\n{ollama_response}\n"
-            #     except:
-            #         pass
-            
+                        
             return response
             
         except Exception as e:

@@ -680,10 +680,12 @@ class AISmartQuestionRouter:
                 'handler': 'performance_analyzer',
                 'method': 'handle_top_gainers',
                 'patterns': [
-                    r'en\s*(?:çok\s*)?kazandıran',
-                    r'en\s*(?:iyi|yüksek)\s*(?:performans|getiri)'
+                    r'en\s*(?:çok\s*)?kazandıran\s*(?:fonlar?)?',
+                    r'en\s*(?:iyi|yüksek)\s*(?:performans|getiri)(?:\s*(?:gösteren|li))?\s*(?:fonlar?)?',
+                    r'en\s*(?:çok\s*)?kazandıran\s*\d*\s*(?:fonlar?)?',
+                    r'(?:son|geçen)\s*\d*\s*(?:ay|yıl)\s*(?:en\s*(?:iyi|çok\s*kazandıran))?\s*(?:fonlar?)?'
                 ],
-                'priority': 0.9
+                'priority': 1.0  # En yüksek öncelik
             },
             {
                 'handler': 'performance_analyzer',

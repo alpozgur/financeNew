@@ -1,0 +1,4198 @@
+================================================================================
+TEFAS AUTOMATED QA TEST SONUÇLARI
+================================================================================
+
+Test Tarihi: 2025-06-11 23:40:30
+Toplam Test: 168
+Başarılı: 168
+Başarısız: 0
+Başarı Oranı: %100.0
+
+KATEGORİ BAZLI SONUÇLAR:
+----------------------------------------
+AI              :   3/  3 (%100.0)
+Advanced        :  13/ 13 (%100.0)
+Allocation      :   4/  4 (%100.0)
+Company         :  10/ 10 (%100.0)
+Currency        :   8/  8 (%100.0)
+Edge            :   7/  7 (%100.0)
+Fundamental     :  11/ 11 (%100.0)
+Macro           :   6/  6 (%100.0)
+Market          :   3/  3 (%100.0)
+Math            :   7/  7 (%100.0)
+Multi           :   4/  4 (%100.0)
+Performance     :  33/ 33 (%100.0)
+Personal        :  10/ 10 (%100.0)
+Predictive      :   5/  5 (%100.0)
+Scenario        :  10/ 10 (%100.0)
+Technical       :  18/ 18 (%100.0)
+Thematic        :   8/  8 (%100.0)
+Time            :   8/  8 (%100.0)
+
+================================================================================
+DETAYLI TEST SONUÇLARI:
+================================================================================
+
+TEST #1
+----------------------------------------
+Kategori: Performance
+Soru: en güvenli fon
+Beklenen Handler: performance_analyzer.handle_safest_fund
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.07s
+Yanıt Önizleme:
+
+🛡️ RİSK KONTROLLÜ EN GÜVENLİ 10 FON
+==================================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon: 10
+   • SQL Analizi: 30 fon
+   • ✅ Risk Kontrolü Geçen: 30
+   • ❌ Riskli Bulunan: 0
+   • En Düşük Volatilite: %0.01
+
+ 1. BTP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+7.124
+    📈 Veri Noktası: 121
+    🛡️ Risk Seviyesi: LOW
+    🏷️ Tür: N/A
+
+ 2. MPP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+15.589
+    📈 Veri Noktası: 121
+    🛡...
+
+TEST #2
+----------------------------------------
+Kategori: Performance
+Soru: en güvenli 5 fon
+Beklenen Handler: performance_analyzer.handle_safest_funds_sql_fast
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.04s
+Yanıt Önizleme:
+
+🛡️ RİSK KONTROLLÜ EN GÜVENLİ 5 FON
+==================================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon: 5
+   • SQL Analizi: 15 fon
+   • ✅ Risk Kontrolü Geçen: 15
+   • ❌ Riskli Bulunan: 0
+   • En Düşük Volatilite: %0.01
+
+ 1. BTP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+7.124
+    📈 Veri Noktası: 121
+    🛡️ Risk Seviyesi: LOW
+    🏷️ Tür: N/A
+
+ 2. MPP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+15.589
+    📈 Veri Noktası: 121
+    🛡️ ...
+
+TEST #3
+----------------------------------------
+Kategori: Performance
+Soru: en güvenli 10 fon listesi
+Beklenen Handler: performance_analyzer.handle_safest_funds_sql_fast
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.05s
+Yanıt Önizleme:
+
+🛡️ RİSK KONTROLLÜ EN GÜVENLİ 10 FON
+==================================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon: 10
+   • SQL Analizi: 30 fon
+   • ✅ Risk Kontrolü Geçen: 30
+   • ❌ Riskli Bulunan: 0
+   • En Düşük Volatilite: %0.01
+
+ 1. BTP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+7.124
+    📈 Veri Noktası: 121
+    🛡️ Risk Seviyesi: LOW
+    🏷️ Tür: N/A
+
+ 2. MPP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+15.589
+    📈 Veri Noktası: 121
+    🛡...
+
+TEST #4
+----------------------------------------
+Kategori: Performance
+Soru: en az riskli fonlar
+Beklenen Handler: performance_analyzer.handle_safest_funds_sql_fast
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.05s
+Yanıt Önizleme:
+
+🛡️ RİSK KONTROLLÜ EN GÜVENLİ 10 FON
+==================================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon: 10
+   • SQL Analizi: 30 fon
+   • ✅ Risk Kontrolü Geçen: 30
+   • ❌ Riskli Bulunan: 0
+   • En Düşük Volatilite: %0.01
+
+ 1. BTP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+7.124
+    📈 Veri Noktası: 121
+    🛡️ Risk Seviyesi: LOW
+    🏷️ Tür: N/A
+
+ 2. MPP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+15.589
+    📈 Veri Noktası: 121
+    🛡...
+
+TEST #5
+----------------------------------------
+Kategori: Performance
+Soru: güvenli fonlar hangileri
+Beklenen Handler: performance_analyzer.handle_safest_funds_sql_fast
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.06s
+Yanıt Önizleme:
+
+🛡️ RİSK KONTROLLÜ EN GÜVENLİ 10 FON
+==================================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon: 10
+   • SQL Analizi: 30 fon
+   • ✅ Risk Kontrolü Geçen: 30
+   • ❌ Riskli Bulunan: 0
+   • En Düşük Volatilite: %0.01
+
+ 1. BTP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+7.124
+    📈 Veri Noktası: 121
+    🛡️ Risk Seviyesi: LOW
+    🏷️ Tür: N/A
+
+ 2. MPP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+15.589
+    📈 Veri Noktası: 121
+    🛡...
+
+TEST #6
+----------------------------------------
+Kategori: Performance
+Soru: en riskli fon
+Beklenen Handler: performance_analyzer.handle_most_risky_fund
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.22s
+Yanıt Önizleme:
+
+📈 EN RİSKLİ 10 FON (Yüksek Volatilite)
+=============================================
+
+📊 EN YÜKSEK VOLATİLİTE FONLARI:
+
+ 1. URA 🟠
+    📈 Risk (Volatilite): %1.55
+    📊 Getiri: %+23.12
+    💲 Güncel Fiyat: 1.0644 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 2. PBE 🟠
+    📈 Risk (Volatilite): %1.47
+    📊 Getiri: %+28.74
+    💲 Güncel Fiyat: 1.4369 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 3. IJC 🟠
+    📈 Risk (Volatilite): %1.45
+    📊 Getiri: %+20.24
+    💲 Güncel Fiyat: 6.9567 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 4. RTA 🟠
+    📈 Risk...
+
+TEST #7
+----------------------------------------
+Kategori: Performance
+Soru: en riskli 10 fon
+Beklenen Handler: performance_analyzer.handle_riskiest_funds_list
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.16s
+Yanıt Önizleme:
+
+📈 EN RİSKLİ 10 FON (Yüksek Volatilite)
+=============================================
+
+📊 EN YÜKSEK VOLATİLİTE FONLARI:
+
+ 1. URA 🟠
+    📈 Risk (Volatilite): %1.55
+    📊 Getiri: %+23.12
+    💲 Güncel Fiyat: 1.0644 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 2. PBE 🟠
+    📈 Risk (Volatilite): %1.47
+    📊 Getiri: %+28.74
+    💲 Güncel Fiyat: 1.4369 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 3. IJC 🟠
+    📈 Risk (Volatilite): %1.45
+    📊 Getiri: %+20.24
+    💲 Güncel Fiyat: 6.9567 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 4. RTA 🟠
+    📈 Risk...
+
+TEST #8
+----------------------------------------
+Kategori: Performance
+Soru: yüksek riskli fonlar
+Beklenen Handler: performance_analyzer.handle_riskiest_funds_list
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.18s
+Yanıt Önizleme:
+
+📈 EN RİSKLİ 10 FON (Yüksek Volatilite)
+=============================================
+
+📊 EN YÜKSEK VOLATİLİTE FONLARI:
+
+ 1. URA 🟠
+    📈 Risk (Volatilite): %1.55
+    📊 Getiri: %+23.12
+    💲 Güncel Fiyat: 1.0644 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 2. PBE 🟠
+    📈 Risk (Volatilite): %1.47
+    📊 Getiri: %+28.74
+    💲 Güncel Fiyat: 1.4369 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 3. IJC 🟠
+    📈 Risk (Volatilite): %1.45
+    📊 Getiri: %+20.24
+    💲 Güncel Fiyat: 6.9567 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 4. RTA 🟠
+    📈 Risk...
+
+TEST #9
+----------------------------------------
+Kategori: Performance
+Soru: en çok kazandıran fon
+Beklenen Handler: performance_analyzer.handle_top_gainer_fund_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.16s
+Yanıt Önizleme:
+
+📈 SON 30 GÜN EN ÇOK KAZANDIRAN GÜVENLİ 10 FON
+=======================================================
+
+🛡️ RİSK KONTROLÜ SONUCU:
+   ✅ Güvenli Kazananlar: 45
+   ⚠️ Riskli Kazananlar: 0
+
+ 1. YJH ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 2.3646 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 2. HMK ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 248.0053 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 3. GZH ✅
+    📊 30 GÜN Getiri: %-0.60
+    💰 Güncel Fiyat: 2.9167 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 4. NFK ✅
+    📊 30 GÜN Getir...
+
+TEST #10
+----------------------------------------
+Kategori: Performance
+Soru: en çok kazandıran 5 fon
+Beklenen Handler: performance_analyzer.handle_top_gainers
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.15s
+Yanıt Önizleme:
+
+📈 SON 30 GÜN EN ÇOK KAZANDIRAN GÜVENLİ 5 FON
+=======================================================
+
+🛡️ RİSK KONTROLÜ SONUCU:
+   ✅ Güvenli Kazananlar: 45
+   ⚠️ Riskli Kazananlar: 0
+
+ 1. YJH ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 2.3646 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 2. HMK ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 248.0053 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 3. GZH ✅
+    📊 30 GÜN Getiri: %-0.60
+    💰 Güncel Fiyat: 2.9167 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 4. NFK ✅
+    📊 30 GÜN Getiri...
+
+TEST #11
+----------------------------------------
+Kategori: Performance
+Soru: en çok getiri sağlayan fonlar
+Beklenen Handler: performance_analyzer.handle_top_gainers
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.61s
+Yanıt Önizleme:
+
+📈 SON 30 GÜN EN ÇOK KAZANDIRAN GÜVENLİ 10 FON
+=======================================================
+
+🛡️ RİSK KONTROLÜ SONUCU:
+   ✅ Güvenli Kazananlar: 45
+   ⚠️ Riskli Kazananlar: 0
+
+ 1. YJH ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 2.3646 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 2. HMK ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 248.0053 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 3. GZH ✅
+    📊 30 GÜN Getiri: %-0.60
+    💰 Güncel Fiyat: 2.9167 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 4. NFK ✅
+    📊 30 GÜN Getir...
+
+TEST #12
+----------------------------------------
+Kategori: Performance
+Soru: bu ay en çok kazandıran fonlar
+Beklenen Handler: performance_analyzer.handle_top_gainers
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.18s
+Yanıt Önizleme:
+
+📈 SON 30 GÜN EN ÇOK KAZANDIRAN GÜVENLİ 10 FON
+=======================================================
+
+🛡️ RİSK KONTROLÜ SONUCU:
+   ✅ Güvenli Kazananlar: 45
+   ⚠️ Riskli Kazananlar: 0
+
+ 1. YJH ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 2.3646 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 2. HMK ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 248.0053 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 3. GZH ✅
+    📊 30 GÜN Getiri: %-0.60
+    💰 Güncel Fiyat: 2.9167 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 4. NFK ✅
+    📊 30 GÜN Getir...
+
+TEST #13
+----------------------------------------
+Kategori: Performance
+Soru: en çok kaybettiren fon
+Beklenen Handler: performance_analyzer.handle_worst_fund
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.16s
+Yanıt Önizleme:
+
+🔻 EN ÇOK KAYBETTİREN 10 FON (Son 60 Gün)
+=======================================================
+
+📉 EN KÖTÜ PERFORMANS GÖSTERENİLER:
+
+ 1. AC8 🟢 DÜŞÜK RİSK
+    📉 Kayıp: %-29.24
+    💲 Güncel Fiyat: 76.2539 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 2. BHH 🟢 DÜŞÜK RİSK
+    📉 Kayıp: %-26.30
+    💲 Güncel Fiyat: 1.1635 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 3. RIH 🟢 DÜŞÜK RİSK
+    📉 Kayıp: %-24.13
+    💲 Güncel Fiyat: 7.7460 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 4. OSF 🟢 DÜŞÜK RİSK
+    📉 Kayıp: %-22.82
+    💲 Güncel Fiyat: 3.331...
+
+TEST #14
+----------------------------------------
+Kategori: Performance
+Soru: en çok kaybettiren 10 fon
+Beklenen Handler: performance_analyzer.handle_worst_funds_list
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.16s
+Yanıt Önizleme:
+
+🔻 EN ÇOK KAYBETTİREN 10 FON (Son 60 Gün)
+=======================================================
+
+📉 EN KÖTÜ PERFORMANS GÖSTERENİLER:
+
+ 1. AC8 🟢 DÜŞÜK RİSK
+    📉 Kayıp: %-29.24
+    💲 Güncel Fiyat: 76.2539 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 2. BHH 🟢 DÜŞÜK RİSK
+    📉 Kayıp: %-26.30
+    💲 Güncel Fiyat: 1.1635 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 3. RIH 🟢 DÜŞÜK RİSK
+    📉 Kayıp: %-24.13
+    💲 Güncel Fiyat: 7.7460 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 4. OSF 🟢 DÜŞÜK RİSK
+    📉 Kayıp: %-22.82
+    💲 Güncel Fiyat: 3.331...
+
+TEST #15
+----------------------------------------
+Kategori: Performance
+Soru: en çok düşen fonlar
+Beklenen Handler: performance_analyzer.handle_worst_funds_list
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.24s
+Yanıt Önizleme:
+
+🔻 EN ÇOK KAYBETTİREN 10 FON (Son 60 Gün)
+=======================================================
+
+📉 EN KÖTÜ PERFORMANS GÖSTERENİLER:
+
+ 1. AC8 🟢 DÜŞÜK RİSK
+    📉 Kayıp: %-29.24
+    💲 Güncel Fiyat: 76.2539 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 2. BHH 🟢 DÜŞÜK RİSK
+    📉 Kayıp: %-26.30
+    💲 Güncel Fiyat: 1.1635 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 3. RIH 🟢 DÜŞÜK RİSK
+    📉 Kayıp: %-24.13
+    💲 Güncel Fiyat: 7.7460 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 4. OSF 🟢 DÜŞÜK RİSK
+    📉 Kayıp: %-22.82
+    💲 Güncel Fiyat: 3.331...
+
+TEST #16
+----------------------------------------
+Kategori: Performance
+Soru: AJE
+Beklenen Handler: performance_analyzer.handle_analysis_question_dual
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 2.61s
+Yanıt Önizleme:
+
+📊 AJE FONU DETAYLI ANALİZ RAPORU
+=============================================
+
+📝 FON: AJE Yatırım Fonu
+📊 Yatırım Dağılımı: Ters Repo: %46.7
+
+💰 PERFORMANS VERİLERİ:
+   Güncel Fiyat: 49.5053 TL
+   Son 100 Gün Getiri: %4.01
+   Yıllık Getiri (Tahmini): %10.1
+   Volatilite: %1.8
+   Sharpe Oranı: -2.732
+   Kazanma Oranı: %37.4
+
+🛡️ RİSK DEĞERLENDİRMESİ:
+   Risk Seviyesi: LOW
+   Değerlendirme: ✅ Güvenli
+
+📈 DEĞERLENDİRME:
+   🟠 Orta Performans (Son dönem %4.0)
+   🟢 Düşük Risk (Volatilite %1.8)
+   🔴 Nega...
+
+TEST #17
+----------------------------------------
+Kategori: Performance
+Soru: BHL analiz
+Beklenen Handler: performance_analyzer.handle_analysis_question_dual
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.77s
+Yanıt Önizleme:
+
+📊 BHL FONU DETAYLI ANALİZ RAPORU
+=============================================
+
+📝 FON: BHL Yatırım Fonu
+📊 Yatırım Dağılımı: Hisse: %94.6
+
+💰 PERFORMANS VERİLERİ:
+   Güncel Fiyat: 0.8145 TL
+   Son 100 Gün Getiri: %5.34
+   Yıllık Getiri (Tahmini): %13.5
+   Volatilite: %8.3
+   Sharpe Oranı: -0.185
+   Kazanma Oranı: %22.2
+
+🛡️ RİSK DEĞERLENDİRMESİ:
+   Risk Seviyesi: LOW
+   Değerlendirme: ✅ Güvenli
+
+📈 DEĞERLENDİRME:
+   🟠 Orta Performans (Son dönem %5.3)
+   🟢 Düşük Risk (Volatilite %8.3)
+   🔴 Negatif R...
+
+TEST #18
+----------------------------------------
+Kategori: Performance
+Soru: BUP fonunu incele
+Beklenen Handler: performance_analyzer.handle_analysis_question_dual
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.02s
+Yanıt Önizleme:
+❌ BUP için fiyat verisi bulunamadı.
+
+TEST #19
+----------------------------------------
+Kategori: Performance
+Soru: DPC fonu nasıl
+Beklenen Handler: performance_analyzer.handle_analysis_question_dual
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.02s
+Yanıt Önizleme:
+❌ DPC için fiyat verisi bulunamadı.
+
+TEST #20
+----------------------------------------
+Kategori: Performance
+Soru: FPH fonunu değerlendir
+Beklenen Handler: performance_analyzer.handle_analysis_question_dual
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.73s
+Yanıt Önizleme:
+
+📊 FPH FONU DETAYLI ANALİZ RAPORU
+=============================================
+
+📝 FON: FPH Yatırım Fonu
+📊 Yatırım Dağılımı: Hisse: %95.2, Ters Repo: %2.8
+
+💰 PERFORMANS VERİLERİ:
+   Güncel Fiyat: 24.8804 TL
+   Son 100 Gün Getiri: %2.12
+   Yıllık Getiri (Tahmini): %5.3
+   Volatilite: %13.9
+   Sharpe Oranı: -0.693
+   Kazanma Oranı: %23.2
+
+🛡️ RİSK DEĞERLENDİRMESİ:
+   Risk Seviyesi: LOW
+   Değerlendirme: ✅ Güvenli
+
+📈 DEĞERLENDİRME:
+   🟠 Orta Performans (Son dönem %2.1)
+   🟡 Orta Risk (Volatilite %13...
+
+TEST #21
+----------------------------------------
+Kategori: Performance
+Soru: GFL fon analizi yap
+Beklenen Handler: performance_analyzer.handle_analysis_question_dual
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.01s
+Yanıt Önizleme:
+❌ GFL için fiyat verisi bulunamadı.
+
+TEST #22
+----------------------------------------
+Kategori: Performance
+Soru: BHL vs AJE
+Beklenen Handler: performance_analyzer.handle_comparison_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.01s
+Yanıt Önizleme:
+
+⚖️ FON KARŞILAŞTIRMASI
+======================
+
+📊 BHL:
+   30 Gün Getiri: %-3.71
+   Güncel Fiyat: 0.7843 TL
+
+📊 AJE:
+   30 Gün Getiri: %-1.15
+   Güncel Fiyat: 48.9367 TL
+
+🏆 En İyi Performans: AJE (%-1.15)
+
+
+TEST #23
+----------------------------------------
+Kategori: Performance
+Soru: FPH ve GFL karşılaştır
+Beklenen Handler: performance_analyzer.handle_comparison_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.01s
+Yanıt Önizleme:
+
+⚖️ FON KARŞILAŞTIRMASI
+======================
+
+📊 FPH:
+   30 Gün Getiri: %-2.27
+   Güncel Fiyat: 24.3156 TL
+
+🏆 En İyi Performans: FPH (%-2.27)
+
+
+TEST #24
+----------------------------------------
+Kategori: Performance
+Soru: GJB ile GNH karşılaştırması
+Beklenen Handler: performance_analyzer.handle_comparison_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.0s
+Yanıt Önizleme:
+❌ Karşılaştırma için en az 2 fon kodu gerekli. Örnek: 'AKB ve YAS karşılaştır'
+
+TEST #25
+----------------------------------------
+Kategori: Performance
+Soru: 2025 için hangi fonları önerirsin
+Beklenen Handler: performance_analyzer.handle_2025_recommendation_dual
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 4.32s
+Yanıt Önizleme:
+
+🎯 2025 YIL SONU RİSK KONTROLLÜ FON ÖNERİSİ
+=======================================================
+
+📊 ANALİZ PARAMETRELERİ:
+   • Risk Toleransı: MODERATE
+   • Yatırım Tutarı: 100,000 TL
+   • Analiz Edilen Fon: 20
+   • ✅ Güvenli Fonlar: 18
+   • ❌ Riskli Fonlar: 0
+
+📈 RİSK KONTROLLÜ EN İYİ 5 FON:
+
+1. AOY (2025 Skoru: 82.0/100) ✅
+   📊 Beklenen Yıllık Getiri: %79.4
+   📉 Risk (Volatilite): %20.3
+   ⚡ Sharpe Oranı: 3.175
+   🎯 Kazanma Oranı: %35.6
+   💰 Güncel Fiyat: 0.2088 TL
+   🛡️ Risk Seviyesi: LOW
+
+...
+
+TEST #26
+----------------------------------------
+Kategori: Performance
+Soru: 2025 yılı için en iyi fonlar
+Beklenen Handler: performance_analyzer.handle_2025_recommendation_dual
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 8.94s
+Yanıt Önizleme:
+
+🎯 2025 YIL SONU RİSK KONTROLLÜ FON ÖNERİSİ
+=======================================================
+
+📊 ANALİZ PARAMETRELERİ:
+   • Risk Toleransı: MODERATE
+   • Yatırım Tutarı: 100,000 TL
+   • Analiz Edilen Fon: 20
+   • ✅ Güvenli Fonlar: 18
+   • ❌ Riskli Fonlar: 0
+
+📈 RİSK KONTROLLÜ EN İYİ 5 FON:
+
+1. AOY (2025 Skoru: 82.0/100) ✅
+   📊 Beklenen Yıllık Getiri: %79.4
+   📉 Risk (Volatilite): %20.3
+   ⚡ Sharpe Oranı: 3.175
+   🎯 Kazanma Oranı: %35.6
+   💰 Güncel Fiyat: 0.2088 TL
+   🛡️ Risk Seviyesi: LOW
+
+...
+
+TEST #27
+----------------------------------------
+Kategori: Performance
+Soru: 2025 fon önerileri
+Beklenen Handler: performance_analyzer.handle_2025_recommendation_dual
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 6.3s
+Yanıt Önizleme:
+
+🎯 2025 YIL SONU RİSK KONTROLLÜ FON ÖNERİSİ
+=======================================================
+
+📊 ANALİZ PARAMETRELERİ:
+   • Risk Toleransı: MODERATE
+   • Yatırım Tutarı: 100,000 TL
+   • Analiz Edilen Fon: 20
+   • ✅ Güvenli Fonlar: 18
+   • ❌ Riskli Fonlar: 0
+
+📈 RİSK KONTROLLÜ EN İYİ 5 FON:
+
+1. AOY (2025 Skoru: 82.0/100) ✅
+   📊 Beklenen Yıllık Getiri: %79.4
+   📉 Risk (Volatilite): %20.3
+   ⚡ Sharpe Oranı: 3.175
+   🎯 Kazanma Oranı: %35.6
+   💰 Güncel Fiyat: 0.2088 TL
+   🛡️ Risk Seviyesi: LOW
+
+...
+
+TEST #28
+----------------------------------------
+Kategori: Performance
+Soru: sharpe oranı en yüksek fonlar
+Beklenen Handler: performance_analyzer.handle_top_sharpe_funds_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.15s
+Yanıt Önizleme:
+
+📈 SON 30 GÜN EN ÇOK KAZANDIRAN GÜVENLİ 10 FON
+=======================================================
+
+🛡️ RİSK KONTROLÜ SONUCU:
+   ✅ Güvenli Kazananlar: 45
+   ⚠️ Riskli Kazananlar: 0
+
+ 1. YJH ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 2.3646 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 2. HMK ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 248.0053 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 3. GZH ✅
+    📊 30 GÜN Getiri: %-0.60
+    💰 Güncel Fiyat: 2.9167 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 4. NFK ✅
+    📊 30 GÜN Getir...
+
+TEST #29
+----------------------------------------
+Kategori: Performance
+Soru: en yüksek sharpe oranına sahip 5 fon
+Beklenen Handler: performance_analyzer.handle_top_sharpe_funds_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.02s
+Yanıt Önizleme:
+
+📊 SHARPE ORANI ANALİZİ (MV + RİSK KONTROLÜ)
+============================================================
+
+🎯 Sharpe oranı > 5.0 olan fonlar aranıyor...
+🛡️ Risk değerlendirmesi aktif
+⚡ Materialized View'dan direkt okuma
+
+🏆 EN YÜKSEK SHARPE ORANLI FONLAR (Risk-Filtreli):
+
+ 1. AC8 - 🌟 EFSANE 🟢
+    ⚡ Sharpe Oranı: 5.578
+    📈 Yıllık Getiri: %128.2
+    📉 Volatilite: %20.3
+    📊 Calmar: 1.440
+    🎯 Kazanma Oranı: %41.3
+    📊 En Kötü/İyi Gün: %-5.6 / %4.0
+    📊 BB Pozisyon: 0.92
+    🛡️ Risk Seviyesi: L...
+
+TEST #30
+----------------------------------------
+Kategori: Performance
+Soru: volatilite %10 altında fonlar
+Beklenen Handler: performance_analyzer.handle_low_volatility_funds_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.36s
+Yanıt Önizleme:
+
+🛡️ RİSK KONTROLLÜ EN GÜVENLİ 10 FON
+==================================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon: 10
+   • SQL Analizi: 30 fon
+   • ✅ Risk Kontrolü Geçen: 30
+   • ❌ Riskli Bulunan: 0
+   • En Düşük Volatilite: %0.01
+
+ 1. BTP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+7.124
+    📈 Veri Noktası: 121
+    🛡️ Risk Seviyesi: LOW
+    🏷️ Tür: N/A
+
+ 2. MPP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+15.589
+    📈 Veri Noktası: 121
+    🛡...
+
+TEST #31
+----------------------------------------
+Kategori: Performance
+Soru: düşük volatiliteli fonlar
+Beklenen Handler: performance_analyzer.handle_low_volatility_funds_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 2.04s
+Yanıt Önizleme:
+
+🛡️ RİSK KONTROLLÜ EN GÜVENLİ 10 FON
+==================================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon: 10
+   • SQL Analizi: 30 fon
+   • ✅ Risk Kontrolü Geçen: 30
+   • ❌ Riskli Bulunan: 0
+   • En Düşük Volatilite: %0.01
+
+ 1. BTP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+7.124
+    📈 Veri Noktası: 121
+    🛡️ Risk Seviyesi: LOW
+    🏷️ Tür: N/A
+
+ 2. MPP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+15.589
+    📈 Veri Noktası: 121
+    🛡...
+
+TEST #32
+----------------------------------------
+Kategori: Performance
+Soru: GNH son 1 yıl getirisi
+Beklenen Handler: performance_analyzer.handle_fund_past_performance_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 4.49s
+Yanıt Önizleme:
+
+📊 GNH FONU DETAYLI ANALİZ RAPORU
+=============================================
+
+📝 FON: GNH Yatırım Fonu
+📊 Yatırım Dağılımı: Hisse: %90.2
+
+💰 PERFORMANS VERİLERİ:
+   Güncel Fiyat: 1.0364 TL
+   Son 38 Gün Getiri: %0.76
+   Yıllık Getiri (Tahmini): %5.0
+   Volatilite: %11.7
+   Sharpe Oranı: -0.854
+   Kazanma Oranı: %18.9
+
+🛡️ RİSK DEĞERLENDİRMESİ:
+   Risk Seviyesi: LOW
+   Değerlendirme: ✅ Güvenli
+
+📈 DEĞERLENDİRME:
+   🟠 Orta Performans (Son dönem %0.8)
+   🟡 Orta Risk (Volatilite %11.7)
+   🔴 Negatif Ri...
+
+TEST #33
+----------------------------------------
+Kategori: Performance
+Soru: HGU geçtiğimiz yıl kazancı
+Beklenen Handler: performance_analyzer.handle_fund_past_performance_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.51s
+Yanıt Önizleme:
+
+📈 SON 30 GÜN EN ÇOK KAZANDIRAN GÜVENLİ 10 FON
+=======================================================
+
+🛡️ RİSK KONTROLÜ SONUCU:
+   ✅ Güvenli Kazananlar: 45
+   ⚠️ Riskli Kazananlar: 0
+
+ 1. YJH ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 2.3646 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 2. HMK ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 248.0053 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 3. GZH ✅
+    📊 30 GÜN Getiri: %-0.60
+    💰 Güncel Fiyat: 2.9167 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 4. NFK ✅
+    📊 30 GÜN Getir...
+
+TEST #34
+----------------------------------------
+Kategori: Technical
+Soru: MACD sinyali pozitif fonlar
+Beklenen Handler: technical_analyzer.handle_macd_signals_sql
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.0s
+⚠️ Uyarı: Yanıtta hata mesajı var
+Yanıt Önizleme:
+❌ SQL MACD analizi hatası: sqlalchemy.cyextension.immutabledict.immutabledict is not a sequence
+
+TEST #35
+----------------------------------------
+Kategori: Technical
+Soru: MACD negatif olan fonlar
+Beklenen Handler: technical_analyzer.handle_macd_signals_sql
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.0s
+⚠️ Uyarı: Yanıtta hata mesajı var
+Yanıt Önizleme:
+❌ SQL MACD analizi hatası: sqlalchemy.cyextension.immutabledict.immutabledict is not a sequence
+
+TEST #36
+----------------------------------------
+Kategori: Technical
+Soru: en güçlü MACD sinyali veren fonlar
+Beklenen Handler: technical_analyzer.handle_macd_signals_sql
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.0s
+⚠️ Uyarı: Yanıtta hata mesajı var
+Yanıt Önizleme:
+❌ SQL MACD analizi hatası: sqlalchemy.cyextension.immutabledict.immutabledict is not a sequence
+
+TEST #37
+----------------------------------------
+Kategori: Technical
+Soru: RSI 30 altında fonlar
+Beklenen Handler: technical_analyzer.handle_rsi_signals_sql
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.01s
+⚠️ Uyarı: Yanıtta hata mesajı var
+Yanıt Önizleme:
+❌ SQL RSI analizi hatası: sqlalchemy.cyextension.immutabledict.immutabledict is not a sequence
+
+TEST #38
+----------------------------------------
+Kategori: Technical
+Soru: RSI 70 üstünde fonlar
+Beklenen Handler: technical_analyzer.handle_rsi_signals_sql
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.0s
+⚠️ Uyarı: Yanıtta hata mesajı var
+Yanıt Önizleme:
+❌ SQL RSI analizi hatası: sqlalchemy.cyextension.immutabledict.immutabledict is not a sequence
+
+TEST #39
+----------------------------------------
+Kategori: Technical
+Soru: aşırı satım bölgesindeki fonlar
+Beklenen Handler: technical_analyzer.handle_rsi_signals_sql
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.0s
+⚠️ Uyarı: Yanıtta hata mesajı var
+Yanıt Önizleme:
+❌ SQL RSI analizi hatası: sqlalchemy.cyextension.immutabledict.immutabledict is not a sequence
+
+TEST #40
+----------------------------------------
+Kategori: Technical
+Soru: aşırı alım bölgesindeki fonlar
+Beklenen Handler: technical_analyzer.handle_rsi_signals_sql
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.0s
+⚠️ Uyarı: Yanıtta hata mesajı var
+Yanıt Önizleme:
+❌ SQL RSI analizi hatası: sqlalchemy.cyextension.immutabledict.immutabledict is not a sequence
+
+TEST #41
+----------------------------------------
+Kategori: Technical
+Soru: bollinger alt banda yakın fonlar
+Beklenen Handler: technical_analyzer.handle_bollinger_signals_sql
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.0s
+⚠️ Uyarı: Yanıtta hata mesajı var
+Yanıt Önizleme:
+❌ SQL Bollinger analizi hatası: sqlalchemy.cyextension.immutabledict.immutabledict is not a sequence
+
+TEST #42
+----------------------------------------
+Kategori: Technical
+Soru: bollinger üst banda yakın fonlar
+Beklenen Handler: technical_analyzer.handle_bollinger_signals_sql
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.0s
+⚠️ Uyarı: Yanıtta hata mesajı var
+Yanıt Önizleme:
+❌ SQL Bollinger analizi hatası: sqlalchemy.cyextension.immutabledict.immutabledict is not a sequence
+
+TEST #43
+----------------------------------------
+Kategori: Technical
+Soru: bollinger bantları daralma gösteren fonlar
+Beklenen Handler: technical_analyzer.handle_bollinger_signals_sql
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.35s
+⚠️ Uyarı: Yanıtta hata mesajı var
+Yanıt Önizleme:
+❌ SQL Bollinger analizi hatası: sqlalchemy.cyextension.immutabledict.immutabledict is not a sequence
+
+TEST #44
+----------------------------------------
+Kategori: Technical
+Soru: golden cross oluşan fonlar
+Beklenen Handler: technical_analyzer.handle_moving_average_signals_sql
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.77s
+⚠️ Uyarı: Yanıtta hata mesajı var
+Yanıt Önizleme:
+❌ SQL MACD analizi hatası: sqlalchemy.cyextension.immutabledict.immutabledict is not a sequence
+
+TEST #45
+----------------------------------------
+Kategori: Technical
+Soru: death cross olan fonlar
+Beklenen Handler: technical_analyzer.handle_moving_average_signals_sql
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.91s
+⚠️ Uyarı: Yanıtta hata mesajı var
+Yanıt Önizleme:
+❌ SQL MACD analizi hatası: sqlalchemy.cyextension.immutabledict.immutabledict is not a sequence
+
+TEST #46
+----------------------------------------
+Kategori: Technical
+Soru: 50 günlük hareketli ortalama üstünde fonlar
+Beklenen Handler: technical_analyzer.handle_moving_average_signals_sql
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.95s
+⚠️ Uyarı: Yanıtta hata mesajı var
+Yanıt Önizleme:
+❌ SQL Moving Average analizi hatası: sqlalchemy.cyextension.immutabledict.immutabledict is not a sequence
+
+TEST #47
+----------------------------------------
+Kategori: Technical
+Soru: AI pattern analizi ile ICD
+Beklenen Handler: technical_analyzer.handle_ai_pattern_analysis
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.9s
+Yanıt Önizleme:
+
+🤖 ICD - AI PATTERN RECOGNITION ANALİZİ
+=======================================================
+
+📊 TEKNİK VERİLER:
+💲 Fiyat: 89.4810 TL
+📈 RSI: 82.6
+📊 MACD: 0.281680
+📍 Bollinger: %92
+📊 SMA20: 88.7230 TL (%+0.9)
+🎯 Support: 86.5936 TL
+🎯 Resistance: 89.5858 TL
+📊 30-Gün Getiri: %+4.69
+👥 Yatırımcı: 287
+
+🤖 AI PATTERN ANALİZİ:
+=======================================================
+1. Teknik patternler: Bollinger Bands'a yakın olması nedeniyle Band Squeeze patterni gözlemleniyor.
+   
+2. Trend yönü ve güc...
+
+TEST #48
+----------------------------------------
+Kategori: Technical
+Soru: HGU için AI teknik analiz
+Beklenen Handler: technical_analyzer.handle_ai_pattern_analysis
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.01s
+Yanıt Önizleme:
+❌ HGU için fiyat verisi bulunamadı.
+
+TEST #49
+----------------------------------------
+Kategori: Technical
+Soru: AI pattern ile HPF fonu
+Beklenen Handler: technical_analyzer.handle_ai_pattern_analysis
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 2.13s
+Yanıt Önizleme:
+
+🤖 HPF - AI PATTERN RECOGNITION ANALİZİ
+=======================================================
+
+📊 TEKNİK VERİLER:
+💲 Fiyat: 17.9373 TL
+📈 RSI: 31.8
+📊 MACD: -0.846020
+📍 Bollinger: %46
+📊 SMA20: 18.1019 TL (%-0.9)
+🎯 Support: 16.9522 TL
+🎯 Resistance: 19.3903 TL
+📊 30-Gün Getiri: %+6.45
+👥 Yatırımcı: 12
+
+🤖 AI PATTERN ANALİZİ:
+=======================================================
+1. Teknik patternler: Şu anda bir Double Bottom (çift dip) formasyonu görülmekte.
+2. Trend yönü ve gücü: Fiyatlar genel olar...
+
+TEST #50
+----------------------------------------
+Kategori: Technical
+Soru: teknik alım sinyali veren fonlar
+Beklenen Handler: technical_analyzer.handle_general_technical_signals_sql
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.92s
+⚠️ Uyarı: Yanıtta hata mesajı var
+Yanıt Önizleme:
+❌ SQL MACD analizi hatası: sqlalchemy.cyextension.immutabledict.immutabledict is not a sequence
+
+TEST #51
+----------------------------------------
+Kategori: Technical
+Soru: teknik satım sinyali veren fonlar
+Beklenen Handler: technical_analyzer.handle_general_technical_signals_sql
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.26s
+⚠️ Uyarı: Yanıtta hata mesajı var
+Yanıt Önizleme:
+❌ SQL MACD analizi hatası: sqlalchemy.cyextension.immutabledict.immutabledict is not a sequence
+
+TEST #52
+----------------------------------------
+Kategori: Advanced
+Soru: beta katsayısı 1 altında fonlar
+Beklenen Handler: advanced_metrics_analyzer.handle_beta_analysis
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 3.68s
+Yanıt Önizleme:
+
+📊 BETA KATSAYISI ANALİZİ (MV + RİSK KONTROLÜ İLE)
+============================================================
+
+🎯 Beta < 1.0 olan fonlar aranıyor...
+🛡️ Risk değerlendirmesi aktif
+⚡ Materialized View kullanılıyor
+
+🏆 BETA < 1.0 OLAN FONLAR (Risk-Filtreli):
+
+ 1. MPP - 🟢 ÇOK SAVUNMACI 🟢
+    📊 Beta: -0.021
+    📈 Yıllık Getiri: %15.6
+    📉 Volatilite: %1.2
+    ⚡ Sharpe: 0.474
+    🎯 Kazanma Oranı: %48.8
+    🛡️ Risk Seviyesi: LOW (0/100)
+    💲 Fiyat: 16.6934 TL
+    📝 MEKSA PORTFÖY PRİME SERBEST FON...
+...
+
+TEST #53
+----------------------------------------
+Kategori: Advanced
+Soru: beta değeri 0.5 düşük fonlar
+Beklenen Handler: advanced_metrics_analyzer.handle_beta_analysis
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 2.69s
+Yanıt Önizleme:
+
+📊 BETA KATSAYISI ANALİZİ (MV + RİSK KONTROLÜ İLE)
+============================================================
+
+🎯 Beta < 0.5 olan fonlar aranıyor...
+🛡️ Risk değerlendirmesi aktif
+⚡ Materialized View kullanılıyor
+
+🏆 BETA < 0.5 OLAN FONLAR (Risk-Filtreli):
+
+ 1. MPP - 🟢 ÇOK SAVUNMACI 🟢
+    📊 Beta: -0.021
+    📈 Yıllık Getiri: %15.6
+    📉 Volatilite: %1.2
+    ⚡ Sharpe: 0.474
+    🎯 Kazanma Oranı: %48.8
+    🛡️ Risk Seviyesi: LOW (0/100)
+    💲 Fiyat: 16.6934 TL
+    📝 MEKSA PORTFÖY PRİME SERBEST FON...
+...
+
+TEST #54
+----------------------------------------
+Kategori: Advanced
+Soru: beta 1.5 üstünde agresif fonlar
+Beklenen Handler: advanced_metrics_analyzer.handle_beta_analysis
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.3s
+Yanıt Önizleme:
+❌ Beta > 1.5 olan fon bulunamadı.
+
+TEST #55
+----------------------------------------
+Kategori: Advanced
+Soru: düşük beta yüksek getiri fonlar
+Beklenen Handler: advanced_metrics_analyzer.handle_beta_analysis
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 4.22s
+Yanıt Önizleme:
+
+📊 BETA KATSAYISI ANALİZİ (MV + RİSK KONTROLÜ İLE)
+============================================================
+
+🎯 Beta < 1.0 olan fonlar aranıyor...
+🛡️ Risk değerlendirmesi aktif
+⚡ Materialized View kullanılıyor
+
+🏆 BETA < 1.0 OLAN FONLAR (Risk-Filtreli):
+
+ 1. MPP - 🟢 ÇOK SAVUNMACI 🟢
+    📊 Beta: -0.021
+    📈 Yıllık Getiri: %15.6
+    📉 Volatilite: %1.2
+    ⚡ Sharpe: 0.474
+    🎯 Kazanma Oranı: %48.8
+    🛡️ Risk Seviyesi: LOW (0/100)
+    💲 Fiyat: 16.6934 TL
+    📝 MEKSA PORTFÖY PRİME SERBEST FON...
+...
+
+TEST #56
+----------------------------------------
+Kategori: Advanced
+Soru: alpha değeri pozitif fonlar
+Beklenen Handler: advanced_metrics_analyzer.handle_alpha_analysis
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 2.64s
+Yanıt Önizleme:
+
+📊 ALPHA DEĞERİ ANALİZİ (MV + RİSK KONTROLÜ İLE)
+============================================================
+
+🎯 Pozitif Alpha değerine sahip fonlar aranıyor...
+🛡️ Risk değerlendirmesi aktif
+⚡ Materialized View kullanılıyor
+
+🏆 EN YÜKSEK ALPHA DEĞERLERİ (Risk-Filtreli):
+
+ 1. PBH - 🌟 ÜSTÜN PERFORMANS 🟢
+    📊 Alpha: %1933.34 (yıllık)
+    📈 Beta: 17.384
+    💰 Fon Getirisi: %313.4
+    📉 Volatilite: %87.3
+    ⚡ Sharpe: 3.420
+    📊 Calmar: 1.022
+    🛡️ Risk Seviyesi: LOW (0/100)
+    💲 Fiyat: 2.3342 TL
+...
+
+TEST #57
+----------------------------------------
+Kategori: Advanced
+Soru: jensen alpha en yüksek fonlar
+Beklenen Handler: advanced_metrics_analyzer.handle_alpha_analysis
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.4s
+Yanıt Önizleme:
+
+📈 SON 30 GÜN EN ÇOK KAZANDIRAN GÜVENLİ 10 FON
+=======================================================
+
+🛡️ RİSK KONTROLÜ SONUCU:
+   ✅ Güvenli Kazananlar: 45
+   ⚠️ Riskli Kazananlar: 0
+
+ 1. YJH ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 2.3646 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 2. HMK ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 248.0053 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 3. GZH ✅
+    📊 30 GÜN Getiri: %-0.60
+    💰 Güncel Fiyat: 2.9167 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 4. NFK ✅
+    📊 30 GÜN Getir...
+
+TEST #58
+----------------------------------------
+Kategori: Advanced
+Soru: negatif alpha olan fonlar
+Beklenen Handler: advanced_metrics_analyzer.handle_alpha_analysis
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 3.21s
+Yanıt Önizleme:
+
+📊 ALPHA DEĞERİ ANALİZİ (MV + RİSK KONTROLÜ İLE)
+============================================================
+
+🎯 Negatif Alpha değerine sahip fonlar aranıyor...
+🛡️ Risk değerlendirmesi aktif
+⚡ Materialized View kullanılıyor
+
+🏆 EN YÜKSEK ALPHA DEĞERLERİ (Risk-Filtreli):
+
+ 1. PPS - 🌟 ÜSTÜN PERFORMANS 🟢
+    📊 Alpha: %32.25 (yıllık)
+    📈 Beta: 0.982
+    💰 Fon Getirisi: %23.8
+    📉 Volatilite: %18.0
+    ⚡ Sharpe: 0.489
+    📊 Calmar: 0.330
+    🛡️ Risk Seviyesi: LOW (0/100)
+    💲 Fiyat: 2.2421 TL
+    ...
+
+TEST #59
+----------------------------------------
+Kategori: Advanced
+Soru: tracking error düşük index fonlar
+Beklenen Handler: advanced_metrics_analyzer.handle_tracking_error_analysis
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 4.18s
+Yanıt Önizleme:
+
+📊 BETA KATSAYISI ANALİZİ (MV + RİSK KONTROLÜ İLE)
+============================================================
+
+🎯 Beta < 1.0 olan fonlar aranıyor...
+🛡️ Risk değerlendirmesi aktif
+⚡ Materialized View kullanılıyor
+
+🏆 BETA < 1.0 OLAN FONLAR (Risk-Filtreli):
+
+ 1. MPP - 🟢 ÇOK SAVUNMACI 🟢
+    📊 Beta: -0.021
+    📈 Yıllık Getiri: %15.6
+    📉 Volatilite: %1.2
+    ⚡ Sharpe: 0.474
+    🎯 Kazanma Oranı: %48.8
+    🛡️ Risk Seviyesi: LOW (0/100)
+    💲 Fiyat: 16.6934 TL
+    📝 MEKSA PORTFÖY PRİME SERBEST FON...
+...
+
+TEST #60
+----------------------------------------
+Kategori: Advanced
+Soru: takip hatası %2 altında fonlar
+Beklenen Handler: advanced_metrics_analyzer.handle_tracking_error_analysis
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.53s
+Yanıt Önizleme:
+
+🛡️ RİSK KONTROLLÜ EN GÜVENLİ 2 FON
+==================================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon: 2
+   • SQL Analizi: 6 fon
+   • ✅ Risk Kontrolü Geçen: 6
+   • ❌ Riskli Bulunan: 0
+   • En Düşük Volatilite: %0.01
+
+ 1. BTP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+7.124
+    📈 Veri Noktası: 121
+    🛡️ Risk Seviyesi: LOW
+    🏷️ Tür: N/A
+
+ 2. MPP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+15.589
+    📈 Veri Noktası: 121
+    🛡️ Ri...
+
+TEST #61
+----------------------------------------
+Kategori: Advanced
+Soru: information ratio yüksek aktif fonlar
+Beklenen Handler: advanced_metrics_analyzer.handle_information_ratio_analysis
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.97s
+Yanıt Önizleme:
+
+📊 BETA KATSAYISI ANALİZİ (Klasik Yöntem)
+============================================================
+
+⚠️ MV kullanılamadı, sınırlı analiz yapılıyor...
+
+🏆 İLK 1 FON:
+
+1. HMK - Beta: 1.088
+
+
+TEST #62
+----------------------------------------
+Kategori: Advanced
+Soru: bilgi oranı 1 üstünde fonlar
+Beklenen Handler: advanced_metrics_analyzer.handle_information_ratio_analysis
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.73s
+Yanıt Önizleme:
+
+📊 BETA KATSAYISI ANALİZİ (Klasik Yöntem)
+============================================================
+
+⚠️ MV kullanılamadı, sınırlı analiz yapılıyor...
+
+🏆 İLK 1 FON:
+
+1. HMK - Beta: 1.088
+
+
+TEST #63
+----------------------------------------
+Kategori: Advanced
+Soru: beta düşük sharpe yüksek fonlar
+Beklenen Handler: advanced_metrics_analyzer.handle_combined_metrics_analysis
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 2.19s
+Yanıt Önizleme:
+
+📊 BETA KATSAYISI ANALİZİ (MV + RİSK KONTROLÜ İLE)
+============================================================
+
+🎯 Beta < 1.0 olan fonlar aranıyor...
+🛡️ Risk değerlendirmesi aktif
+⚡ Materialized View kullanılıyor
+
+🏆 BETA < 1.0 OLAN FONLAR (Risk-Filtreli):
+
+ 1. MPP - 🟢 ÇOK SAVUNMACI 🟢
+    📊 Beta: -0.021
+    📈 Yıllık Getiri: %15.6
+    📉 Volatilite: %1.2
+    ⚡ Sharpe: 0.474
+    🎯 Kazanma Oranı: %48.8
+    🛡️ Risk Seviyesi: LOW (0/100)
+    💲 Fiyat: 16.6934 TL
+    📝 MEKSA PORTFÖY PRİME SERBEST FON...
+...
+
+TEST #64
+----------------------------------------
+Kategori: Advanced
+Soru: sharpe 1.5 üstü beta 0.8 altı fonlar
+Beklenen Handler: advanced_metrics_analyzer.handle_combined_metrics_analysis
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.08s
+Yanıt Önizleme:
+❌ Beta > 1.5 olan fon bulunamadı.
+
+TEST #65
+----------------------------------------
+Kategori: Currency
+Soru: dolar fonları
+Beklenen Handler: currency_inflation_analyzer.analyze_currency_funds
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.0s
+Yanıt Önizleme:
+❌ USD kategorisinde fon bulunamadı.
+
+TEST #66
+----------------------------------------
+Kategori: Currency
+Soru: euro fonları listesi
+Beklenen Handler: currency_inflation_analyzer.analyze_currency_funds
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.0s
+Yanıt Önizleme:
+❌ EUR kategorisinde fon bulunamadı.
+
+TEST #67
+----------------------------------------
+Kategori: Currency
+Soru: en iyi döviz fonları
+Beklenen Handler: currency_inflation_analyzer.analyze_currency_funds
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.8s
+Yanıt Önizleme:
+
+📈 SON 30 GÜN EN ÇOK KAZANDIRAN GÜVENLİ 10 FON
+=======================================================
+
+🛡️ RİSK KONTROLÜ SONUCU:
+   ✅ Güvenli Kazananlar: 45
+   ⚠️ Riskli Kazananlar: 0
+
+ 1. YJH ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 2.3646 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 2. HMK ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 248.0053 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 3. GZH ✅
+    📊 30 GÜN Getiri: %-0.60
+    💰 Güncel Fiyat: 2.9167 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 4. NFK ✅
+    📊 30 GÜN Getir...
+
+TEST #68
+----------------------------------------
+Kategori: Currency
+Soru: USD bazlı fonlar
+Beklenen Handler: currency_inflation_analyzer.analyze_currency_funds
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.46s
+Yanıt Önizleme:
+❌ USD kategorisinde fon bulunamadı.
+
+TEST #69
+----------------------------------------
+Kategori: Currency
+Soru: enflasyon korumalı fonlar
+Beklenen Handler: currency_inflation_analyzer.analyze_inflation_funds_mv
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.02s
+Yanıt Önizleme:
+
+💹 ENFLASYON KORUMALI FONLAR ANALİZİ (MV + Risk Assessment)
+======================================================================
+
+⚡ Süre: 0.010 saniye (MV kullanıldı)
+📊 Toplam: 31 fon (kategorilere göre gruplu)
+🛡️ Risk Taraması: ✅ Tamamlandı
+   ⚠️ Yüksek Risk: 0 fon
+   ⛔ Ekstrem Risk: 0 fon
+
+📊 GENEL İSTATİSTİKLER:
+==================================================
+   📈 Toplam Enflasyon Korumalı Fon: 863
+   💰 Toplam Varlık: 2696.0 Milyar TL
+   👥 Toplam Yatırımcı: 5,731,702
+
+
+🥇 ALTIN AĞIRLIKLI F...
+
+TEST #70
+----------------------------------------
+Kategori: Currency
+Soru: enflasyona karşı en iyi fonlar
+Beklenen Handler: currency_inflation_analyzer.analyze_inflation_funds_mv
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.16s
+Yanıt Önizleme:
+
+💹 ENFLASYON KORUMALI FONLAR ANALİZİ (MV + Risk Assessment)
+======================================================================
+
+⚡ Süre: 0.010 saniye (MV kullanıldı)
+📊 Toplam: 31 fon (kategorilere göre gruplu)
+🛡️ Risk Taraması: ✅ Tamamlandı
+   ⚠️ Yüksek Risk: 0 fon
+   ⛔ Ekstrem Risk: 0 fon
+
+📊 GENEL İSTATİSTİKLER:
+==================================================
+   📈 Toplam Enflasyon Korumalı Fon: 863
+   💰 Toplam Varlık: 2696.0 Milyar TL
+   👥 Toplam Yatırımcı: 5,731,702
+
+
+🥇 ALTIN AĞIRLIKLI F...
+
+TEST #71
+----------------------------------------
+Kategori: Currency
+Soru: enflasyon %50 olursa hangi fonlar
+Beklenen Handler: currency_inflation_analyzer.analyze_inflation_scenario
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.04s
+Yanıt Önizleme:
+
+💹 ENFLASYON SENARYOSU ANALİZİ - %50
+============================================================
+
+🎯 Senaryo: Yıllık enflasyon %50 olması durumu
+
+🥇 ALTIN/KIYMETLİ MADEN FONLARI (En İyi Koruma):
+
+1. KZL - KUVEYT TÜRK ASSET MANAGEMENT GOLD PARTIC... ✅
+   📈 30 gün getiri: %3.39
+   📊 Volatilite: %1.82
+   💰 Güncel fiyat: 17.5594 TL
+   🥇 Kıymetli maden oranı: %99.9
+   👥 Yatırımcı: 50,947
+   🎯 Tavsiye: Enflasyon koruması için ideal
+   🛡️ Risk Durumu: Güvenli
+
+2. HAM - HEDEF PORTFÖY ALTIN KATILIM FONU.....
+
+TEST #72
+----------------------------------------
+Kategori: Currency
+Soru: yüksek enflasyonda güvenli fonlar
+Beklenen Handler: currency_inflation_analyzer.analyze_inflation_scenario
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.07s
+Yanıt Önizleme:
+
+🛡️ RİSK KONTROLLÜ EN GÜVENLİ 10 FON
+==================================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon: 10
+   • SQL Analizi: 30 fon
+   • ✅ Risk Kontrolü Geçen: 30
+   • ❌ Riskli Bulunan: 0
+   • En Düşük Volatilite: %0.01
+
+ 1. BTP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+7.124
+    📈 Veri Noktası: 121
+    🛡️ Risk Seviyesi: LOW
+    🏷️ Tür: N/A
+
+ 2. MPP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+15.589
+    📈 Veri Noktası: 121
+    🛡...
+
+TEST #73
+----------------------------------------
+Kategori: Scenario
+Soru: enflasyon %30 olursa ne olur
+Beklenen Handler: scenario_analyzer.analyze_scenario_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.02s
+Yanıt Önizleme:
+
+💹 ENFLASYON SENARYOSU ANALİZİ - %30
+============================================================
+
+🎯 Senaryo: Yıllık enflasyon %30 olması durumu
+
+🥇 ALTIN/KIYMETLİ MADEN FONLARI (En İyi Koruma):
+
+1. KZL - KUVEYT TÜRK ASSET MANAGEMENT GOLD PARTIC... ✅
+   📈 30 gün getiri: %3.39
+   📊 Volatilite: %1.82
+   💰 Güncel fiyat: 17.5594 TL
+   🥇 Kıymetli maden oranı: %99.9
+   👥 Yatırımcı: 50,947
+   🎯 Tavsiye: Enflasyon koruması için ideal
+   🛡️ Risk Durumu: Güvenli
+
+2. HAM - HEDEF PORTFÖY ALTIN KATILIM FONU.....
+
+TEST #74
+----------------------------------------
+Kategori: Scenario
+Soru: enflasyon %100 olursa fonlar nasıl etkilenir
+Beklenen Handler: scenario_analyzer.analyze_scenario_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.04s
+Yanıt Önizleme:
+
+💹 ENFLASYON SENARYOSU ANALİZİ - %100
+============================================================
+
+🎯 Senaryo: Yıllık enflasyon %100 olması durumu
+
+🥇 ALTIN/KIYMETLİ MADEN FONLARI (En İyi Koruma):
+
+1. KZL - KUVEYT TÜRK ASSET MANAGEMENT GOLD PARTIC... ✅
+   📈 30 gün getiri: %3.39
+   📊 Volatilite: %1.82
+   💰 Güncel fiyat: 17.5594 TL
+   🥇 Kıymetli maden oranı: %99.9
+   👥 Yatırımcı: 50,947
+   🎯 Tavsiye: Enflasyon koruması için ideal
+   🛡️ Risk Durumu: Güvenli
+
+2. HAM - HEDEF PORTFÖY ALTIN KATILIM FONU...
+
+TEST #75
+----------------------------------------
+Kategori: Scenario
+Soru: borsa %20 düşerse hangi fonlar
+Beklenen Handler: scenario_analyzer.analyze_stock_crash_scenario
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.0s
+⚠️ Uyarı: Yanıtta hata mesajı var
+Yanıt Önizleme:
+
+❓ DUAL AI TEFAS ANALİZ SİSTEMİ
+===================================
+
+🤖 SİSTEM DURUMU:
+   📱 OpenAI: ✅ Aktif
+   🦙 Ollama: ❌ İnaktif
+   📊 Aktif Fonlar: 50
+   🗄️ Veritabanı: ✅ Bağlı
+
+📋 DUAL AI SORU TİPLERİ:
+   • '2025 için hangi fonları önerirsin?' (Her iki AI de yanıt verir)
+   • 'AKB fonunu analiz et' (Dual AI değerlendirme)
+   • 'Piyasa durumu nasıl?' (İkili AI yorumu)
+   • 'AI test' (AI sistemlerini test et)
+   • 'AKB ve YAS karşılaştır'
+   • 'Güvenli fonlar neler?'
+
+🎯 DUAL AI AVANTAJLARI:
+   • ...
+
+TEST #76
+----------------------------------------
+Kategori: Scenario
+Soru: piyasa çökerse güvenli fonlar
+Beklenen Handler: scenario_analyzer.analyze_stock_crash_scenario
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.06s
+Yanıt Önizleme:
+
+🛡️ RİSK KONTROLLÜ EN GÜVENLİ 10 FON
+==================================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon: 10
+   • SQL Analizi: 30 fon
+   • ✅ Risk Kontrolü Geçen: 30
+   • ❌ Riskli Bulunan: 0
+   • En Düşük Volatilite: %0.01
+
+ 1. BTP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+7.124
+    📈 Veri Noktası: 121
+    🛡️ Risk Seviyesi: LOW
+    🏷️ Tür: N/A
+
+ 2. MPP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+15.589
+    📈 Veri Noktası: 121
+    🛡...
+
+TEST #77
+----------------------------------------
+Kategori: Scenario
+Soru: dolar 40 TL olursa
+Beklenen Handler: scenario_analyzer.analyze_scenario_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.21s
+Yanıt Önizleme:
+❌ USD kategorisinde fon bulunamadı.
+
+TEST #78
+----------------------------------------
+Kategori: Scenario
+Soru: euro 50 TL olursa hangi fonlar kazandırır
+Beklenen Handler: scenario_analyzer.analyze_scenario_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 2.06s
+Yanıt Önizleme:
+❌ euro kategorisinde fon bulunamadı.
+
+TEST #79
+----------------------------------------
+Kategori: Scenario
+Soru: faiz %50 olursa
+Beklenen Handler: scenario_analyzer.analyze_scenario_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 2.72s
+Yanıt Önizleme:
+
+🎲 GENEL SENARYO ANALİZİ
+========================================
+
+📊 MEVCUT ANALİZ YETENEKLERİ (Risk Kontrollü):
+
+1️⃣ ENFLASYON SENARYOLARI:
+   • 'Enflasyon %50 olursa hangi fonlar korunur?'
+   • Altın, hisse ve döviz fonları önerilir
+   • ✅ Risk kontrolü: EXTREME riskli fonlar elenir
+
+2️⃣ BORSA ÇÖKÜŞÜ SENARYOLARI:
+   • 'Borsa %30 düşerse portföy önerisi'
+   • Para piyasası ve tahvil fonları önerilir
+   • ✅ Risk kontrolü: Defansif fonlar bile kontrol edilir
+
+3️⃣ RESESYON SENARYOLARI:
+   • 'Reses...
+
+TEST #80
+----------------------------------------
+Kategori: Scenario
+Soru: TCMB faiz indirirse
+Beklenen Handler: scenario_analyzer.analyze_scenario_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 3.73s
+Yanıt Önizleme:
+
+💹 FAİZ DEĞIŞIM ETKİ ANALİZİ
+==================================================
+
+
+
+🤖 AI MAKROEKONOMİK YORUM:
+📱 Faiz değişimleri genellikle yatırım fonlarının performansını etkileyebilir. Düşen faiz ortamında, sabit getirili fonlar daha cazip hale gelirken, yüksek faiz ortamında likidite fonları tercih edilebilir. TEFAS fonlarının performansına etkisi ise fonların varlık dağılımına ve yönetim stratejilerine bağlı olacaktır. Düşen faiz ortamında, özellikle likidite ve sabit getirili fonlarının per...
+
+TEST #81
+----------------------------------------
+Kategori: Scenario
+Soru: savaş çıkarsa hangi fonlar güvenli
+Beklenen Handler: scenario_analyzer.analyze_scenario_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.47s
+Yanıt Önizleme:
+
+🛡️ RİSK KONTROLLÜ EN GÜVENLİ 10 FON
+==================================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon: 10
+   • SQL Analizi: 30 fon
+   • ✅ Risk Kontrolü Geçen: 30
+   • ❌ Riskli Bulunan: 0
+   • En Düşük Volatilite: %0.01
+
+ 1. BTP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+7.124
+    📈 Veri Noktası: 121
+    🛡️ Risk Seviyesi: LOW
+    🏷️ Tür: N/A
+
+ 2. MPP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+15.589
+    📈 Veri Noktası: 121
+    🛡...
+
+TEST #82
+----------------------------------------
+Kategori: Scenario
+Soru: küresel kriz olursa
+Beklenen Handler: scenario_analyzer.analyze_scenario_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.92s
+Yanıt Önizleme:
+
+🔴 RESESYON SENARYOSU ANALİZİ
+=============================================
+
+🎯 Senaryo: Ekonomik resesyon/durgunluk dönemi
+
+🛡️ RESESYONA DAYANIKLI FONLAR:
+
+1. TB9 - TEB PORTFÖY DOKUZUNCU SERBEST (DÖVİ... ✅
+   📊 Kategori: Para Piyasası
+   💪 Dayanıklılık: Çok Yüksek
+   📉 Volatilite: %0.531
+   📈 30 gün getiri: %2.31
+   🛡️ Risk Kontrolü: Onaylandı
+
+2. AS1 - ALLBATROSS PORTFÖY BİRİNCİ SERBEST ... ✅
+   📊 Kategori: Para Piyasası
+   💪 Dayanıklılık: Çok Yüksek
+   📉 Volatilite: %0.535
+   📈 30 gün getiri: ...
+
+TEST #83
+----------------------------------------
+Kategori: Personal
+Soru: emeklilik için en iyi fonlar
+Beklenen Handler: personal_finance_analyzer.handle_retirement_planning
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.31s
+Yanıt Önizleme:
+
+🛡️ RİSK KONTROLLÜ EN GÜVENLİ 10 FON
+==================================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon: 10
+   • SQL Analizi: 30 fon
+   • ✅ Risk Kontrolü Geçen: 30
+   • ❌ Riskli Bulunan: 0
+   • En Düşük Volatilite: %0.01
+
+ 1. BTP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+7.124
+    📈 Veri Noktası: 121
+    🛡️ Risk Seviyesi: LOW
+    🏷️ Tür: N/A
+
+ 2. MPP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+15.589
+    📈 Veri Noktası: 121
+    🛡...
+
+TEST #84
+----------------------------------------
+Kategori: Personal
+Soru: emekliliğe 20 yıl var
+Beklenen Handler: personal_finance_analyzer.handle_retirement_planning
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.09s
+Yanıt Önizleme:
+
+👴 EMEKLİLİK PORTFÖY ÖNERİSİ (20 YIL)
+=======================================================
+
+⚡ RİSK PROFİLİ: YÜKSEK (20+ yıl var)
+
+📊 PORTFÖY DAĞILIMI ÖNERİSİ:
+   • Hisse Senedi Fonları: %70
+   • Borçlanma Araçları: %20
+   • Para Piyasası: %10
+
+🎯 ÖNERİLEN FONLAR (RİSK KONTROLÜ İLE):
+
+📈 HİSSE SENEDİ FONLARI (%70):
+   ⚠️ Risk kriterlerine uygun hisse senedi fonu bulunamadı.
+
+📊 BORÇLANMA ARAÇLARI FONLARI (%20):
+   ⚠️ Risk kriterlerine uygun borçlanma araçları fonu bulunamadı.
+
+💰 PARA PİYASASI FONL...
+
+TEST #85
+----------------------------------------
+Kategori: Personal
+Soru: 45 yaşındayım emeklilik planı
+Beklenen Handler: personal_finance_analyzer.handle_retirement_planning
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.09s
+Yanıt Önizleme:
+
+👴 EMEKLİLİK PORTFÖY ÖNERİSİ (10 YIL)
+=======================================================
+
+⚖️ RİSK PROFİLİ: DENGELİ (10-20 yıl)
+
+📊 PORTFÖY DAĞILIMI ÖNERİSİ:
+   • Hisse Senedi Fonları: %50
+   • Borçlanma Araçları: %35
+   • Para Piyasası: %15
+
+🎯 ÖNERİLEN FONLAR (RİSK KONTROLÜ İLE):
+
+📈 HİSSE SENEDİ FONLARI (%50):
+   ⚠️ Risk kriterlerine uygun hisse senedi fonu bulunamadı.
+
+📊 BORÇLANMA ARAÇLARI FONLARI (%35):
+   ⚠️ Risk kriterlerine uygun borçlanma araçları fonu bulunamadı.
+
+💰 PARA PİYASASI FONL...
+
+TEST #86
+----------------------------------------
+Kategori: Personal
+Soru: 30 yaşında emeklilik için ayda ne kadar
+Beklenen Handler: personal_finance_analyzer.handle_ai_personalized_planning
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.09s
+Yanıt Önizleme:
+
+👴 EMEKLİLİK PORTFÖY ÖNERİSİ (10 YIL)
+=======================================================
+
+⚖️ RİSK PROFİLİ: DENGELİ (10-20 yıl)
+
+📊 PORTFÖY DAĞILIMI ÖNERİSİ:
+   • Hisse Senedi Fonları: %50
+   • Borçlanma Araçları: %35
+   • Para Piyasası: %15
+
+🎯 ÖNERİLEN FONLAR (RİSK KONTROLÜ İLE):
+
+📈 HİSSE SENEDİ FONLARI (%50):
+   ⚠️ Risk kriterlerine uygun hisse senedi fonu bulunamadı.
+
+📊 BORÇLANMA ARAÇLARI FONLARI (%35):
+   ⚠️ Risk kriterlerine uygun borçlanma araçları fonu bulunamadı.
+
+💰 PARA PİYASASI FONL...
+
+TEST #87
+----------------------------------------
+Kategori: Personal
+Soru: çocuğum için eğitim fonu
+Beklenen Handler: personal_finance_analyzer.analyze_personal_finance_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.86s
+Yanıt Önizleme:
+❌ Geçerli bir fon kodu bulunamadı. Örnek: 'AKB fonunu analiz et'
+
+TEST #88
+----------------------------------------
+Kategori: Personal
+Soru: 10 yıl sonra üniversite masrafı
+Beklenen Handler: personal_finance_analyzer.analyze_personal_finance_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 2.2s
+Yanıt Önizleme:
+
+👴 EMEKLİLİK PORTFÖY ÖNERİSİ (10 YIL)
+=======================================================
+
+⚖️ RİSK PROFİLİ: DENGELİ (10-20 yıl)
+
+📊 PORTFÖY DAĞILIMI ÖNERİSİ:
+   • Hisse Senedi Fonları: %50
+   • Borçlanma Araçları: %35
+   • Para Piyasası: %15
+
+🎯 ÖNERİLEN FONLAR (RİSK KONTROLÜ İLE):
+
+📈 HİSSE SENEDİ FONLARI (%50):
+   ⚠️ Risk kriterlerine uygun hisse senedi fonu bulunamadı.
+
+📊 BORÇLANMA ARAÇLARI FONLARI (%35):
+   ⚠️ Risk kriterlerine uygun borçlanma araçları fonu bulunamadı.
+
+💰 PARA PİYASASI FONL...
+
+TEST #89
+----------------------------------------
+Kategori: Personal
+Soru: ev almak için birikim
+Beklenen Handler: personal_finance_analyzer.analyze_personal_finance_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 8.82s
+⚠️ Uyarı: Yanıtta hata mesajı var
+Yanıt Önizleme:
+
+🎯 KİŞİSELLEŞTİRİLMİŞ FİNANSAL PLAN
+============================================================
+
+👤 PROFİL ÖZETİ:
+   • Yaş: 35 (young dönem)
+   • Hedef: house (5 yıl)
+   • Risk Profili: MEDIUM
+   • Mevcut Birikim: 0 TL
+
+🤖 KİŞİYE ÖZEL AI TAVSİYELERİ:
+============================================================
+Tabii ki, size özel olarak finansal tavsiyeler verebilirim. 
+
+1. **UYGUN RİSK PROFİLİ DEĞERLENDİRMESİ**
+   - Bu kişi için orta risk profili uygun çünkü genç yaşta olması ve hedefine ulaşmak...
+
+TEST #90
+----------------------------------------
+Kategori: Personal
+Soru: 5 yıl sonra ev peşinatı
+Beklenen Handler: personal_finance_analyzer.analyze_personal_finance_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 10.53s
+⚠️ Uyarı: Yanıtta hata mesajı var
+Yanıt Önizleme:
+
+🎯 KİŞİSELLEŞTİRİLMİŞ FİNANSAL PLAN
+============================================================
+
+👤 PROFİL ÖZETİ:
+   • Yaş: 35 (young dönem)
+   • Hedef: house (5 yıl)
+   • Risk Profili: LOW
+   • Mevcut Birikim: 0 TL
+
+🤖 KİŞİYE ÖZEL AI TAVSİYELERİ:
+============================================================
+Tabii ki, size özel tavsiyeler sunabilirim.
+
+1. **UYGUN RİSK PROFİLİ DEĞERLENDİRMESİ**
+   - Bu kişi için düzeltilmiş risk profili "low" olduğundan daha az riskli yatırım araçları tercih edilme...
+
+TEST #91
+----------------------------------------
+Kategori: Personal
+Soru: 2 yıl sonra düğün için
+Beklenen Handler: personal_finance_analyzer.analyze_personal_finance_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.85s
+Yanıt Önizleme:
+
+📈 SON 30 GÜN EN ÇOK KAZANDIRAN GÜVENLİ 2 FON
+=======================================================
+
+🛡️ RİSK KONTROLÜ SONUCU:
+   ✅ Güvenli Kazananlar: 45
+   ⚠️ Riskli Kazananlar: 0
+
+ 1. YJH ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 2.3646 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 2. HMK ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 248.0053 TL
+    🛡️ Risk Seviyesi: LOW
+
+
+
+TEST #92
+----------------------------------------
+Kategori: Personal
+Soru: acil durum fonu
+Beklenen Handler: personal_finance_analyzer.analyze_personal_finance_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.99s
+Yanıt Önizleme:
+
+🛡️ RİSK KONTROLLÜ EN GÜVENLİ 10 FON
+==================================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon: 10
+   • SQL Analizi: 30 fon
+   • ✅ Risk Kontrolü Geçen: 30
+   • ❌ Riskli Bulunan: 0
+   • En Düşük Volatilite: %0.01
+
+ 1. BTP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+7.124
+    📈 Veri Noktası: 121
+    🛡️ Risk Seviyesi: LOW
+    🏷️ Tür: N/A
+
+ 2. MPP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+15.589
+    📈 Veri Noktası: 121
+    🛡...
+
+TEST #93
+----------------------------------------
+Kategori: Math
+Soru: 100000 TL'yi 5 fona dağıt
+Beklenen Handler: mathematical_calculator.handle_portfolio_distribution
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.63s
+Yanıt Önizleme:
+
+📊 PORTFÖY DAĞITIM ÖNERİSİ
+==================================================
+
+💰 Toplam Tutar: 100,000 TL
+📈 Fon Sayısı: 5
+
+🎯 MUHAFAZAKAR STRATEJİ:
+==============================
+1. Para Piyasası Fonu:
+   Tutar: 40,000 TL (%40)
+   Beklenen Yıllık Getiri: %20
+
+2. Borçlanma Araçları Fonu:
+   Tutar: 40,000 TL (%40)
+   Beklenen Yıllık Getiri: %25
+
+3. Hisse Senedi Fonu:
+   Tutar: 20,000 TL (%20)
+   Beklenen Yıllık Getiri: %35
+
+📊 STRATEJİ ÖZETİ:
+   Toplam Dağıtılan: 100,000 TL
+   Beklenen Yıllık Getiri...
+
+TEST #94
+----------------------------------------
+Kategori: Math
+Soru: 50000 TL ile portföy oluştur
+Beklenen Handler: mathematical_calculator.handle_portfolio_distribution
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 2.54s
+Yanıt Önizleme:
+
+📈 SON 30 GÜN EN ÇOK KAZANDIRAN GÜVENLİ 50000 FON
+=======================================================
+
+🛡️ RİSK KONTROLÜ SONUCU:
+   ✅ Güvenli Kazananlar: 45
+   ⚠️ Riskli Kazananlar: 0
+
+ 1. YJH ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 2.3646 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 2. HMK ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 248.0053 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 3. GZH ✅
+    📊 30 GÜN Getiri: %-0.60
+    💰 Güncel Fiyat: 2.9167 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 4. NFK ✅
+    📊 30 GÜN Ge...
+
+TEST #95
+----------------------------------------
+Kategori: Math
+Soru: 200000 TL'yi en iyi şekilde dağıt
+Beklenen Handler: mathematical_calculator.handle_portfolio_distribution
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.57s
+Yanıt Önizleme:
+
+📊 PORTFÖY DAĞITIM ÖNERİSİ
+==================================================
+
+💰 Toplam Tutar: 200,000 TL
+📈 Fon Sayısı: 3
+
+🎯 MUHAFAZAKAR STRATEJİ:
+==============================
+1. Para Piyasası Fonu:
+   Tutar: 80,000 TL (%40)
+   Beklenen Yıllık Getiri: %20
+
+2. Borçlanma Araçları Fonu:
+   Tutar: 80,000 TL (%40)
+   Beklenen Yıllık Getiri: %25
+
+3. Hisse Senedi Fonu:
+   Tutar: 40,000 TL (%20)
+   Beklenen Yıllık Getiri: %35
+
+📊 STRATEJİ ÖZETİ:
+   Toplam Dağıtılan: 200,000 TL
+   Beklenen Yıllık Getiri...
+
+TEST #96
+----------------------------------------
+Kategori: Math
+Soru: ayda 5000 TL yatırırsam 10 yıl sonra
+Beklenen Handler: mathematical_calculator.handle_monthly_investment_calculation
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 7.98s
+Yanıt Önizleme:
+
+🔮 PREDİKTİF SENARYO ANALİZİ
+============================================================
+
+📊 SENARYO: GENEL - HEDEF: 5000.0
+📅 TAHMİN PERİYODU: 3 ay (90 gün)
+🕐 Analiz Zamanı: 2025-06-11 23:43
+
+📈 MEVCUT DURUM:
+   • Ortalama Volatilite: %1.57
+   • Para Piyasası Getirisi: %0.80
+   • Altın Fonları Getirisi: %4.25
+   • Döviz Fonları Getirisi: %3.04
+
+📊 TARİHSEL TREND (90 günlük):
+   • Ortalama Getiri: %7.60
+   • Volatilite: %1.89
+   • Veri Sayısı: 100 fon
+
+🤖 AI TAHMİNLERİ:
+=============================...
+
+TEST #97
+----------------------------------------
+Kategori: Math
+Soru: aylık 2000 TL ile 20 yılda ne birikir
+Beklenen Handler: mathematical_calculator.handle_monthly_investment_calculation
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 4.54s
+Yanıt Önizleme:
+
+💰 AYLIK YATIRIM HESAPLAMASI
+==================================================
+
+📊 PARAMETRELER:
+   • Aylık Yatırım: 2,000 TL
+   • Süre: 20 yıl (240 ay)
+   • Toplam Yatırım: 480,000 TL
+
+📈 SABİT GETİRİ SENARYOLARI:
+
+🎯 Düşük Risk (%15/yıl):
+   Birikecek Tutar: 2,994,479 TL
+   Toplam Kazanç: 2,514,479 TL
+   Kazanç Oranı: %523.8
+
+🎯 Orta Risk (%25/yıl):
+   Birikecek Tutar: 13,438,227 TL
+   Toplam Kazanç: 12,958,227 TL
+   Kazanç Oranı: %2699.6
+
+🎯 Yüksek Risk (%40/yıl):
+   Birikecek Tutar: 156,924,451 ...
+
+TEST #98
+----------------------------------------
+Kategori: Math
+Soru: yıllık %20 getiri ile 5 yıl
+Beklenen Handler: mathematical_calculator.analyze_mathematical_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 53.83s
+Yanıt Önizleme:
+
+🏛️ SON 5 YILIN EN İSTİKRARLI FONLARI
+==================================================
+
+📊 İstikrar Kriterleri:
+   • Düşük volatilite
+   • Tutarlı pozitif getiri
+   • Yüksek Sharpe oranı
+   • En az 4 yıllık veri
+
+🏆 EN İSTİKRARLI FONLAR:
+
+ 1. OTF - 🟠 ORTA İSTİKRARLI
+    📈 5 Yıllık Toplam Getiri: %+230.01
+    📊 Yıllık Ortalama: %+26.96
+    📉 Yıllık Volatilite: %1.20
+    ⚡ Sharpe Oranı: 9.960
+    ✅ Pozitif Gün Oranı: %49.7
+    📅 Veri Süresi: 2508 gün (10.0 yıl)
+    💰 Güncel Fiyat: 4.4915 TL
+    🏷️...
+
+TEST #99
+----------------------------------------
+Kategori: Math
+Soru: 100000 TL %15 getiri 10 yıl
+Beklenen Handler: mathematical_calculator.analyze_mathematical_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.31s
+Yanıt Önizleme:
+❌ Geçerli bir fon kodu tespit edilemedi.
+
+TEST #100
+----------------------------------------
+Kategori: Company
+Soru: İş Portföy analizi
+Beklenen Handler: portfolio_company_analyzer.analyze_company_comprehensive
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.14s
+Yanıt Önizleme:
+❌ İş Portföy fonları bulunamadı.
+
+TEST #101
+----------------------------------------
+Kategori: Company
+Soru: Ak Portföy fonları
+Beklenen Handler: portfolio_company_analyzer.analyze_company_comprehensive
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.01s
+Yanıt Önizleme:
+❌ Ak Portföy fonları bulunamadı.
+
+TEST #102
+----------------------------------------
+Kategori: Company
+Soru: Garanti Portföy performansı
+Beklenen Handler: portfolio_company_analyzer.analyze_company_comprehensive
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.01s
+Yanıt Önizleme:
+❌ Garanti Portföy fonları bulunamadı.
+
+TEST #103
+----------------------------------------
+Kategori: Company
+Soru: QNB Portföy değerlendirmesi
+Beklenen Handler: portfolio_company_analyzer.analyze_company_comprehensive
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.01s
+Yanıt Önizleme:
+❌ QNB fonu veritabanında bulunamadı.
+
+TEST #104
+----------------------------------------
+Kategori: Company
+Soru: Ata Portföy nasıl
+Beklenen Handler: portfolio_company_analyzer.analyze_company_comprehensive
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.01s
+Yanıt Önizleme:
+❌ ATA fonu veritabanında bulunamadı.
+
+TEST #105
+----------------------------------------
+Kategori: Company
+Soru: Fiba Portföy fonları
+Beklenen Handler: portfolio_company_analyzer.analyze_company_comprehensive
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 2.64s
+Yanıt Önizleme:
+
+📈 SON 30 GÜN EN ÇOK KAZANDIRAN GÜVENLİ 10 FON
+=======================================================
+
+🛡️ RİSK KONTROLÜ SONUCU:
+   ✅ Güvenli Kazananlar: 45
+   ⚠️ Riskli Kazananlar: 0
+
+ 1. YJH ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 2.3646 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 2. HMK ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 248.0053 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 3. GZH ✅
+    📊 30 GÜN Getiri: %-0.60
+    💰 Güncel Fiyat: 2.9167 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 4. NFK ✅
+    📊 30 GÜN Getir...
+
+TEST #106
+----------------------------------------
+Kategori: Company
+Soru: İş Portföy vs Ak Portföy
+Beklenen Handler: portfolio_company_analyzer.compare_companies_unlimited
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.0s
+Yanıt Önizleme:
+❌ İş Portföy fonları bulunamadı.
+
+TEST #107
+----------------------------------------
+Kategori: Company
+Soru: Garanti Portföy karşı QNB Portföy
+Beklenen Handler: portfolio_company_analyzer.compare_companies_unlimited
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.0s
+Yanıt Önizleme:
+❌ Garanti Portföy fonları bulunamadı.
+
+TEST #108
+----------------------------------------
+Kategori: Company
+Soru: en başarılı portföy şirketi
+Beklenen Handler: portfolio_company_analyzer.find_best_portfolio_company_unlimited
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.16s
+Yanıt Önizleme:
+❌ Hiçbir şirket analiz edilemedi.
+
+TEST #109
+----------------------------------------
+Kategori: Company
+Soru: en iyi portföy yönetim şirketi hangisi
+Beklenen Handler: portfolio_company_analyzer.find_best_portfolio_company_unlimited
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.45s
+Yanıt Önizleme:
+❌ Hiçbir şirket analiz edilemedi.
+
+TEST #110
+----------------------------------------
+Kategori: Time
+Soru: bugün en çok kazanan fonlar
+Beklenen Handler: time_based_analyzer.analyze_today_performance
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.14s
+Yanıt Önizleme:
+
+📈 SON 30 GÜN EN ÇOK KAZANDIRAN GÜVENLİ 10 FON
+=======================================================
+
+🛡️ RİSK KONTROLÜ SONUCU:
+   ✅ Güvenli Kazananlar: 45
+   ⚠️ Riskli Kazananlar: 0
+
+ 1. YJH ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 2.3646 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 2. HMK ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 248.0053 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 3. GZH ✅
+    📊 30 GÜN Getiri: %-0.60
+    💰 Güncel Fiyat: 2.9167 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 4. NFK ✅
+    📊 30 GÜN Getir...
+
+TEST #111
+----------------------------------------
+Kategori: Time
+Soru: bugünkü fon performansları
+Beklenen Handler: time_based_analyzer.analyze_today_performance
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.05s
+⚠️ Uyarı: Yanıtta hata mesajı var
+Yanıt Önizleme:
+
+❓ DUAL AI TEFAS ANALİZ SİSTEMİ
+===================================
+
+🤖 SİSTEM DURUMU:
+   📱 OpenAI: ✅ Aktif
+   🦙 Ollama: ❌ İnaktif
+   📊 Aktif Fonlar: 50
+   🗄️ Veritabanı: ✅ Bağlı
+
+📋 DUAL AI SORU TİPLERİ:
+   • '2025 için hangi fonları önerirsin?' (Her iki AI de yanıt verir)
+   • 'AKB fonunu analiz et' (Dual AI değerlendirme)
+   • 'Piyasa durumu nasıl?' (İkili AI yorumu)
+   • 'AI test' (AI sistemlerini test et)
+   • 'AKB ve YAS karşılaştır'
+   • 'Güvenli fonlar neler?'
+
+🎯 DUAL AI AVANTAJLARI:
+   • ...
+
+TEST #112
+----------------------------------------
+Kategori: Time
+Soru: bu hafta en iyi fonlar
+Beklenen Handler: time_based_analyzer.analyze_time_based_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.47s
+Yanıt Önizleme:
+
+🛡️ RİSK KONTROLLÜ EN GÜVENLİ 10 FON
+==================================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon: 10
+   • SQL Analizi: 30 fon
+   • ✅ Risk Kontrolü Geçen: 30
+   • ❌ Riskli Bulunan: 0
+   • En Düşük Volatilite: %0.01
+
+ 1. BTP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+7.124
+    📈 Veri Noktası: 121
+    🛡️ Risk Seviyesi: LOW
+    🏷️ Tür: N/A
+
+ 2. MPP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+15.589
+    📈 Veri Noktası: 121
+    🛡...
+
+TEST #113
+----------------------------------------
+Kategori: Time
+Soru: haftalık en çok kazandıran
+Beklenen Handler: time_based_analyzer.analyze_time_based_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.37s
+Yanıt Önizleme:
+
+📈 SON 30 GÜN EN ÇOK KAZANDIRAN GÜVENLİ 10 FON
+=======================================================
+
+🛡️ RİSK KONTROLÜ SONUCU:
+   ✅ Güvenli Kazananlar: 45
+   ⚠️ Riskli Kazananlar: 0
+
+ 1. YJH ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 2.3646 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 2. HMK ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 248.0053 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 3. GZH ✅
+    📊 30 GÜN Getiri: %-0.60
+    💰 Güncel Fiyat: 2.9167 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 4. NFK ✅
+    📊 30 GÜN Getir...
+
+TEST #114
+----------------------------------------
+Kategori: Time
+Soru: bu ay en çok düşen fonlar
+Beklenen Handler: time_based_analyzer.analyze_time_based_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 2.0s
+Yanıt Önizleme:
+
+🔻 EN ÇOK KAYBETTİREN 10 FON (Son 60 Gün)
+=======================================================
+
+📉 EN KÖTÜ PERFORMANS GÖSTERENİLER:
+
+ 1. AC8 🟢 DÜŞÜK RİSK
+    📉 Kayıp: %-29.24
+    💲 Güncel Fiyat: 76.2539 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 2. BHH 🟢 DÜŞÜK RİSK
+    📉 Kayıp: %-26.30
+    💲 Güncel Fiyat: 1.1635 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 3. RIH 🟢 DÜŞÜK RİSK
+    📉 Kayıp: %-24.13
+    💲 Güncel Fiyat: 7.7460 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 4. OSF 🟢 DÜŞÜK RİSK
+    📉 Kayıp: %-22.82
+    💲 Güncel Fiyat: 3.331...
+
+TEST #115
+----------------------------------------
+Kategori: Time
+Soru: son 30 günde en iyi performans
+Beklenen Handler: time_based_analyzer.analyze_time_based_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.15s
+Yanıt Önizleme:
+
+📈 SON 30 GÜN EN ÇOK KAZANDIRAN GÜVENLİ 30 FON
+=======================================================
+
+🛡️ RİSK KONTROLÜ SONUCU:
+   ✅ Güvenli Kazananlar: 45
+   ⚠️ Riskli Kazananlar: 0
+
+ 1. YJH ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 2.3646 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 2. HMK ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 248.0053 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 3. GZH ✅
+    📊 30 GÜN Getiri: %-0.60
+    💰 Güncel Fiyat: 2.9167 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 4. NFK ✅
+    📊 30 GÜN Getir...
+
+TEST #116
+----------------------------------------
+Kategori: Time
+Soru: yılbaşından beri en çok kazandıran
+Beklenen Handler: time_based_analyzer.analyze_time_based_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.22s
+Yanıt Önizleme:
+
+📈 SON 30 GÜN EN ÇOK KAZANDIRAN GÜVENLİ 10 FON
+=======================================================
+
+🛡️ RİSK KONTROLÜ SONUCU:
+   ✅ Güvenli Kazananlar: 45
+   ⚠️ Riskli Kazananlar: 0
+
+ 1. YJH ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 2.3646 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 2. HMK ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 248.0053 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 3. GZH ✅
+    📊 30 GÜN Getiri: %-0.60
+    💰 Güncel Fiyat: 2.9167 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 4. NFK ✅
+    📊 30 GÜN Getir...
+
+TEST #117
+----------------------------------------
+Kategori: Time
+Soru: 2024 yılı en başarılı fonlar
+Beklenen Handler: time_based_analyzer.analyze_time_based_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.82s
+Yanıt Önizleme:
+
+📈 SON 30 GÜN EN ÇOK KAZANDIRAN GÜVENLİ 2024 FON
+=======================================================
+
+🛡️ RİSK KONTROLÜ SONUCU:
+   ✅ Güvenli Kazananlar: 45
+   ⚠️ Riskli Kazananlar: 0
+
+ 1. YJH ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 2.3646 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 2. HMK ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 248.0053 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 3. GZH ✅
+    📊 30 GÜN Getiri: %-0.60
+    💰 Güncel Fiyat: 2.9167 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 4. NFK ✅
+    📊 30 GÜN Get...
+
+TEST #118
+----------------------------------------
+Kategori: Macro
+Soru: faiz artışı fonları nasıl etkiler
+Beklenen Handler: macroeconomic_analyzer.analyze_interest_rate_impact
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 3.52s
+Yanıt Önizleme:
+
+💹 FAİZ ARTIŞ ETKİ ANALİZİ
+==================================================
+
+📈 FAİZ ARTIŞI SENARYOSU:
+
+🟢 OLUMLU ETKİLENECEK FON TÜRLERİ:
+   • Para Piyasası Fonları (yüksek getiri)
+   • Kısa Vadeli Tahvil Fonları
+   • Likit Fonlar
+   • Mevduat Benzeri Fonlar
+
+🔴 OLUMSUZ ETKİLENECEK FON TÜRLERİ:
+   • Hisse Senedi Fonları (değerleme baskısı)
+   • Uzun Vadeli Tahvil Fonları
+   • Gayrimenkul Fonları
+
+💡 STRATEJİ ÖNERİLERİ:
+   1. Hisse fonlarından para piyasasına geçiş
+   2. Kısa vadeli enstrümanlara ...
+
+TEST #119
+----------------------------------------
+Kategori: Macro
+Soru: TCMB faiz kararı fon piyasası
+Beklenen Handler: macroeconomic_analyzer.analyze_interest_rate_impact
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 3.55s
+Yanıt Önizleme:
+
+💹 FAİZ DEĞIŞIM ETKİ ANALİZİ
+==================================================
+
+
+
+🤖 AI MAKROEKONOMİK YORUM:
+📱 TEFAS fonları genellikle faiz oranlarındaki değişikliklere duyarlılık gösterir. Faiz oranları arttığında sabit getirili fonların değeri düşerken, hisse senedi fonları genellikle olumlu etkilenir. Bu nedenle, faiz oranlarının artması durumunda hisse senedi ağırlıklı fonlara yönelmek mantıklı olabilir. Öte yandan, faiz oranlarının düşmesi durumunda ise sabit getirili fonlar tercih edilebi...
+
+TEST #120
+----------------------------------------
+Kategori: Macro
+Soru: enflasyon ve fon getirileri
+Beklenen Handler: macroeconomic_analyzer.analyze_macroeconomic_impact
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.24s
+Yanıt Önizleme:
+
+💹 ENFLASYON KORUMALI FONLAR ANALİZİ (MV + Risk Assessment)
+======================================================================
+
+⚡ Süre: 0.013 saniye (MV kullanıldı)
+📊 Toplam: 31 fon (kategorilere göre gruplu)
+🛡️ Risk Taraması: ✅ Tamamlandı
+   ⚠️ Yüksek Risk: 0 fon
+   ⛔ Ekstrem Risk: 0 fon
+
+📊 GENEL İSTATİSTİKLER:
+==================================================
+   📈 Toplam Enflasyon Korumalı Fon: 863
+   💰 Toplam Varlık: 2696.0 Milyar TL
+   👥 Toplam Yatırımcı: 5,731,702
+
+
+🥇 ALTIN AĞIRLIKLI F...
+
+TEST #121
+----------------------------------------
+Kategori: Macro
+Soru: yüksek enflasyonda fon stratejisi
+Beklenen Handler: macroeconomic_analyzer.analyze_macroeconomic_impact
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.17s
+Yanıt Önizleme:
+
+💹 ENFLASYON KORUMALI FONLAR ANALİZİ (MV + Risk Assessment)
+======================================================================
+
+⚡ Süre: 0.005 saniye (MV kullanıldı)
+📊 Toplam: 31 fon (kategorilere göre gruplu)
+🛡️ Risk Taraması: ✅ Tamamlandı
+   ⚠️ Yüksek Risk: 0 fon
+   ⛔ Ekstrem Risk: 0 fon
+
+📊 GENEL İSTATİSTİKLER:
+==================================================
+   📈 Toplam Enflasyon Korumalı Fon: 863
+   💰 Toplam Varlık: 2696.0 Milyar TL
+   👥 Toplam Yatırımcı: 5,731,702
+
+
+🥇 ALTIN AĞIRLIKLI F...
+
+TEST #122
+----------------------------------------
+Kategori: Macro
+Soru: jeopolitik riskler ve fonlar
+Beklenen Handler: macroeconomic_analyzer.analyze_macroeconomic_impact
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.81s
+Yanıt Önizleme:
+
+🌍 JEOPOLİTİK RİSK ANALİZİ
+==================================================
+
+⚠️ GÜNCEL JEOPOLİTİK RİSKLER:
+   • Bölgesel çatışmalar ve savaşlar
+   • Ticaret savaşları ve ambargolar
+   • Enerji krizi ve tedarik zinciri
+   • Küresel resesyon endişeleri
+
+🛡️ KORUNMA SAĞLAYAN FON TÜRLERİ:
+
+1. **ALTIN FONLARI** 🥇
+   • Klasik güvenli liman
+   • Kriz dönemlerinde %10-30 prim
+   • Enflasyon koruması bonus
+
+2. **DÖVİZ FONLARI** 💵
+   • USD/EUR bazlı fonlar
+   • TL değer kaybına karşı koruma
+   • Küresel ...
+
+TEST #123
+----------------------------------------
+Kategori: Macro
+Soru: küresel belirsizlikte güvenli fonlar
+Beklenen Handler: macroeconomic_analyzer.analyze_macroeconomic_impact
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.03s
+Yanıt Önizleme:
+
+🛡️ RİSK KONTROLLÜ EN GÜVENLİ 10 FON
+==================================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon: 10
+   • SQL Analizi: 30 fon
+   • ✅ Risk Kontrolü Geçen: 30
+   • ❌ Riskli Bulunan: 0
+   • En Düşük Volatilite: %0.01
+
+ 1. BTP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+7.124
+    📈 Veri Noktası: 121
+    🛡️ Risk Seviyesi: LOW
+    🏷️ Tür: N/A
+
+ 2. MPP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+15.589
+    📈 Veri Noktası: 121
+    🛡...
+
+TEST #124
+----------------------------------------
+Kategori: Thematic
+Soru: teknoloji fonları
+Beklenen Handler: thematic_analyzer.analyze_thematic_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 2.23s
+Yanıt Önizleme:
+
+🛡️ RİSK KONTROLLÜ EN GÜVENLİ 10 FON
+==================================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon: 10
+   • SQL Analizi: 30 fon
+   • ✅ Risk Kontrolü Geçen: 30
+   • ❌ Riskli Bulunan: 0
+   • En Düşük Volatilite: %0.01
+
+ 1. BTP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+7.124
+    📈 Veri Noktası: 121
+    🛡️ Risk Seviyesi: LOW
+    🏷️ Tür: N/A
+
+ 2. MPP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+15.589
+    📈 Veri Noktası: 121
+    🛡...
+
+TEST #125
+----------------------------------------
+Kategori: Thematic
+Soru: sağlık sektörü fonları
+Beklenen Handler: thematic_analyzer.analyze_thematic_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.8s
+Yanıt Önizleme:
+
+🛡️ RİSK KONTROLLÜ EN GÜVENLİ 10 FON
+==================================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon: 10
+   • SQL Analizi: 30 fon
+   • ✅ Risk Kontrolü Geçen: 30
+   • ❌ Riskli Bulunan: 0
+   • En Düşük Volatilite: %0.01
+
+ 1. BTP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+7.124
+    📈 Veri Noktası: 121
+    🛡️ Risk Seviyesi: LOW
+    🏷️ Tür: N/A
+
+ 2. MPP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+15.589
+    📈 Veri Noktası: 121
+    🛡...
+
+TEST #126
+----------------------------------------
+Kategori: Thematic
+Soru: enerji fonları listesi
+Beklenen Handler: thematic_analyzer.analyze_thematic_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.36s
+Yanıt Önizleme:
+
+🛡️ RİSK KONTROLLÜ EN GÜVENLİ 10 FON
+==================================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon: 10
+   • SQL Analizi: 30 fon
+   • ✅ Risk Kontrolü Geçen: 30
+   • ❌ Riskli Bulunan: 0
+   • En Düşük Volatilite: %0.01
+
+ 1. BTP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+7.124
+    📈 Veri Noktası: 121
+    🛡️ Risk Seviyesi: LOW
+    🏷️ Tür: N/A
+
+ 2. MPP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+15.589
+    📈 Veri Noktası: 121
+    🛡...
+
+TEST #127
+----------------------------------------
+Kategori: Thematic
+Soru: altın fonları
+Beklenen Handler: thematic_analyzer.analyze_thematic_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.9s
+Yanıt Önizleme:
+
+🛡️ RİSK KONTROLLÜ EN GÜVENLİ 10 FON
+==================================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon: 10
+   • SQL Analizi: 30 fon
+   • ✅ Risk Kontrolü Geçen: 30
+   • ❌ Riskli Bulunan: 0
+   • En Düşük Volatilite: %0.01
+
+ 1. BTP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+7.124
+    📈 Veri Noktası: 121
+    🛡️ Risk Seviyesi: LOW
+    🏷️ Tür: N/A
+
+ 2. MPP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+15.589
+    📈 Veri Noktası: 121
+    🛡...
+
+TEST #128
+----------------------------------------
+Kategori: Thematic
+Soru: gayrimenkul fonları
+Beklenen Handler: thematic_analyzer.analyze_thematic_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.2s
+Yanıt Önizleme:
+
+🛡️ RİSK KONTROLLÜ EN GÜVENLİ 10 FON
+==================================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon: 10
+   • SQL Analizi: 30 fon
+   • ✅ Risk Kontrolü Geçen: 30
+   • ❌ Riskli Bulunan: 0
+   • En Düşük Volatilite: %0.01
+
+ 1. BTP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+7.124
+    📈 Veri Noktası: 121
+    🛡️ Risk Seviyesi: LOW
+    🏷️ Tür: N/A
+
+ 2. MPP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+15.589
+    📈 Veri Noktası: 121
+    🛡...
+
+TEST #129
+----------------------------------------
+Kategori: Thematic
+Soru: sürdürülebilir yatırım fonları
+Beklenen Handler: thematic_analyzer.analyze_thematic_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.66s
+Yanıt Önizleme:
+
+🛡️ RİSK KONTROLLÜ EN GÜVENLİ 10 FON
+==================================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon: 10
+   • SQL Analizi: 30 fon
+   • ✅ Risk Kontrolü Geçen: 30
+   • ❌ Riskli Bulunan: 0
+   • En Düşük Volatilite: %0.01
+
+ 1. BTP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+7.124
+    📈 Veri Noktası: 121
+    🛡️ Risk Seviyesi: LOW
+    🏷️ Tür: N/A
+
+ 2. MPP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+15.589
+    📈 Veri Noktası: 121
+    🛡...
+
+TEST #130
+----------------------------------------
+Kategori: Thematic
+Soru: temiz enerji fonları
+Beklenen Handler: thematic_analyzer.analyze_thematic_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.75s
+Yanıt Önizleme:
+❌ USD kategorisinde fon bulunamadı.
+
+TEST #131
+----------------------------------------
+Kategori: Thematic
+Soru: yapay zeka temalı fonlar
+Beklenen Handler: thematic_analyzer.analyze_thematic_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.91s
+Yanıt Önizleme:
+❌ TEKNOLOJI temasında fon bulunamadı.
+
+TEST #132
+----------------------------------------
+Kategori: Fundamental
+Soru: en büyük fonlar
+Beklenen Handler: fundamental_analyzer.handle_largest_funds_questions
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 2.17s
+Yanıt Önizleme:
+
+🏢 EN BÜYÜK 10 FON (Kapasite Bazlı)
+=============================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon Sayısı: 10
+   • Bulunan Fon: 10
+   • En Büyük Kapasite: 194,640,513,467 TL
+
+ 1. DCB
+    💰 Kapasite: 194.6 milyar TL
+    👥 Yatırımcı: 33,544 kişi
+    💲 Güncel Fiyat: 2.9702 TL
+    🏷️ Tür: N/A
+    📝 Adı: DENİZ PORTFÖY PARA PİYASASI SERBEST (TL) FON...
+
+ 2. DAS
+    💰 Kapasite: 133.7 milyar TL
+    👥 Yatırımcı: 29,277 kişi
+    💲 Güncel Fiyat: 43.1220 TL
+    🏷️ Tür: N/A
+    📝 Adı: DENİZ...
+
+TEST #133
+----------------------------------------
+Kategori: Fundamental
+Soru: 1 milyar TL üstü fonlar
+Beklenen Handler: fundamental_analyzer.handle_capacity_questions
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 2.35s
+Yanıt Önizleme:
+
+📈 SON 30 GÜN EN ÇOK KAZANDIRAN GÜVENLİ 1 FON
+=======================================================
+
+🛡️ RİSK KONTROLÜ SONUCU:
+   ✅ Güvenli Kazananlar: 45
+   ⚠️ Riskli Kazananlar: 0
+
+ 1. YJH ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 2.3646 TL
+    🛡️ Risk Seviyesi: LOW
+
+
+
+TEST #134
+----------------------------------------
+Kategori: Fundamental
+Soru: küçük ölçekli fonlar
+Beklenen Handler: fundamental_analyzer.handle_capacity_questions
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 2.14s
+Yanıt Önizleme:
+
+🛡️ RİSK KONTROLLÜ EN GÜVENLİ 10 FON
+==================================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon: 10
+   • SQL Analizi: 30 fon
+   • ✅ Risk Kontrolü Geçen: 30
+   • ❌ Riskli Bulunan: 0
+   • En Düşük Volatilite: %0.01
+
+ 1. BTP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+7.124
+    📈 Veri Noktası: 121
+    🛡️ Risk Seviyesi: LOW
+    🏷️ Tür: N/A
+
+ 2. MPP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+15.589
+    📈 Veri Noktası: 121
+    🛡...
+
+TEST #135
+----------------------------------------
+Kategori: Fundamental
+Soru: en popüler fonlar
+Beklenen Handler: fundamental_analyzer.handle_investor_count_questions
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.58s
+Yanıt Önizleme:
+
+📈 SON 30 GÜN EN ÇOK KAZANDIRAN GÜVENLİ 10 FON
+=======================================================
+
+🛡️ RİSK KONTROLÜ SONUCU:
+   ✅ Güvenli Kazananlar: 45
+   ⚠️ Riskli Kazananlar: 0
+
+ 1. YJH ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 2.3646 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 2. HMK ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 248.0053 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 3. GZH ✅
+    📊 30 GÜN Getiri: %-0.60
+    💰 Güncel Fiyat: 2.9167 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 4. NFK ✅
+    📊 30 GÜN Getir...
+
+TEST #136
+----------------------------------------
+Kategori: Fundamental
+Soru: yatırımcı sayısı en fazla fonlar
+Beklenen Handler: fundamental_analyzer.handle_investor_count_questions
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.35s
+Yanıt Önizleme:
+
+👥 YATIRIMCI SAYISI ANALİZİ
+========================================
+
+🎯 Minimum Yatırımcı: 1,000
+
+🏆 EN POPÜLER FONLAR (Benzersiz Fonlar - En Güncel Veriler):
+
+ 1. HLL
+    👥 Yatırımcı: 1,077,939 kişi
+    💲 Fiyat: 0.2391 TL
+    💰 Kapasite: 28,903,893,302 TL
+    🏷️ Tür: N/A
+
+ 2. TKM
+    👥 Yatırımcı: 468,619 kişi
+    💲 Fiyat: 0.1350 TL
+    💰 Kapasite: 47,105,832,972 TL
+    🏷️ Tür: N/A
+
+ 3. HPV
+    👥 Yatırımcı: 354,234 kişi
+    💲 Fiyat: 4.9875 TL
+    💰 Kapasite: 4,949,212,113 TL
+    🏷️ Tür: N/A
+
+ 4. ...
+
+TEST #137
+----------------------------------------
+Kategori: Fundamental
+Soru: en eski fonlar
+Beklenen Handler: fundamental_analyzer.handle_fund_age_questions
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 2.22s
+Yanıt Önizleme:
+
+🏢 EN BÜYÜK 10 FON (Kapasite Bazlı)
+=============================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon Sayısı: 10
+   • Bulunan Fon: 10
+   • En Büyük Kapasite: 194,640,513,467 TL
+
+ 1. DCB
+    💰 Kapasite: 194.6 milyar TL
+    👥 Yatırımcı: 33,544 kişi
+    💲 Güncel Fiyat: 2.9702 TL
+    🏷️ Tür: N/A
+    📝 Adı: DENİZ PORTFÖY PARA PİYASASI SERBEST (TL) FON...
+
+ 2. DAS
+    💰 Kapasite: 133.7 milyar TL
+    👥 Yatırımcı: 29,277 kişi
+    💲 Güncel Fiyat: 43.1220 TL
+    🏷️ Tür: N/A
+    📝 Adı: DENİZ...
+
+TEST #138
+----------------------------------------
+Kategori: Fundamental
+Soru: yeni kurulan fonlar
+Beklenen Handler: fundamental_analyzer.handle_new_funds_questions
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.36s
+Yanıt Önizleme:
+
+🛡️ RİSK KONTROLLÜ EN GÜVENLİ 10 FON
+==================================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon: 10
+   • SQL Analizi: 30 fon
+   • ✅ Risk Kontrolü Geçen: 30
+   • ❌ Riskli Bulunan: 0
+   • En Düşük Volatilite: %0.01
+
+ 1. BTP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+7.124
+    📈 Veri Noktası: 121
+    🛡️ Risk Seviyesi: LOW
+    🏷️ Tür: N/A
+
+ 2. MPP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+15.589
+    📈 Veri Noktası: 121
+    🛡...
+
+TEST #139
+----------------------------------------
+Kategori: Fundamental
+Soru: son 1 yılda kurulan fonlar
+Beklenen Handler: fundamental_analyzer.handle_new_funds_questions
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.94s
+Yanıt Önizleme:
+
+📈 SON 30 GÜN EN ÇOK KAZANDIRAN GÜVENLİ 1 FON
+=======================================================
+
+🛡️ RİSK KONTROLÜ SONUCU:
+   ✅ Güvenli Kazananlar: 45
+   ⚠️ Riskli Kazananlar: 0
+
+ 1. YJH ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 2.3646 TL
+    🛡️ Risk Seviyesi: LOW
+
+
+
+TEST #140
+----------------------------------------
+Kategori: Fundamental
+Soru: hisse senedi fonları
+Beklenen Handler: fundamental_analyzer.handle_fund_category_questions
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 3.11s
+Yanıt Önizleme:
+
+🛡️ RİSK KONTROLLÜ EN GÜVENLİ 10 FON
+==================================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon: 10
+   • SQL Analizi: 30 fon
+   • ✅ Risk Kontrolü Geçen: 30
+   • ❌ Riskli Bulunan: 0
+   • En Düşük Volatilite: %0.01
+
+ 1. BTP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+7.124
+    📈 Veri Noktası: 121
+    🛡️ Risk Seviyesi: LOW
+    🏷️ Tür: N/A
+
+ 2. MPP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+15.589
+    📈 Veri Noktası: 121
+    🛡...
+
+TEST #141
+----------------------------------------
+Kategori: Fundamental
+Soru: borçlanma araçları fonları
+Beklenen Handler: fundamental_analyzer.handle_fund_category_questions
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.31s
+Yanıt Önizleme:
+
+🛡️ RİSK KONTROLLÜ EN GÜVENLİ 10 FON
+==================================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon: 10
+   • SQL Analizi: 30 fon
+   • ✅ Risk Kontrolü Geçen: 30
+   • ❌ Riskli Bulunan: 0
+   • En Düşük Volatilite: %0.01
+
+ 1. BTP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+7.124
+    📈 Veri Noktası: 121
+    🛡️ Risk Seviyesi: LOW
+    🏷️ Tür: N/A
+
+ 2. MPP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+15.589
+    📈 Veri Noktası: 121
+    🛡...
+
+TEST #142
+----------------------------------------
+Kategori: Fundamental
+Soru: karma fonlar
+Beklenen Handler: fundamental_analyzer.handle_fund_category_questions
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.64s
+Yanıt Önizleme:
+❌ AKB fonu veritabanında bulunamadı.
+
+TEST #143
+----------------------------------------
+Kategori: Predictive
+Soru: 1 ay sonra piyasa tahmini
+Beklenen Handler: predictive_scenario_analyzer.analyze_predictive_scenario
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.14s
+Yanıt Önizleme:
+
+📈 SON 1 AY EN ÇOK KAZANDIRAN GÜVENLİ 1 FON
+=======================================================
+
+🛡️ RİSK KONTROLÜ SONUCU:
+   ✅ Güvenli Kazananlar: 45
+   ⚠️ Riskli Kazananlar: 0
+
+ 1. YJH ✅
+    📊 1 AY Getiri: %-0.44
+    💰 Güncel Fiyat: 2.3646 TL
+    🛡️ Risk Seviyesi: LOW
+
+
+
+TEST #144
+----------------------------------------
+Kategori: Predictive
+Soru: 6 ay sonra hangi fonlar öne çıkar
+Beklenen Handler: predictive_scenario_analyzer.analyze_predictive_scenario
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.36s
+Yanıt Önizleme:
+
+📈 SON 30 GÜN EN ÇOK KAZANDIRAN GÜVENLİ 6 FON
+=======================================================
+
+🛡️ RİSK KONTROLÜ SONUCU:
+   ✅ Güvenli Kazananlar: 45
+   ⚠️ Riskli Kazananlar: 0
+
+ 1. YJH ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 2.3646 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 2. HMK ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 248.0053 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 3. GZH ✅
+    📊 30 GÜN Getiri: %-0.60
+    💰 Güncel Fiyat: 2.9167 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 4. NFK ✅
+    📊 30 GÜN Getiri...
+
+TEST #145
+----------------------------------------
+Kategori: Predictive
+Soru: 2025 sonunda fon piyasası
+Beklenen Handler: predictive_scenario_analyzer.analyze_predictive_scenario
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 6.54s
+Yanıt Önizleme:
+
+🎯 2025 YIL SONU RİSK KONTROLLÜ FON ÖNERİSİ
+=======================================================
+
+📊 ANALİZ PARAMETRELERİ:
+   • Risk Toleransı: MODERATE
+   • Yatırım Tutarı: 100,000 TL
+   • Analiz Edilen Fon: 20
+   • ✅ Güvenli Fonlar: 18
+   • ❌ Riskli Fonlar: 0
+
+📈 RİSK KONTROLLÜ EN İYİ 5 FON:
+
+1. AOY (2025 Skoru: 82.0/100) ✅
+   📊 Beklenen Yıllık Getiri: %79.4
+   📉 Risk (Volatilite): %20.3
+   ⚡ Sharpe Oranı: 3.175
+   🎯 Kazanma Oranı: %35.6
+   💰 Güncel Fiyat: 0.2088 TL
+   🛡️ Risk Seviyesi: LOW
+
+...
+
+TEST #146
+----------------------------------------
+Kategori: Predictive
+Soru: gelecek ay enflasyon fonları
+Beklenen Handler: predictive_scenario_analyzer.analyze_predictive_scenario
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.11s
+Yanıt Önizleme:
+
+💹 ENFLASYON KORUMALI FONLAR ANALİZİ (MV + Risk Assessment)
+======================================================================
+
+⚡ Süre: 0.016 saniye (MV kullanıldı)
+📊 Toplam: 31 fon (kategorilere göre gruplu)
+🛡️ Risk Taraması: ✅ Tamamlandı
+   ⚠️ Yüksek Risk: 0 fon
+   ⛔ Ekstrem Risk: 0 fon
+
+📊 GENEL İSTATİSTİKLER:
+==================================================
+   📈 Toplam Enflasyon Korumalı Fon: 863
+   💰 Toplam Varlık: 2696.0 Milyar TL
+   👥 Toplam Yatırımcı: 5,731,702
+
+
+🥇 ALTIN AĞIRLIKLI F...
+
+TEST #147
+----------------------------------------
+Kategori: Predictive
+Soru: 3 ay sonra dolar fonları
+Beklenen Handler: predictive_scenario_analyzer.analyze_predictive_scenario
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.0s
+Yanıt Önizleme:
+❌ USD kategorisinde fon bulunamadı.
+
+TEST #148
+----------------------------------------
+Kategori: Multi
+Soru: kapsamlı piyasa analizi
+Beklenen Handler: multi.multi
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.16s
+Yanıt Önizleme:
+
+📈 SON 30 GÜN EN ÇOK KAZANDIRAN GÜVENLİ 10 FON
+=======================================================
+
+🛡️ RİSK KONTROLÜ SONUCU:
+   ✅ Güvenli Kazananlar: 45
+   ⚠️ Riskli Kazananlar: 0
+
+ 1. YJH ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 2.3646 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 2. HMK ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 248.0053 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 3. GZH ✅
+    📊 30 GÜN Getiri: %-0.60
+    💰 Güncel Fiyat: 2.9167 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 4. NFK ✅
+    📊 30 GÜN Getir...
+
+TEST #149
+----------------------------------------
+Kategori: Multi
+Soru: AKB fonunun detaylı ve kapsamlı analizi
+Beklenen Handler: multi.multi
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.0s
+Yanıt Önizleme:
+❌ AKB fonu veritabanında bulunamadı.
+
+TEST #150
+----------------------------------------
+Kategori: Multi
+Soru: tüm yönleriyle TYH fonu
+Beklenen Handler: multi.multi
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.0s
+Yanıt Önizleme:
+❌ TÜM fonu veritabanında bulunamadı.
+
+TEST #151
+----------------------------------------
+Kategori: Multi
+Soru: derinlemesine YAS fon analizi
+Beklenen Handler: multi.multi
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 2.45s
+Yanıt Önizleme:
+
+📊 YAS FONU DETAYLI ANALİZ RAPORU
+=============================================
+
+📝 FON: YAS Yatırım Fonu
+📊 Yatırım Dağılımı: Hisse: %89.1, Ters Repo: %1.7
+
+💰 PERFORMANS VERİLERİ:
+   Güncel Fiyat: 11.1916 TL
+   Son 100 Gün Getiri: %-7.35
+   Yıllık Getiri (Tahmini): %-18.5
+   Volatilite: %17.8
+   Sharpe Oranı: -1.882
+   Kazanma Oranı: %16.2
+
+🛡️ RİSK DEĞERLENDİRMESİ:
+   Risk Seviyesi: LOW
+   Değerlendirme: ✅ Güvenli
+
+📈 DEĞERLENDİRME:
+   🔴 Zayıf Performans (Son dönem %-7.4)
+   🟡 Orta Risk (Volatilit...
+
+TEST #152
+----------------------------------------
+Kategori: Edge
+Soru: XYZ fonu analiz
+Beklenen Handler: error.invalid_fund
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.0s
+Yanıt Önizleme:
+❌ XYZ fonu veritabanında bulunamadı.
+
+TEST #153
+----------------------------------------
+Kategori: Edge
+Soru: en iyi 0 fon
+Beklenen Handler: error.invalid_count
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.17s
+Yanıt Önizleme:
+❌ SQL analizi sonuç vermedi.
+
+TEST #154
+----------------------------------------
+Kategori: Edge
+Soru: 
+Beklenen Handler: error.empty_query
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.01s
+⚠️ Uyarı: Yanıtta hata mesajı var
+Yanıt Önizleme:
+
+❓ DUAL AI TEFAS ANALİZ SİSTEMİ
+===================================
+
+🤖 SİSTEM DURUMU:
+   📱 OpenAI: ✅ Aktif
+   🦙 Ollama: ❌ İnaktif
+   📊 Aktif Fonlar: 50
+   🗄️ Veritabanı: ✅ Bağlı
+
+📋 DUAL AI SORU TİPLERİ:
+   • '2025 için hangi fonları önerirsin?' (Her iki AI de yanıt verir)
+   • 'AKB fonunu analiz et' (Dual AI değerlendirme)
+   • 'Piyasa durumu nasıl?' (İkili AI yorumu)
+   • 'AI test' (AI sistemlerini test et)
+   • 'AKB ve YAS karşılaştır'
+   • 'Güvenli fonlar neler?'
+
+🎯 DUAL AI AVANTAJLARI:
+   • ...
+
+TEST #155
+----------------------------------------
+Kategori: Edge
+Soru: ????
+Beklenen Handler: error.invalid_chars
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.86s
+⚠️ Uyarı: Yanıtta hata mesajı var
+Yanıt Önizleme:
+
+❓ DUAL AI TEFAS ANALİZ SİSTEMİ
+===================================
+
+🤖 SİSTEM DURUMU:
+   📱 OpenAI: ✅ Aktif
+   🦙 Ollama: ❌ İnaktif
+   📊 Aktif Fonlar: 50
+   🗄️ Veritabanı: ✅ Bağlı
+
+📋 DUAL AI SORU TİPLERİ:
+   • '2025 için hangi fonları önerirsin?' (Her iki AI de yanıt verir)
+   • 'AKB fonunu analiz et' (Dual AI değerlendirme)
+   • 'Piyasa durumu nasıl?' (İkili AI yorumu)
+   • 'AI test' (AI sistemlerini test et)
+   • 'AKB ve YAS karşılaştır'
+   • 'Güvenli fonlar neler?'
+
+🎯 DUAL AI AVANTAJLARI:
+   • ...
+
+TEST #156
+----------------------------------------
+Kategori: Edge
+Soru: beta 0.8 altı sharpe 1.2 üstü alpha pozitif fonlar
+Beklenen Handler: advanced_metrics_analyzer.handle_combined_metrics_analysis
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.08s
+Yanıt Önizleme:
+
+📊 BETA KATSAYISI ANALİZİ (Klasik Yöntem)
+============================================================
+
+⚠️ MV kullanılamadı, sınırlı analiz yapılıyor...
+
+🏆 İLK 3 FON:
+
+1. PO9 - Beta: 0.973
+2. HMK - Beta: 1.088
+3. HJA - Beta: 0.838
+
+
+TEST #157
+----------------------------------------
+Kategori: Edge
+Soru: hem güvenli hem yüksek getirili fonlar
+Beklenen Handler: performance_analyzer.handle_safest_funds_sql_fast
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.15s
+Yanıt Önizleme:
+
+🛡️ RİSK KONTROLLÜ EN GÜVENLİ 10 FON
+==================================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon: 10
+   • SQL Analizi: 30 fon
+   • ✅ Risk Kontrolü Geçen: 30
+   • ❌ Riskli Bulunan: 0
+   • En Düşük Volatilite: %0.01
+
+ 1. BTP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+7.124
+    📈 Veri Noktası: 121
+    🛡️ Risk Seviyesi: LOW
+    🏷️ Tür: N/A
+
+ 2. MPP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+15.589
+    📈 Veri Noktası: 121
+    🛡...
+
+TEST #158
+----------------------------------------
+Kategori: Edge
+Soru: merhaba ben 35 yaşındayım ve emekliliğim için uzun vadeli yatırım yapmak istiyorum risk almak istemiyorum ama enflasyondan da korunmak istiyorum hangi fonları önerirsiniz
+Beklenen Handler: personal_finance_analyzer.handle_retirement_planning
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.03s
+Yanıt Önizleme:
+
+💹 ENFLASYON KORUMALI FONLAR ANALİZİ (MV + Risk Assessment)
+======================================================================
+
+⚡ Süre: 0.016 saniye (MV kullanıldı)
+📊 Toplam: 31 fon (kategorilere göre gruplu)
+🛡️ Risk Taraması: ✅ Tamamlandı
+   ⚠️ Yüksek Risk: 0 fon
+   ⛔ Ekstrem Risk: 0 fon
+
+📊 GENEL İSTATİSTİKLER:
+==================================================
+   📈 Toplam Enflasyon Korumalı Fon: 863
+   💰 Toplam Varlık: 2696.0 Milyar TL
+   👥 Toplam Yatırımcı: 5,731,702
+
+
+🥇 ALTIN AĞIRLIKLI F...
+
+TEST #159
+----------------------------------------
+Kategori: Allocation
+Soru: ICH yatırım dağılımı
+Beklenen Handler: general._handle_fund_allocation_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.9s
+Yanıt Önizleme:
+
+🛡️ RİSK KONTROLLÜ EN GÜVENLİ 10 FON
+==================================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon: 10
+   • SQL Analizi: 30 fon
+   • ✅ Risk Kontrolü Geçen: 30
+   • ❌ Riskli Bulunan: 0
+   • En Düşük Volatilite: %0.01
+
+ 1. BTP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+7.124
+    📈 Veri Noktası: 121
+    🛡️ Risk Seviyesi: LOW
+    🏷️ Tür: N/A
+
+ 2. MPP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+15.589
+    📈 Veri Noktası: 121
+    🛡...
+
+TEST #160
+----------------------------------------
+Kategori: Allocation
+Soru: IIA fonu içeriği
+Beklenen Handler: general._handle_fund_allocation_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 2.45s
+Yanıt Önizleme:
+
+📊 IIA FONU DETAYLI ANALİZ RAPORU
+=============================================
+
+📝 FON: IIA Yatırım Fonu
+📊 Yatırım Dağılımı: Hisse: %72.0
+
+💰 PERFORMANS VERİLERİ:
+   Güncel Fiyat: 3.8824 TL
+   Son 100 Gün Getiri: %22.83
+   Yıllık Getiri (Tahmini): %57.5
+   Volatilite: %18.5
+   Sharpe Oranı: 2.293
+   Kazanma Oranı: %33.3
+
+🛡️ RİSK DEĞERLENDİRMESİ:
+   Risk Seviyesi: LOW
+   Değerlendirme: ✅ Güvenli
+
+📈 DEĞERLENDİRME:
+   🟢 Mükemmel Performans (Son dönem %22.8)
+   🟡 Orta Risk (Volatilite %18.5)
+   🟢 Mük...
+
+TEST #161
+----------------------------------------
+Kategori: Allocation
+Soru: KCL portföy kompozisyonu
+Beklenen Handler: general._handle_fund_allocation_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 0.98s
+Yanıt Önizleme:
+
+🛡️ RİSK KONTROLLÜ EN GÜVENLİ 10 FON
+==================================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon: 10
+   • SQL Analizi: 30 fon
+   • ✅ Risk Kontrolü Geçen: 30
+   • ❌ Riskli Bulunan: 0
+   • En Düşük Volatilite: %0.01
+
+ 1. BTP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+7.124
+    📈 Veri Noktası: 121
+    🛡️ Risk Seviyesi: LOW
+    🏷️ Tür: N/A
+
+ 2. MPP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+15.589
+    📈 Veri Noktası: 121
+    🛡...
+
+TEST #162
+----------------------------------------
+Kategori: Allocation
+Soru: KKE varlık dağılımı
+Beklenen Handler: general._handle_fund_allocation_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.01s
+Yanıt Önizleme:
+
+🛡️ RİSK KONTROLLÜ EN GÜVENLİ 10 FON
+==================================================
+
+📊 ANALİZ SONUCU:
+   • İstenen Fon: 10
+   • SQL Analizi: 30 fon
+   • ✅ Risk Kontrolü Geçen: 30
+   • ❌ Riskli Bulunan: 0
+   • En Düşük Volatilite: %0.01
+
+ 1. BTP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+7.124
+    📈 Veri Noktası: 121
+    🛡️ Risk Seviyesi: LOW
+    🏷️ Tür: N/A
+
+ 2. MPP - 🟢 ÇOK GÜVENLİ ✅
+    📉 Volatilite: %0.01
+    📊 Ortalama Getiri: %+15.589
+    📈 Veri Noktası: 121
+    🛡...
+
+TEST #163
+----------------------------------------
+Kategori: AI
+Soru: AI test
+Beklenen Handler: general._handle_ai_test_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.91s
+Yanıt Önizleme:
+
+🤖 AI PATTERN TARAMASI - EN GÜÇLÜ SİNYALLER
+=======================================================
+
+1. PO8 - 🟢 GÜÇLÜ AL SİNYALİ
+   💲 Fiyat: 1.1197 TL
+   📊 RSI: 2.9 / Stoch: 3.3
+   📈 MACD: -0.122730
+   📍 BB Pozisyon: %18
+   📊 SMA20 Fark: -13.4%
+   📊 30-Gün Getiri: %-4.76
+   👥 Yatırımcı: 50
+   🎯 Patterns: 📉 RSI Oversold, 🔴 MACD Bearish, ⬇️ BB Alt Band, 💥 SMA20 %5+ altında
+
+2. DAE - 🟢 GÜÇLÜ AL SİNYALİ
+   💲 Fiyat: 1.2518 TL
+   📊 RSI: 5.1 / Stoch: 5.5
+   📈 MACD: -0.136830
+   📍 BB Pozisyon: %19
+   📊 ...
+
+TEST #164
+----------------------------------------
+Kategori: AI
+Soru: yapay zeka durumu
+Beklenen Handler: general._handle_ai_test_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.42s
+Yanıt Önizleme:
+
+📈 SON 30 GÜN EN ÇOK KAZANDIRAN GÜVENLİ 10 FON
+=======================================================
+
+🛡️ RİSK KONTROLÜ SONUCU:
+   ✅ Güvenli Kazananlar: 45
+   ⚠️ Riskli Kazananlar: 0
+
+ 1. YJH ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 2.3646 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 2. HMK ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 248.0053 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 3. GZH ✅
+    📊 30 GÜN Getiri: %-0.60
+    💰 Güncel Fiyat: 2.9167 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 4. NFK ✅
+    📊 30 GÜN Getir...
+
+TEST #165
+----------------------------------------
+Kategori: AI
+Soru: AI sistemi çalışıyor mu
+Beklenen Handler: general._handle_ai_test_question
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 2.31s
+Yanıt Önizleme:
+
+📈 SON 30 GÜN EN ÇOK KAZANDIRAN GÜVENLİ 10 FON
+=======================================================
+
+🛡️ RİSK KONTROLÜ SONUCU:
+   ✅ Güvenli Kazananlar: 45
+   ⚠️ Riskli Kazananlar: 0
+
+ 1. YJH ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 2.3646 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 2. HMK ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 248.0053 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 3. GZH ✅
+    📊 30 GÜN Getiri: %-0.60
+    💰 Güncel Fiyat: 2.9167 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 4. NFK ✅
+    📊 30 GÜN Getir...
+
+TEST #166
+----------------------------------------
+Kategori: Market
+Soru: piyasa durumu nasıl
+Beklenen Handler: general._handle_market_question_dual
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.2s
+Yanıt Önizleme:
+
+📈 SON 30 GÜN EN ÇOK KAZANDIRAN GÜVENLİ 10 FON
+=======================================================
+
+🛡️ RİSK KONTROLÜ SONUCU:
+   ✅ Güvenli Kazananlar: 45
+   ⚠️ Riskli Kazananlar: 0
+
+ 1. YJH ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 2.3646 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 2. HMK ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 248.0053 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 3. GZH ✅
+    📊 30 GÜN Getiri: %-0.60
+    💰 Güncel Fiyat: 2.9167 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 4. NFK ✅
+    📊 30 GÜN Getir...
+
+TEST #167
+----------------------------------------
+Kategori: Market
+Soru: genel piyasa değerlendirmesi
+Beklenen Handler: general._handle_market_question_dual
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.22s
+Yanıt Önizleme:
+❌ USD kategorisinde fon bulunamadı.
+
+TEST #168
+----------------------------------------
+Kategori: Market
+Soru: fon piyasası genel durum
+Beklenen Handler: general._handle_market_question_dual
+Durum: ✅ BAŞARILI
+Yanıt Süresi: 1.23s
+Yanıt Önizleme:
+
+📈 SON 30 GÜN EN ÇOK KAZANDIRAN GÜVENLİ 10 FON
+=======================================================
+
+🛡️ RİSK KONTROLÜ SONUCU:
+   ✅ Güvenli Kazananlar: 45
+   ⚠️ Riskli Kazananlar: 0
+
+ 1. YJH ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 2.3646 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 2. HMK ✅
+    📊 30 GÜN Getiri: %-0.44
+    💰 Güncel Fiyat: 248.0053 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 3. GZH ✅
+    📊 30 GÜN Getiri: %-0.60
+    💰 Güncel Fiyat: 2.9167 TL
+    🛡️ Risk Seviyesi: LOW
+
+ 4. NFK ✅
+    📊 30 GÜN Getir...
+

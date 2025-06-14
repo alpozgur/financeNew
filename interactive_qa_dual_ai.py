@@ -1,7 +1,6 @@
 # interactive_qa_dual_ai.py
 """
-TEFAS Analysis System - Dual AI Q&A (OpenAI vs Ollama)
-Her iki AI'ın da yanıt vermesi için güncellenmiş versiyon
+TEFAS Analysis System - OpenAI 
 """
 import numbers
 import re
@@ -32,6 +31,7 @@ from macroeconomic_analyzer import MacroeconomicAnalyzer
 from response_merger import ResponseMerger
 from ai_provider import AIProvider
 from predictive_scenario_analyzer import PredictiveScenarioAnalyzer
+from semantic_router import SemanticRouter
 @dataclass
 class RouteMatch:
     """Route eşleşme sonucu"""
@@ -42,7 +42,7 @@ class RouteMatch:
     matched_pattern: Optional[str] = None
     route_name: Optional[str] = None
 class DualAITefasQA:
-    """TEFAS Soru-Cevap Sistemi - OpenAI ve Ollama karşılaştırmalı"""
+    """TEFAS Soru-Cevap Sistemi - OpenAI Destekli"""
     
     def __init__(self):
         print("🚀 TEFAS Analysis Dual AI Q&A System Loading...")
@@ -59,8 +59,7 @@ class DualAITefasQA:
          # ESKİ: self.ai_status = self._check_ai_availability()
         # YENİ: Compatibility için ai_status'u tut ama ai_provider'dan al
         self.ai_status = {
-            'openai': self.ai_provider.get_status()['openai_status'],
-            'ollama': self.ai_provider.get_status()['ollama_status']
+            'openai': self.ai_provider.get_status()['openai_status']
         }
         # Modüllere ai_status yerine ai_provider geçebiliriz ama şimdilik uyumluluk için böyle
         self.advanced_metrics_analyzer = AdvancedMetricsAnalyzer(self.coordinator, self.active_funds, self.ai_status)
@@ -78,6 +77,7 @@ class DualAITefasQA:
         self.time_analyzer = TimeBasedAnalyzer(self.coordinator, self.active_funds)
         self.scenario_analyzer = ScenarioAnalyzer(self.coordinator, self.active_funds)
         self.math_calculator = MathematicalCalculator(self.coordinator, self.active_funds)
+        self.macro_analyzer = MacroeconomicAnalyzer(self.coordinator.db, self.config,self.coordinator)
         self.response_merger = ResponseMerger()
         self.enable_multi_handler = True  # Feature flag
         from ai_personalized_advisor import AIPersonalizedAdvisor
@@ -90,17 +90,196 @@ class DualAITefasQA:
             self.coordinator,
             self.scenario_analyzer
         )        
+        # --- SEMANTIC ROUTER ENTEGRASYONU ---
+        self.semantic_router = SemanticRouter(
+            model_name='all-MiniLM-L6-v2',
+            similarity_threshold=0.85,
+            max_matches=5
+        )
+        # Handler'ları semantic router'a ekle
+        self._register_semantic_handlers()
 
-                # Makroekonomik analyzer'ı oluştur - HATA KONTROLÜ İLE
-        try:
-            print("📊 Makroekonomik analyzer yükleniyor...")
-            self.macro_analyzer = MacroeconomicAnalyzer(self.coordinator.db, self.config, self.coordinator)
-            print("✅ Makroekonomik analyzer yüklendi")
-        except Exception as e:
-            print(f"❌ Makroekonomik analyzer yüklenemedi: {e}")
-            self.macro_analyzer = None
-        # AI durumunu kontrol et
-        
+    def _register_semantic_handlers(self):
+        # Her handler için açıklama, methodlar ve örnek sorular
+        self.semantic_router.add_handler(
+            handler='performance_analyzer',
+            description='Fon performans analizi, getiri analizi, en çok kazandıran/kaybettiren fonlar, performans karşılaştırması.',
+            methods={
+                'handle_safest_funds_sql_fast': 'En güvenli fonları listeler',
+                'handle_riskiest_funds_list': 'En riskli fonları listeler',
+                'handle_top_gainers': 'En çok kazandıran fonları listeler',
+                'handle_worst_funds_list': 'En çok kaybettiren fonları listeler',
+                'handle_analysis_question_dual': 'Genel fon performans analizi yapar',
+            },
+            examples=[
+                'En çok kazandıran fonlar hangileri?',
+                'Son 1 yılın en çok kazandıran fonları',
+                'En çok kaybettiren fonlar nelerdir?',
+                'En iyi performans gösteren fonlar',
+                'En yüksek getirili fonlar',
+                'En çok kazandıran 10 fon',
+                'Son 3 ayın en iyi fonları',
+                'En yüksek performanslı fonlar'
+            ],
+            execution_order=5  # Daha yüksek öncelik
+        )
+        self.semantic_router.add_handler(
+            handler='scenario_analyzer',
+            description='Senaryo bazlı fon analizi ve tahminler.',
+            methods={
+                'analyze_scenario_question': 'Senaryo bazlı analiz',
+            },
+            examples=[
+                'Enflasyon artarsa hangi fonlar etkilenir?',
+                'Dolar yükselirse fonlar ne olur?',
+                'Faiz düşerse hangi fonlar avantajlı olur?'
+            ],
+            execution_order=20
+        )
+        self.semantic_router.add_handler(
+            handler='personal_finance_analyzer',
+            description='Kişisel finans ve yatırım danışmanlığı.',
+            methods={
+                'analyze_personal_finance_question': 'Kişisel finans sorularını yanıtlar',
+            },
+            examples=[
+                'Birikimimi hangi fona yatırmalıyım?',
+                'Emeklilik için en uygun fon hangisi?',
+                'Kısa vadede kazançlı fon önerisi'
+            ],
+            execution_order=30
+        )
+        self.semantic_router.add_handler(
+            handler='technical_analyzer',
+            description='Fonlar için teknik analiz ve sinyal üretimi.',
+            methods={
+                'handle_ai_pattern_analysis': 'AI tabanlı teknik analiz',
+                'handle_technical_analysis_questions_full_db': 'Teknik analiz sorularını yanıtlar',
+            },
+            examples=[
+                'MACD sinyali veren fonlar',
+                'RSI değeri yüksek fonlar',
+                'Teknik analiz ile alım sinyali',
+                'AI teknik analiz önerisi'
+            ],
+            execution_order=40
+        )
+        self.semantic_router.add_handler(
+            handler='currency_inflation_analyzer',
+            description='Döviz ve enflasyon etkisi analizi.',
+            methods={
+                'analyze_currency_funds': 'Döviz bazlı fon analizi',
+            },
+            examples=[
+                'Dolar bazında en iyi fonlar',
+                'Enflasyona karşı koruyan fonlar',
+                'Euro bazında fon performansı'
+            ],
+            execution_order=50
+        )
+        self.semantic_router.add_handler(
+            handler='portfolio_company_analyzer',
+            description='Portföy şirketleri ve karşılaştırmalı analiz.',
+            methods={
+                'analyze_company_comprehensive': 'Şirket bazlı analiz',
+                'find_best_portfolio_company_unlimited': 'En iyi portföy şirketini bulur',
+            },
+            examples=[
+                'İş Portföy analizi',
+                'Ak Portföy vs Garanti Portföy karşılaştırması',
+                'En başarılı portföy şirketi hangisi?'
+            ],
+            execution_order=60
+        )
+        self.semantic_router.add_handler(
+            handler='advanced_metrics_analyzer',
+            description='Fonlar için gelişmiş metrik analizleri.',
+            methods={
+                'handle_beta_analysis': 'Beta katsayısı analizi',
+                'handle_alpha_analysis': 'Alpha analizi',
+                'handle_tracking_error_analysis': 'Tracking error analizi',
+                'handle_information_ratio_analysis': 'Bilgi oranı analizi',
+            },
+            examples=[
+                'Beta katsayısı düşük fonlar',
+                'Alpha değeri yüksek fonlar',
+                'Tracking error düşük fonlar',
+                'Bilgi oranı yüksek fonlar'
+            ],
+            execution_order=70
+        )
+        self.semantic_router.add_handler(
+            handler='thematic_analyzer',
+            description='Tematik fonlar ve sektör bazlı analiz.',
+            methods={
+                'analyze_thematic_question': 'Tematik fon analizi',
+            },
+            examples=[
+                'Teknoloji temalı fonlar',
+                'Sağlık sektörü fonları',
+                'Yeşil enerji fonları'
+            ],
+            execution_order=80
+        )
+        self.semantic_router.add_handler(
+            handler='fundamental_analyzer',
+            description='Fonların temel analizleri ve büyüklük, yaş, kategori gibi bilgiler.',
+            methods={
+                'handle_capacity_questions': 'Fon kapasite ve büyüklük analizi',
+                'handle_investor_count_questions': 'Yatırımcı sayısı analizi',
+                'handle_new_funds_questions': 'Yeni fonlar',
+                'handle_largest_funds_questions': 'En büyük fonlar',
+                'handle_fund_age_questions': 'Fon yaşı',
+                'handle_fund_category_questions': 'Fon kategorisi',
+            },
+            examples=[
+                'En büyük fonlar hangileri?',
+                'Yatırımcı sayısı en fazla olan fonlar',
+                'Yeni kurulan fonlar',
+                'Fon kategorileri nelerdir?'
+            ],
+            execution_order=90
+        )
+        self.semantic_router.add_handler(
+            handler='math_calculator',
+            description='Matematiksel finans hesaplamaları.',
+            methods={
+                'analyze_mathematical_question': 'Matematiksel soru analizleri',
+            },
+            examples=[
+                'Fon getirisi nasıl hesaplanır?',
+                'Sharpe oranı nasıl bulunur?',
+                'Risk/ödül oranı nedir?'
+            ],
+            execution_order=100
+        )
+        self.semantic_router.add_handler(
+            handler='time_based_analyzer',
+            description='Zaman bazlı fon analizleri.',
+            methods={
+                'analyze_time_based_question': 'Zaman bazlı analiz',
+            },
+            examples=[
+                'Son 1 ayın en iyi fonları',
+                'Geçen yılın performansı',
+                'Son 6 ayda en çok kazandıran fonlar'
+            ],
+            execution_order=110
+        )
+        self.semantic_router.add_handler(
+            handler='macroeconomic_analyzer',
+            description='Makroekonomik gelişmelerin fonlara etkisi.',
+            methods={
+                'analyze_macroeconomic_impact': 'Makroekonomik etki analizi',
+            },
+            examples=[
+                'Faiz artışı fonları nasıl etkiler?',
+                'Enflasyonun fonlara etkisi',
+                'Döviz kuru değişimi ve fonlar'
+            ],
+            execution_order=120
+        )
+
     def _load_active_funds(self, max_funds=None, mode="comprehensive"):
         """
         Gelişmiş fon yükleme sistemi
@@ -144,19 +323,15 @@ class DualAITefasQA:
         
         # Legacy uyumluluk için eski formatı döndür
         ai_status = {
-            'openai': provider_status['openai_status'],
-            'ollama': provider_status['ollama_status']
+            'openai': provider_status['openai_status']
         }
         
         print(f"   📱 OpenAI: {'✅ Hazır' if ai_status['openai'] else '❌ Mevcut değil'}")
-        print(f"   🦙 Ollama: {'✅ Hazır' if ai_status['ollama'] else '❌ Mevcut değil'}")
         
-        if provider_status['provider_type'] == 'dual' and ai_status['openai'] and ai_status['ollama']:
+        if provider_status['provider_type'] == 'dual' and ai_status['openai']:
             print("   🎯 Dual mode aktif - Karşılaştırmalı analiz mevcut!")
         elif ai_status['openai']:
             print("   🎯 Sadece OpenAI aktif")
-        elif ai_status['ollama']:
-            print("   🎯 Sadece Ollama aktif")
         else:
             print("   ⚠️ Hiçbir AI sistemi aktif değil")
         
@@ -175,11 +350,10 @@ class DualAITefasQA:
             return self._legacy_routing(question, question_lower, requested_count)
         
         try:
-            # AI routing kullan
-            routes = self.ai_router.route_question_multi(question, max_handlers=5)
-            
+            # --- SEMANTIC ROUTER KULLANIMI ---
+            routes = self.semantic_router.route(question)
             if routes:
-                print(f"🎯 AI Routing: {len(routes)} handler bulundu")
+                print(f"🎯 Semantic Routing: {len(routes)} handler bulundu")
                 for i, route in enumerate(routes, 1):
                     print(f"  {i}. {route.handler}.{route.method} (güven: {route.confidence:.2f})")
                     print(f"     Sebep: {route.reasoning}")
@@ -197,7 +371,7 @@ class DualAITefasQA:
                         return response
             
         except Exception as e:
-            print(f"❌ AI routing hatası: {e}")
+            print(f"❌ Semantic routing hatası: {e}")
             import traceback
             traceback.print_exc()
         
@@ -391,7 +565,7 @@ class DualAITefasQA:
         """Handler instance'ını döndür"""
         handler_map = {
             'performance_analyzer': self.performanceMain,
-            'scenario_analyzer': self.scenario_analyzer,  # BU SATIR EKSİK OLABİLİR
+            'scenario_analyzer': self.scenario_analyzer,
             'personal_finance_analyzer': self.personal_analyzer,
             'technical_analyzer': self.technical_analyzer,
             'currency_inflation_analyzer': self.currency_analyzer,
@@ -401,9 +575,15 @@ class DualAITefasQA:
             'macroeconomic_analyzer': self.macro_analyzer,
             'advanced_metrics_analyzer': self.advanced_metrics_analyzer,
             'thematic_analyzer': self.thematic_analyzer,
-            'fundamental_analyzer': self.fundamental_analyzer
+            'fundamental_analyzer': self.fundamental_analyzer,
+            'predictive_analyzer': self.predictive_analyzer,
+            'ai_advisor': self.ai_advisor
         }
-        return handler_map.get(handler_name)    
+        handler = handler_map.get(handler_name)
+        if not handler:
+            print(f"⚠️ Handler bulunamadı: {handler_name}")
+        return handler
+
     def _legacy_single_handler(self, question: str, question_lower: str) -> str:
         """Eski tek handler sistemi (fallback)"""
         # Mevcut _legacy_routing metodunuzu buraya taşıyın
@@ -652,137 +832,6 @@ class DualAITefasQA:
         
     #     # RİSKLİ FONLAR - ÇOKLU LİSTE DESTEĞİ  
     #     if "en riskli" in question_lower:
-    #         if requested_count > 1 or 'fonlar' in question_lower:
-    #             return self.performanceMain.handle_riskiest_funds_list(requested_count)
-    #         else:
-    #             return self.performanceMain.handle_most_risky_fund()
-        
-    #     # EN ÇOK KAYBETTİREN - ÇOKLU LİSTE DESTEĞİ
-    #     if any(word in question_lower for word in ['en çok kaybettiren', 'en çok düşen']):
-    #         if requested_count > 1 or 'fonlar' in question_lower:
-    #             return self.performanceMain.handle_worst_funds_list(requested_count)
-    #         else:
-    #             return self.performanceMain.handle_worst_fund()        
-    #     # Özel risk sorusu yakalama
-    #     if "en riskli" in question_lower:
-    #         return self.performanceMain.handle_most_risky_fund()
-    #     if "en güvenli" in question_lower or "en az riskli" in question_lower:
-    #         return self.performanceMain.handle_safest_fund()
-    #     if "en çok kaybettiren" in question_lower or "en çok düşen" in question_lower:
-    #         return self.performanceMain.handle_worst_fund()
-
-    #     if any(word in question_lower for word in ['portföy', 'portfolio']):
-            
-    #         # Belirli şirket kapsamlı analizi
-    #         if any(word in question_lower for word in ['iş portföy', 'is portfoy', 'işbank portföy']):
-    #             return self.portfolio_analyzer.analyze_company_comprehensive('İş Portföy')
-            
-    #         elif any(word in question_lower for word in ['ak portföy', 'akbank portföy']):
-    #             return self.portfolio_analyzer.analyze_company_comprehensive('Ak Portföy')
-            
-    #         elif any(word in question_lower for word in ['garanti portföy', 'garantibank portföy']):
-    #             return self.portfolio_analyzer.analyze_company_comprehensive('Garanti Portföy')
-            
-    #         elif any(word in question_lower for word in ['ata portföy']):
-    #             return self.portfolio_analyzer.analyze_company_comprehensive('Ata Portföy')
-            
-    #         elif any(word in question_lower for word in ['qnb portföy']):
-    #             return self.portfolio_analyzer.analyze_company_comprehensive('QNB Portföy')
-            
-    #         elif any(word in question_lower for word in ['fiba portföy', 'fibabank portföy']):
-    #             return self.portfolio_analyzer.analyze_company_comprehensive('Fiba Portföy')
-            
-    #         # Şirket karşılaştırması
-    #         elif any(word in question_lower for word in ['vs', 'karşı', 'karşılaştır', 'compare']):
-    #             return self._handle_company_comparison_enhanced(question)
-            
-    #         # En başarılı şirket
-    #         elif any(word in question_lower for word in ['en başarılı', 'en iyi', 'best', 'most successful']):
-    #             return self.portfolio_analyzer.find_best_portfolio_company_unlimited()
-            
-    #         else:
-    #             return self._handle_portfolio_companies_overview(question)     
-            
-    #     elif any(word in question_lower for word in ['beta katsayısı', 'beta değeri', 'beta 1', 
-    #                                                     'beta düşük', 'beta yüksek', 'beta altında','beta katsayisi', 'beta degeri', 'beta coefficient', 
-    #                                         'beta 1', 'beta dusuk', 'beta yuksek', 'beta altinda',
-    #                                         'beta less than', 'beta greater than']):
-    #         return self.advanced_metrics_analyzer.handle_beta_analysis(question)
-            
-    #     elif any(word in question_lower for word in ['alpha değeri', 'alpha pozitif', 'jensen alpha', 
-    #                                                     'alpha negatif', 'alfa değeri', 'alfa pozitif']):
-    #         return self.advanced_metrics_analyzer.handle_alpha_analysis(question)
-            
-    #     elif any(word in question_lower for word in ['tracking error', 'takip hatası', 'index fon tracking',
-    #                                                     'endeks fon tracking', 'tracking error düşük']):
-    #         return self.advanced_metrics_analyzer.handle_tracking_error_analysis(question)
-            
-    #     elif any(word in question_lower for word in ['information ratio', 'bilgi oranı', 'ir yüksek',
-    #                                                     'information ratio yüksek', 'aktif fon ir']):
-    #         return self.advanced_metrics_analyzer.handle_information_ratio_analysis(question)
-       
-    #     # 📈 TEMATİK FON SORULARI - TÜM VERİTABANI 
-    #     if self.thematic_analyzer.is_thematic_question(question):
-    #         return self.thematic_analyzer.analyze_thematic_question(question)
-    #            # FUNDAMENTAL ANALİZ SORULARI 🆕
-    #     if any(word in question_lower for word in ['kapasite', 'büyüklük', 'büyük fon']):
-    #         return self.fundamental_analyzer.handle_capacity_questions(question)
-        
-    #     if any(word in question_lower for word in ['yatırımcı sayısı', 'popüler fon']):
-    #         return self.fundamental_analyzer.handle_investor_count_questions(question)
-        
-    #     if any(word in question_lower for word in ['yeni fon', 'yeni kurulan']):
-    #         return self.fundamental_analyzer.handle_new_funds_questions(question)
-        
-    #     if any(word in question_lower for word in ['en büyük', 'largest']):
-    #         return self.fundamental_analyzer.handle_largest_funds_questions(question)
-        
-    #     if any(word in question_lower for word in ['en eski', 'köklü']):
-    #         return self.fundamental_analyzer.handle_fund_age_questions(question)
-        
-    #     if any(word in question_lower for word in ['kategori', 'tür']):
-    #         return self.fundamental_analyzer.handle_fund_category_questions(question)        
-    #     # --- Gelişmiş anahtar kelime tabanlı analizler ---
-    #     if any(word in question_lower for word in ['yatırım dağılımı', 'varlık dağılımı', 'kompozisyon', 'içerik', 'portföy içerik']):
-    #         return self._handle_fund_allocation_question(question)
-    #     if 'fon kategorisi' in question_lower or 'fon türü' in question_lower:
-    #         return self._handle_fund_category_question(question)
-    #     if any(word in question_lower for word in ['kazanç', 'getiri', 'son 1 yıl', 'son 12 ay', 'geçtiğimiz yıl', 'son yıl']):
-    #         return self.performanceMain.handle_fund_past_performance_question(question)
-    #     if any(word in question_lower for word in ['en çok kazandıran', 'en çok getiri']):
-    #         return self.performanceMain.handle_top_gainer_fund_question(question)
-    #     if 'en çok kazandıran' in question_lower or 'en çok getiri' in question_lower:
-    #         return self.performanceMain.handle_top_gainer_fund_question(question)
-    #     if 'düşüşte olan fonlar' in question_lower or 'en çok kaybettiren' in question_lower:
-    #         return self.performanceMain.handle_top_loser_fund_question(question)
-    #     if 'sharpe oranı en yüksek' in question_lower:
-    #         return self.performanceMain.handle_top_sharpe_funds_question(question)
-    #     if 'volatilite' in question_lower and 'altında' in question_lower:
-    #         return self.performanceMain.handle_low_volatility_funds_question(question)
-    #     # --- mevcut kalan kodun ---
-    #     if any(word in question_lower for word in ['2025', 'öneri', 'öner', 'recommend', 'suggest']):
-    #         return self.performanceMain.handle_2025_recommendation_dual(question)
-    #     elif any(word in question_lower for word in ['analiz', 'analyze', 'performance']):
-    #         return self.performanceMain.handle_analysis_question_dual(question)
-    #     elif any(word in question_lower for word in ['karşılaştır', 'compare', 'vs']):
-    #         return self.performanceMain.handle_comparison_question(question)
-    #     elif any(word in question_lower for word in ['risk', 'güvenli', 'safe']):
-    #         return self._handle_risk_question(question)
-    #     elif any(word in question_lower for word in ['piyasa', 'market', 'durum']):
-    #         return self._handle_market_question_dual(question)
-    #     elif any(word in question_lower for word in ['macd', 'bollinger', 'rsi', 'hareketli ortalama', 
-    #                                                 'moving average', 'sma', 'ema', 'teknik sinyal',
-    #                                                 'alım sinyali', 'satım sinyali', 'aşırı satım',
-    #                                                 'aşırı alım', 'golden cross', 'death cross']):
-    #         technical_result = self._handle_technical_analysis_questions_full_db(question)
-    #         if technical_result:
-    #             return technical_result
-    #         else:
-    #             return self._handle_general_question(question)
-    #     elif any(word in question_lower for word in ['ai', 'yapay zeka', 'test']):
-    #         return self._handle_ai_test_question(question)
-    #     else:
-    #         return self._handle_general_question(question)
 
     def _handle_portfolio_companies_overview(self, question):
         """Genel portföy şirketleri genel bakış"""
@@ -1121,23 +1170,17 @@ class DualAITefasQA:
         
         response += f"🤖 SİSTEM DURUMU:\n"
         response += f"   📱 OpenAI: {'✅ Aktif' if self.ai_status['openai'] else '❌ İnaktif'}\n"
-        response += f"   🦙 Ollama: {'✅ Aktif' if self.ai_status['ollama'] else '❌ İnaktif'}\n"
         response += f"   📊 Aktif Fonlar: {len(self.active_funds)}\n"
         response += f"   🗄️ Veritabanı: ✅ Bağlı\n\n"
         
-        response += f"📋 DUAL AI SORU TİPLERİ:\n"
-        response += f"   • '2025 için hangi fonları önerirsin?' (Her iki AI de yanıt verir)\n"
-        response += f"   • 'AKB fonunu analiz et' (Dual AI değerlendirme)\n"
-        response += f"   • 'Piyasa durumu nasıl?' (İkili AI yorumu)\n"
+        response += f"📋 AI SORU TİPLERİ:\n"
+        response += f"   • '2025 için hangi fonları önerirsin?'\n"
+        response += f"   • 'AKB fonunu analiz et'\n"
+        response += f"   • 'Piyasa durumu nasıl?' \n"
         response += f"   • 'AI test' (AI sistemlerini test et)\n"
         response += f"   • 'AKB ve YAS karşılaştır'\n"
         response += f"   • 'Güvenli fonlar neler?'\n\n"
         
-        response += f"🎯 DUAL AI AVANTAJLARI:\n"
-        response += f"   • OpenAI ve Ollama karşılaştırması\n"
-        response += f"   • Farklı AI perspektifleri\n"
-        response += f"   • Daha kapsamlı analiz\n"
-        response += f"   • AI performans değerlendirmesi\n"
         response += f"\n🔬 İLERİ ANALİZ SORULARI:\n"
         response += f"   • 'Beta katsayısı 1'den düşük fonlar'\n"
         response += f"   • 'Alpha değeri pozitif olan fonlar'\n"
@@ -1146,11 +1189,11 @@ class DualAITefasQA:
         return response
 
     def run_interactive_session(self):
-        """İnteraktif dual AI oturumu"""
+        """İnteraktif AI oturumu"""
         print("\n" + "="*60)
-        print("🤖 TEFAS DUAL AI ANALYSIS SYSTEM")
+        print("🤖 TEFAS AI ANALYSIS SYSTEM")
         print("="*60)
-        print("🎯 Özellik: Her iki AI (OpenAI + Ollama) aynı anda yanıt verir!")
+        print("🎯 Özellik:  AI OpenAI yanıt verir!")
         print("\n💡 Örnek sorular:")
         print("   • '2025 için 100000 TL ile hangi fonları önerirsin?'")
         print("   • 'AKB fonunu analiz et'")

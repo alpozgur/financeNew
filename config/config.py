@@ -22,8 +22,6 @@ class DatabaseConfig:
 @dataclass
 class AIConfig:
     openai_api_key: str = os.getenv('OPENAI_API_KEY', '')
-    ollama_base_url: str = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
-    ollama_model: str = os.getenv('OLLAMA_MODEL', 'mistral')
 
 @dataclass
 class AnalysisConfig:
@@ -64,8 +62,7 @@ class Config:
                 'username': self.database.username
             },
             'ai': {
-                'ollama_base_url': self.ai.ollama_base_url,
-                'ollama_model': self.ai.ollama_model
+                'openai_api_key': self.ai.openai_api_key
             },
             'analysis': {
                 'risk_free_rate': self.analysis.risk_free_rate,
